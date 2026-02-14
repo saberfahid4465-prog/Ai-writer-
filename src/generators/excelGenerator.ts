@@ -32,13 +32,13 @@ const FONT_NAME = 'Calibri';
  *
  * @param excelData - The excel section of the AI response.
  * @param metaData - The pdf_word section (for title/author metadata).
- * @returns Buffer of the .xlsx file bytes.
+ * @returns Base64 string of the .xlsx file.
  */
 export async function generateExcel(
   excelData: ExcelData,
   metaData: PdfWordData,
   images?: Map<string, DocumentImage>
-): Promise<Buffer> {
+): Promise<string> {
   const workbook = new ExcelJS.Workbook();
 
   // Set workbook metadata
@@ -227,7 +227,12 @@ export async function generateExcel(
     }
   }
 
-  // ─── Export ──────────────────────────────────────────────
-  const buffer = await workbook.xlsx.writeBuffer();
-  return buffer as unknown as Buffer;
+  // ─── Export as base64 (safe for React Native) ─────────
+  const arrayBuffer = await workbook.xlsx.writeBuffer();
+  const bytes = new Uint8Array(arrayBuffer as ArrayBuffer);
+  let binary = '';
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
 }

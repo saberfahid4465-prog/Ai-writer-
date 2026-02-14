@@ -39,12 +39,12 @@ const FONT_FAMILY = 'Calibri';
  * Generate a Word (.docx) document from structured AI data.
  *
  * @param data - The pdf_word section of the AI response.
- * @returns Buffer of the .docx file bytes.
+ * @returns Base64 string of the .docx file.
  */
 export async function generateWord(
   data: PdfWordData,
   images?: Map<string, DocumentImage>
-): Promise<Buffer> {
+): Promise<string> {
   const children: Paragraph[] = [];
 
   // ─── Title ───────────────────────────────────────────────
@@ -247,7 +247,7 @@ export async function generateWord(
     ],
   });
 
-  // Pack and return
-  const buffer = await Packer.toBuffer(doc);
-  return buffer;
+  // Pack and return as base64 string (safe for React Native)
+  const base64String = await Packer.toBase64String(doc);
+  return base64String;
 }

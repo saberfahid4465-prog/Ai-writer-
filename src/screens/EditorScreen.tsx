@@ -242,9 +242,8 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
       }
 
       if (outputFormats.includes('docx')) {
-        const wordBuffer = await generateWord(editedOutput.pdf_word, imageMap);
+        const wordBase64 = await generateWord(editedOutput.pdf_word, imageMap);
         const wordFileName = generateFileName(topic, 'docx');
-        const wordBase64 = wordBuffer.toString('base64');
         const wordPath = await saveFile(wordFileName, wordBase64);
         files.push({ name: wordFileName, path: wordPath, type: 'docx' });
       }
@@ -257,9 +256,8 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
       }
 
       if (outputFormats.includes('xlsx')) {
-        const excelBuffer = await generateExcel(editedOutput.excel, editedOutput.pdf_word, imageMap);
+        const excelBase64 = await generateExcel(editedOutput.excel, editedOutput.pdf_word, imageMap);
         const excelFileName = generateFileName(topic, 'xlsx');
-        const excelBase64 = excelBuffer.toString('base64');
         const excelPath = await saveFile(excelFileName, excelBase64);
         files.push({ name: excelFileName, path: excelPath, type: 'xlsx' });
       }

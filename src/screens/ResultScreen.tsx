@@ -16,6 +16,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Platform,
 } from 'react-native';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
@@ -71,11 +72,30 @@ export default function ResultScreen({ route, navigation }: ResultScreenProps) {
         return;
       }
 
-      Alert.alert(
-        'Downloaded',
-        `${file.name} has been saved to your device.`,
-        [{ text: 'OK' }]
-      );
+      if (Platform.OS === 'android') {
+        // Use Storage Access Framework to let user choose save location
+        const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+        if (permissions.granted) {
+          const base64 = await FileSystem.readAsStringAsync(file.path, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+          const uri = await FileSystem.StorageAccessFramework.createFileAsync(
+            permissions.directoryUri,
+            file.name,
+            getMimeType(file.type)
+          );
+          await FileSystem.writeAsStringAsync(uri, base64, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+          Alert.alert('Downloaded', `${file.name} has been saved successfully.`);
+        }
+      } else {
+        // iOS: Use share sheet to save
+        await Sharing.shareAsync(file.path, {
+          mimeType: getMimeType(file.type),
+          dialogTitle: `Save ${file.name}`,
+        });
+      }
     } catch (error) {
       Alert.alert('Error', 'Failed to download file. Please try again.');
     }
