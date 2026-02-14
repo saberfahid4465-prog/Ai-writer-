@@ -1,16 +1,22 @@
 /**
  * AI Writer — App Navigator
  *
- * React Navigation stack navigator connecting all screens.
- * Includes: Home, Generate, Translate, Summarize, Editor, Result flows.
+ * Bottom Tab Bar with 5 tabs:
+ *   ✏️ Generate  |  📋 Summarize  |  🌍 Translate  |  📁 History  |  ⚙️ Settings
+ *
+ * Each tab has its own screen. Processing, Editor, Result, etc.
+ * are pushed as stack screens on top of the tab bar.
  */
 
 import React from 'react';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useTheme } from '../utils/themeContext';
 import { AIWriterOutput } from '../ai/responseParser';
 
+// ─── Screens ────────────────────────────────────────────────────
 import HomeScreen from '../screens/HomeScreen';
 import ProcessingScreen from '../screens/ProcessingScreen';
 import ResultScreen from '../screens/ResultScreen';
@@ -30,7 +36,9 @@ import EditorScreen from '../screens/EditorScreen';
 export type OutputFormat = 'pdf' | 'docx' | 'pptx' | 'xlsx';
 
 export type RootStackParamList = {
-  Home: undefined;
+  // Tab root
+  HomeTabs: undefined;
+  // Stack screens pushed on top of tabs
   Processing: {
     topic: string;
     language: string;
@@ -38,14 +46,7 @@ export type RootStackParamList = {
     uploadedFileUri?: string | null;
     uploadedFileName?: string | null;
     outputFormats: OutputFormat[];
-    optSummarize?: boolean;
-    optTranslate?: boolean;
-    translateLanguage?: string | null;
-    translateLanguageCode?: string | null;
-    optTables?: boolean;
   };
-  Translate: undefined;
-  Summarize: undefined;
   TranslateProcessing: {
     uploadedFileUri: string;
     uploadedFileName: string;
@@ -75,16 +76,109 @@ export type RootStackParamList = {
       type: 'pdf' | 'docx' | 'pptx' | 'xlsx';
     }>;
   };
-  History: undefined;
-  Settings: undefined;
   Premium: undefined;
   Privacy: undefined;
   Terms: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+const Tab = createBottomTabNavigator();
 
-// ─── Navigator ──────────────────────────────────────────────────
+// ─── Tab Icon ───────────────────────────────────────────────────
+
+function TabIcon({ emoji, label, focused, color }: { emoji: string; label: string; focused: boolean; color: string }) {
+  return (
+    <View style={iconStyles.wrap}>
+      <Text style={[iconStyles.emoji, focused && iconStyles.emojiFocused]}>{emoji}</Text>
+      <Text style={[iconStyles.label, { color }]} numberOfLines={1}>{label}</Text>
+    </View>
+  );
+}
+
+const iconStyles = StyleSheet.create({
+  wrap: { alignItems: 'center', justifyContent: 'center', paddingTop: 4 },
+  emoji: { fontSize: 22 },
+  emojiFocused: { fontSize: 26 },
+  label: { fontSize: 10, fontWeight: '600', marginTop: 2 },
+});
+
+// ─── Bottom Tabs ────────────────────────────────────────────────
+
+function BottomTabs() {
+  const { colors } = useTheme();
+
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: {
+          backgroundColor: colors.surface,
+          borderTopColor: colors.border,
+          borderTopWidth: 1,
+          height: Platform.OS === 'ios' ? 88 : 64,
+          paddingBottom: Platform.OS === 'ios' ? 28 : 8,
+          paddingTop: 4,
+          elevation: 12,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 8,
+        },
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textMuted,
+        tabBarShowLabel: false,
+      }}
+    >
+      <Tab.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{
+          tabBarIcon: ({ focused, color }) => (
+            <TabIcon emoji="✏️" label="Generate" focused={focused} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Summarize"
+        component={SummarizeScreen}
+        options={{
+          tabBarIcon: ({ focused, color }) => (
+            <TabIcon emoji="📋" label="Summarize" focused={focused} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Translate"
+        component={TranslateScreen}
+        options={{
+          tabBarIcon: ({ focused, color }) => (
+            <TabIcon emoji="🌍" label="Translate" focused={focused} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="History"
+        component={HistoryScreen}
+        options={{
+          tabBarIcon: ({ focused, color }) => (
+            <TabIcon emoji="📁" label="History" focused={focused} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{
+          tabBarIcon: ({ focused, color }) => (
+            <TabIcon emoji="⚙️" label="Settings" focused={focused} color={color} />
+          ),
+        }}
+      />
+    </Tab.Navigator>
+  );
+}
+
+// ─── Root Stack Navigator ───────────────────────────────────────
 
 export default function AppNavigator() {
   const { colors } = useTheme();
@@ -92,21 +186,21 @@ export default function AppNavigator() {
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName="Home"
         screenOptions={{
           headerShown: false,
           animation: 'slide_from_right',
           contentStyle: { backgroundColor: colors.background },
         }}
       >
-        <Stack.Screen name="Home" component={HomeScreen} />
+        {/* Bottom tabs as the root */}
+        <Stack.Screen name="HomeTabs" component={BottomTabs} />
+
+        {/* Full-screen stack screens (tab bar hidden) */}
         <Stack.Screen
           name="Processing"
           component={ProcessingScreen}
           options={{ gestureEnabled: false }}
         />
-        <Stack.Screen name="Translate" component={TranslateScreen} />
-        <Stack.Screen name="Summarize" component={SummarizeScreen} />
         <Stack.Screen
           name="TranslateProcessing"
           component={TranslateProcessingScreen}
@@ -119,8 +213,6 @@ export default function AppNavigator() {
         />
         <Stack.Screen name="Editor" component={EditorScreen} />
         <Stack.Screen name="Result" component={ResultScreen} />
-        <Stack.Screen name="History" component={HistoryScreen} />
-        <Stack.Screen name="Settings" component={SettingsScreen} />
         <Stack.Screen name="Premium" component={PremiumScreen} />
         <Stack.Screen name="Privacy" component={PrivacyScreen} />
         <Stack.Screen name="Terms" component={TermsScreen} />

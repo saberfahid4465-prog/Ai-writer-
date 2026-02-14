@@ -1,9 +1,9 @@
 /**
- * AI Writer — Home Screen (Redesigned)
+ * AI Writer — Home Screen (Generate Tab)
  *
- * Unified page: enter topic or upload file, pick output format,
- * choose language, toggle options (summarize, translate, tables),
- * then generate.  Logo from assets/logo.png.  Premium banner removed.
+ * Enter topic or upload file, pick output format,
+ * choose language, then generate.
+ * Summarize & Translate are now separate tabs.
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -54,11 +54,6 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   const [selectedFormats, setSelectedFormats] = useState<Set<OutputFormat>>(new Set(['pdf']));
   const [selectedLanguage, setSelectedLanguage] = useState<LanguageOption>(DEFAULT_LANGUAGE);
   const [showLanguagePicker, setShowLanguagePicker] = useState(false);
-  const [optSummarize, setOptSummarize] = useState(false);
-  const [optTranslate, setOptTranslate] = useState(false);
-  const [optTables, setOptTables] = useState(false);
-  const [translateLang, setTranslateLang] = useState<LanguageOption | null>(null);
-  const [showTranslatePicker, setShowTranslatePicker] = useState(false);
   const [tokenUsage, setTokenUsage] = useState({ used: 0, limit: DAILY_TOKEN_LIMIT, remaining: DAILY_TOKEN_LIMIT, percentage: 0 });
   const { colors } = useTheme();
 
@@ -130,11 +125,6 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
       uploadedFileName:
         uploadedFile && !uploadedFile.canceled ? uploadedFile.assets[0].name : null,
       outputFormats: Array.from(selectedFormats),
-      optSummarize,
-      optTranslate,
-      translateLanguage: translateLang?.name ?? null,
-      translateLanguageCode: translateLang?.code ?? null,
-      optTables,
     });
   };
 
@@ -145,22 +135,6 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        {/* Top Bar */}
-        <View style={styles.topBar}>
-          <TouchableOpacity
-            style={[styles.iconBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
-            onPress={() => navigation.navigate('History')}
-          >
-            <Text style={styles.iconBtnText}>📁</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.iconBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
-            onPress={() => navigation.navigate('Settings')}
-          >
-            <Text style={styles.iconBtnText}>⚙️</Text>
-          </TouchableOpacity>
-        </View>
-
         {/* Header with Logo */}
         <View style={styles.header}>
           <Image source={require('../../assets/logo.png')} style={styles.logo} resizeMode="contain" />
@@ -293,106 +267,6 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
           )}
         </View>
 
-        {/* ── Additional Options ───────────────────────────── */}
-        <View style={styles.section}>
-          <Text style={[styles.label, { color: colors.textPrimary }]}>⚡  Options</Text>
-
-          {/* Summarize */}
-          <TouchableOpacity
-            style={[styles.optionRow, {
-              backgroundColor: optSummarize ? colors.primaryLight : colors.surface,
-              borderColor: optSummarize ? colors.primary : colors.border,
-            }]}
-            onPress={() => setOptSummarize(!optSummarize)}
-          >
-            <Text style={styles.optIcon}>📋</Text>
-            <View style={styles.optInfo}>
-              <Text style={[styles.optTitle, { color: colors.textPrimary }]}>Summarize</Text>
-              <Text style={[styles.optDesc, { color: colors.textMuted }]}>
-                Extract key points from uploaded files
-              </Text>
-            </View>
-            <View style={[styles.optCheck, { backgroundColor: optSummarize ? colors.primary : colors.border }]}>
-              {optSummarize && <Text style={styles.optCheckMark}>✓</Text>}
-            </View>
-          </TouchableOpacity>
-
-          {/* Translate */}
-          <TouchableOpacity
-            style={[styles.optionRow, {
-              backgroundColor: optTranslate ? colors.primaryLight : colors.surface,
-              borderColor: optTranslate ? colors.primary : colors.border,
-            }]}
-            onPress={() => { setOptTranslate(!optTranslate); if (optTranslate) setShowTranslatePicker(false); }}
-          >
-            <Text style={styles.optIcon}>🌍</Text>
-            <View style={styles.optInfo}>
-              <Text style={[styles.optTitle, { color: colors.textPrimary }]}>Translate</Text>
-              <Text style={[styles.optDesc, { color: colors.textMuted }]}>
-                Translate output to another language
-              </Text>
-            </View>
-            <View style={[styles.optCheck, { backgroundColor: optTranslate ? colors.primary : colors.border }]}>
-              {optTranslate && <Text style={styles.optCheckMark}>✓</Text>}
-            </View>
-          </TouchableOpacity>
-
-          {optTranslate && (
-            <>
-              <TouchableOpacity
-                style={[styles.languageBtn, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: 6 }]}
-                onPress={() => setShowTranslatePicker(!showTranslatePicker)}
-              >
-                <Text style={[styles.languageBtnText, { color: translateLang ? colors.textPrimary : colors.placeholder }]}>
-                  {translateLang ? `${translateLang.name} (${translateLang.nativeName})` : 'Select target language…'}
-                </Text>
-                <Text style={[styles.arrow, { color: colors.textMuted }]}>
-                  {showTranslatePicker ? '▲' : '▼'}
-                </Text>
-              </TouchableOpacity>
-              {showTranslatePicker && (
-                <View style={[styles.langList, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                  <ScrollView nestedScrollEnabled style={{ maxHeight: 180 }}>
-                    {SUPPORTED_LANGUAGES.filter((l) => l.code !== 'auto').map((lang) => (
-                      <TouchableOpacity
-                        key={lang.code}
-                        style={[styles.langItem, { borderBottomColor: colors.borderLight },
-                          translateLang?.code === lang.code && { backgroundColor: colors.primaryLight },
-                        ]}
-                        onPress={() => { setTranslateLang(lang); setShowTranslatePicker(false); }}
-                      >
-                        <Text style={[styles.langItemText, { color: colors.textPrimary }]}>
-                          {lang.name} ({lang.nativeName})
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </ScrollView>
-                </View>
-              )}
-            </>
-          )}
-
-          {/* Include Tables & Charts */}
-          <TouchableOpacity
-            style={[styles.optionRow, {
-              backgroundColor: optTables ? colors.primaryLight : colors.surface,
-              borderColor: optTables ? colors.primary : colors.border,
-            }]}
-            onPress={() => setOptTables(!optTables)}
-          >
-            <Text style={styles.optIcon}>📊</Text>
-            <View style={styles.optInfo}>
-              <Text style={[styles.optTitle, { color: colors.textPrimary }]}>Tables & Charts</Text>
-              <Text style={[styles.optDesc, { color: colors.textMuted }]}>
-                Include tables in Excel/PPT output
-              </Text>
-            </View>
-            <View style={[styles.optCheck, { backgroundColor: optTables ? colors.primary : colors.border }]}>
-              {optTables && <Text style={styles.optCheckMark}>✓</Text>}
-            </View>
-          </TouchableOpacity>
-        </View>
-
         {/* ── Generate Button ──────────────────────────────── */}
         <TouchableOpacity
           style={[styles.generateBtn, { backgroundColor: colors.headerBg, shadowColor: colors.shadowColor }]}
@@ -439,12 +313,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  scroll: { padding: 20, paddingTop: 50, paddingBottom: 40 },
-
-  // Top bar
-  topBar: { flexDirection: 'row', justifyContent: 'flex-end', gap: 10, marginBottom: 6 },
-  iconBtn: { width: 42, height: 42, borderRadius: 21, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
-  iconBtnText: { fontSize: 20 },
+  scroll: { padding: 20, paddingTop: 50, paddingBottom: 100 },
 
   // Header
   header: { alignItems: 'center', marginBottom: 22 },
@@ -491,22 +360,6 @@ const styles = StyleSheet.create({
   langList: { borderRadius: 12, borderWidth: 1, marginTop: 4, overflow: 'hidden' },
   langItem: { paddingVertical: 12, paddingHorizontal: 16, borderBottomWidth: 1 },
   langItemText: { fontSize: 14 },
-
-  // Options
-  optionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 12,
-    borderWidth: 1.5,
-    padding: 14,
-    marginBottom: 10,
-  },
-  optIcon: { fontSize: 24, marginRight: 12 },
-  optInfo: { flex: 1 },
-  optTitle: { fontSize: 15, fontWeight: '600' },
-  optDesc: { fontSize: 12, marginTop: 2 },
-  optCheck: { width: 26, height: 26, borderRadius: 13, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
-  optCheckMark: { color: '#FFF', fontSize: 14, fontWeight: '700' },
 
   // Generate
   generateBtn: {

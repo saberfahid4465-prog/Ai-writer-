@@ -101,7 +101,7 @@ export default function ResultScreen({ route, navigation }: ResultScreenProps) {
 
   // ─── New Generation ───────────────────────────────────────
   const handleNewGeneration = () => {
-    navigation.navigate('Home');
+    navigation.navigate('HomeTabs');
   };
 
   // ─── Render ───────────────────────────────────────────────

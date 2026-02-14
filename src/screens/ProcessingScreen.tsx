@@ -32,11 +32,6 @@ interface ProcessingScreenProps {
       uploadedFileUri?: string | null;
       uploadedFileName?: string | null;
       outputFormats?: string[];
-      optSummarize?: boolean;
-      optTranslate?: boolean;
-      translateLanguage?: string | null;
-      translateLanguageCode?: string | null;
-      optTables?: boolean;
     };
   };
   navigation: any;

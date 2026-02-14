@@ -128,7 +128,7 @@ export default function TermsScreen({ navigation }: TermsScreenProps) {
         <Text style={[styles.body, { color: colors.textSecondary }]}>
           If you have any questions about these Terms of Service, please contact us at:{'\n'}
           {'\n'}Email: legal@aiwriter.app
-          {'\n'}Website: https://aiwriter.app/terms
+          {'\n'}Website: https://ai-writer-2v9.pages.dev/terms
         </Text>
       </View>
     </ScrollView>

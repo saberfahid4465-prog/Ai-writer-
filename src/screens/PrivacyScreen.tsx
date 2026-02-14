@@ -121,7 +121,7 @@ export default function PrivacyScreen({ navigation }: PrivacyScreenProps) {
         <Text style={[styles.body, { color: colors.textSecondary }]}>
           If you have any questions about this Privacy Policy, please contact us at:{'\n'}
           {'\n'}Email: privacy@aiwriter.app
-          {'\n'}Website: https://aiwriter.app/privacy
+          {'\n'}Website: https://ai-writer-2v9.pages.dev/privacy
         </Text>
       </View>
     </ScrollView>

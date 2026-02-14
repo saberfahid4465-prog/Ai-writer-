@@ -36,7 +36,6 @@ export default function SummarizeScreen({ navigation }: SummarizeScreenProps) {
     try {
       const result = await DocumentPicker.getDocumentAsync({
         type: [
-          'application/pdf',
           'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
           'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
           'application/vnd.openxmlformats-officedocument.presentationml.presentation',
@@ -73,10 +72,7 @@ export default function SummarizeScreen({ navigation }: SummarizeScreenProps) {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        {/* Back button */}
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Text style={[styles.backText, { color: colors.primary }]}>← Back</Text>
-        </TouchableOpacity>
+
 
         {/* Header */}
         <View style={styles.header}>
@@ -90,7 +86,7 @@ export default function SummarizeScreen({ navigation }: SummarizeScreenProps) {
         {/* How it works */}
         <View style={[styles.infoCard, { backgroundColor: colors.primaryLight }]}>
           <Text style={[styles.infoTitle, { color: colors.primary }]}>How it works</Text>
-          <Text style={[styles.infoItem, { color: colors.textSecondary }]}>📄 Upload any document (PDF, Word, PPT, Excel)</Text>
+          <Text style={[styles.infoItem, { color: colors.textSecondary }]}>📄 Upload any document (Word, PPT, Excel, TXT)</Text>
           <Text style={[styles.infoItem, { color: colors.textSecondary }]}>🤖 AI reads and identifies key points</Text>
           <Text style={[styles.infoItem, { color: colors.textSecondary }]}>📊 Get a professional summary in all formats</Text>
           <Text style={[styles.infoItem, { color: colors.textSecondary }]}>✏️ Edit and customize before downloading</Text>
@@ -112,9 +108,18 @@ export default function SummarizeScreen({ navigation }: SummarizeScreenProps) {
             <Text style={[styles.uploadText, { color: colors.textMuted }]} numberOfLines={2}>
               {uploadedFile && !uploadedFile.canceled
                 ? `📄 ${uploadedFile.assets[0].name}`
-                : 'Tap to upload a file (PDF, Word, Excel, PPT, TXT)'}
+                : 'Tap to upload a file (Word, Excel, PPT, TXT)'}
             </Text>
           </TouchableOpacity>
+
+          {/* File compatibility note */}
+          <View style={[styles.noteCard, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}>
+            <Text style={[styles.noteText, { color: colors.textMuted }]}>
+              ✅ <Text style={{ fontWeight: '600' }}>TXT</Text> — Best results, full text extracted{"\n"}
+              ⚡ <Text style={{ fontWeight: '600' }}>Word / PPT / Excel</Text> — Partial text extraction{"\n"}
+              🚫 <Text style={{ fontWeight: '600' }}>PDF</Text> — Not supported (text cannot be reliably extracted)
+            </Text>
+          </View>
         </View>
 
         {/* Output Language */}
@@ -229,4 +234,11 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   summarizeButtonText: { fontSize: 18, fontWeight: '700', color: '#FFF' },
+  noteCard: {
+    marginTop: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    padding: 12,
+  },
+  noteText: { fontSize: 12, lineHeight: 18 },
 });

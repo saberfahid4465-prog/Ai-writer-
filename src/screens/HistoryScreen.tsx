@@ -147,7 +147,7 @@ export default function HistoryScreen({ navigation }: HistoryScreenProps) {
       </Text>
       <TouchableOpacity
         style={[styles.emptyButton, { backgroundColor: colors.primary }]}
-        onPress={() => navigation.navigate('Home')}
+        onPress={() => navigation.navigate('HomeTabs')}
       >
         <Text style={styles.emptyButtonText}>✨ Generate Your First File</Text>
       </TouchableOpacity>
