@@ -8,7 +8,6 @@ on:
 env:
   JAVA_VERSION: '17'
   NODE_VERSION: '18'
-  EXPO_SDK: '50'
 
 jobs:
   build:
@@ -39,108 +38,131 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
-      # ─── Decode keystore ───────────────────────────────
-      - name: Decode keystore
-        run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/upload-keystore.jks
-
       # ─── Setup Android SDK ─────────────────────────────
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
       # ─── Expo prebuild (generate android project) ──────
-      - name: Install Expo CLI
-        run: npm install -g expo-cli @expo/ngrok
-
-      - name: Expo prebuild (generate native android)
+      - name: Expo prebuild
         run: npx expo prebuild --platform android --clean
 
-      # ─── Configure signing ─────────────────────────────
+      # ─── Generate signing keystore ─────────────────────
+      - name: Generate signing keystore
+        run: |
+          STORE_PASS="AiWriter2026Secure"
+          KEY_ALIAS="ai-writer-release"
+
+          # Generate keystore
+          keytool -genkeypair \
+            -v \
+            -keystore android/app/upload-keystore.jks \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -alias "$KEY_ALIAS" \
+            -storepass "$STORE_PASS" \
+            -keypass "$STORE_PASS" \
+            -dname "CN=AI Writer, O=AI Writer, L=Internet, ST=Cloud, C=US"
+
+          echo "STORE_PASS=$STORE_PASS" >> $GITHUB_ENV
+          echo "KEY_ALIAS=$KEY_ALIAS" >> $GITHUB_ENV
+
+          # Export PEM for future Play Console upload key reset
+          keytool -exportcert -alias "$KEY_ALIAS" \
+            -keystore android/app/upload-keystore.jks \
+            -storepass "$STORE_PASS" -rfc -file upload-key.pem
+
+          # Save base64 for future GitHub secret
+          base64 -w 0 android/app/upload-keystore.jks > keystore-base64.txt
+
+      # ─── Configure Gradle signing ──────────────────────
       - name: Configure release signing
         run: |
-          # Create keystore.properties
-          cat > android/keystore.properties << EOF
-          storeFile=upload-keystore.jks
-          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
-          keyAlias=${{ secrets.KEY_ALIAS }}
-          keyPassword=${{ secrets.KEY_PASSWORD }}
+          # Patch android/app/build.gradle to add signing config
+          # Insert signing config before the LAST closing brace of the android block
+          cat > /tmp/signing_patch.gradle << 'EOF'
+
+          android.signingConfigs {
+              release {
+                  storeFile file("upload-keystore.jks")
+                  storePassword System.getenv("STORE_PASS") ?: ""
+                  keyAlias System.getenv("KEY_ALIAS") ?: ""
+                  keyPassword System.getenv("STORE_PASS") ?: ""
+              }
+          }
+          android.buildTypes.release.signingConfig = android.signingConfigs.release
           EOF
 
-          # Patch build.gradle to use signing config
-          cat >> android/app/build.gradle << 'GRADLE'
-
-          // ─── Release Signing ─────────────────────────
-          def keystorePropertiesFile = rootProject.file("keystore.properties")
-          def keystoreProperties = new Properties()
-          if (keystorePropertiesFile.exists()) {
-              keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
-          }
-
-          android {
-              signingConfigs {
-                  release {
-                      storeFile file(keystoreProperties['storeFile'] ?: 'upload-keystore.jks')
-                      storePassword keystoreProperties['storePassword'] ?: ''
-                      keyAlias keystoreProperties['keyAlias'] ?: ''
-                      keyPassword keystoreProperties['keyPassword'] ?: ''
-                  }
-              }
-              buildTypes {
-                  release {
-                      signingConfig signingConfigs.release
-                      minifyEnabled true
-                      proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-                  }
-              }
-          }
-          GRADLE
+          cat /tmp/signing_patch.gradle >> android/app/build.gradle
+          echo "--- build.gradle tail ---"
+          tail -20 android/app/build.gradle
 
       # ─── Build AAB ─────────────────────────────────────
       - name: Build Release AAB
         working-directory: android
         run: |
           chmod +x gradlew
-          ./gradlew bundleRelease --no-daemon --stacktrace
+          ./gradlew bundleRelease --no-daemon
 
       # ─── Build APK ─────────────────────────────────────
       - name: Build Release APK
         working-directory: android
-        run: |
-          ./gradlew assembleRelease --no-daemon --stacktrace
+        run: ./gradlew assembleRelease --no-daemon
 
-      # ─── Verify outputs ────────────────────────────────
-      - name: Verify build outputs
+      # ─── Copy & verify outputs ─────────────────────────
+      - name: Collect build outputs
         run: |
-          echo "=== AAB ==="
-          ls -lh android/app/build/outputs/bundle/release/*.aab || echo "AAB not found"
-          echo "=== APK ==="
-          ls -lh android/app/build/outputs/apk/release/*.apk || echo "APK not found"
+          mkdir -p build-output
+          cp android/app/build/outputs/bundle/release/*.aab build-output/app-release.aab 2>/dev/null || true
+          cp android/app/build/outputs/apk/release/*.apk build-output/app-release.apk 2>/dev/null || true
+          cp upload-key.pem build-output/ 2>/dev/null || true
+          cp keystore-base64.txt build-output/ 2>/dev/null || true
+          echo "=== Build Outputs ==="
+          ls -lh build-output/
 
       # ─── Upload AAB artifact ───────────────────────────
       - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
           name: app-release-aab
-          path: android/app/build/outputs/bundle/release/*.aab
-          retention-days: 30
+          path: build-output/app-release.aab
+          retention-days: 90
+          if-no-files-found: error
 
       # ─── Upload APK artifact ───────────────────────────
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: app-release-apk
-          path: android/app/build/outputs/apk/release/*.apk
-          retention-days: 30
+          path: build-output/app-release.apk
+          retention-days: 90
+          if-no-files-found: error
 
-      # ─── Build summary ─────────────────────────────────
+      # ─── Upload keystore files ─────────────────────────
+      - name: Upload signing files
+        uses: actions/upload-artifact@v4
+        with:
+          name: signing-keystore
+          path: |
+            build-output/upload-key.pem
+            build-output/keystore-base64.txt
+          retention-days: 90
+
+      # ─── Summary ───────────────────────────────────────
       - name: Build Summary
+        if: always()
         run: |
-          AAB_SIZE=$(stat -c%s android/app/build/outputs/bundle/release/*.aab 2>/dev/null || echo "0")
-          APK_SIZE=$(stat -c%s android/app/build/outputs/apk/release/*.apk 2>/dev/null || echo "0")
-          echo "## Build Complete" >> $GITHUB_STEP_SUMMARY
-          echo "| Output | Size |" >> $GITHUB_STEP_SUMMARY
-          echo "|--------|------|" >> $GITHUB_STEP_SUMMARY
-          echo "| AAB | $(numfmt --to=iec $AAB_SIZE) |" >> $GITHUB_STEP_SUMMARY
-          echo "| APK | $(numfmt --to=iec $APK_SIZE) |" >> $GITHUB_STEP_SUMMARY
+          echo "## AI Writer — Android Build" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Download from the **Artifacts** section above." >> $GITHUB_STEP_SUMMARY
+          if [ -f build-output/app-release.aab ]; then
+            AAB_SIZE=$(stat -c%s build-output/app-release.aab)
+            APK_SIZE=$(stat -c%s build-output/app-release.apk 2>/dev/null || echo "0")
+            echo "| Output | Size |" >> $GITHUB_STEP_SUMMARY
+            echo "|--------|------|" >> $GITHUB_STEP_SUMMARY
+            echo "| AAB | $(numfmt --to=iec $AAB_SIZE) |" >> $GITHUB_STEP_SUMMARY
+            echo "| APK | $(numfmt --to=iec $APK_SIZE) |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Download AAB, APK, and signing keystore from **Artifacts** above." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "Build failed. Check logs above." >> $GITHUB_STEP_SUMMARY
+          fi
