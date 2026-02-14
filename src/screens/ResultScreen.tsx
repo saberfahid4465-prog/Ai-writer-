@@ -18,7 +18,7 @@ import {
   Alert,
 } from 'react-native';
 import * as Sharing from 'expo-sharing';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { GeneratedFile } from '../utils/fileStorage';
 import { useTheme } from '../utils/themeContext';
 import { useTranslation } from '../i18n/i18nContext';

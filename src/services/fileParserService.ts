@@ -10,7 +10,7 @@
  * - XLSX → xl/sharedStrings.xml + xl/worksheets/sheet*.xml
  */
 
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import JSZip from 'jszip';
 import { base64ToUint8Array } from '../utils/base64Polyfill';
 

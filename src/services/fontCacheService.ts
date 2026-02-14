@@ -6,7 +6,7 @@
  * Fonts are cached in the app's document directory for reuse.
  */
 
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 
 const FONT_CACHE_DIR = `${FileSystem.documentDirectory}font-cache/`;
 

@@ -15,7 +15,7 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { generateDocumentContent } from '../ai/longcatService';
 import { AIWriterOutput } from '../ai/responseParser';
 import { parseUploadedFile } from '../services/fileParserService';

@@ -46,7 +46,7 @@ import {
 import { aiEditSection, SectionContent } from '../ai/sectionAIHelper';
 import { SUPPORTED_LANGUAGES } from '../utils/languageConfig';
 import { uint8ArrayToBase64 } from '../utils/base64Polyfill';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 
 // ─── Types ──────────────────────────────────────────────────────
 
