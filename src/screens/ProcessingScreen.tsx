@@ -31,6 +31,12 @@ interface ProcessingScreenProps {
       languageCode: string;
       uploadedFileUri?: string | null;
       uploadedFileName?: string | null;
+      outputFormats?: string[];
+      optSummarize?: boolean;
+      optTranslate?: boolean;
+      translateLanguage?: string | null;
+      translateLanguageCode?: string | null;
+      optTables?: boolean;
     };
   };
   navigation: any;
@@ -46,7 +52,7 @@ const STEPS = [
 // ─── Component ──────────────────────────────────────────────────
 
 export default function ProcessingScreen({ route, navigation }: ProcessingScreenProps) {
-  const { topic, language, uploadedFileUri } = route.params;
+  const { topic, language, uploadedFileUri, outputFormats } = route.params;
   const { colors } = useTheme();
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -114,6 +120,7 @@ export default function ProcessingScreen({ route, navigation }: ProcessingScreen
         aiOutput,
         topic,
         language,
+        outputFormats: outputFormats || ['pdf', 'docx', 'pptx', 'xlsx'],
       });
     } catch (error) {
       if (cancelledRef.current) return;

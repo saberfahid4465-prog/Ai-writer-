@@ -47,6 +47,7 @@ interface EditorScreenProps {
       aiOutput: AIWriterOutput;
       topic: string;
       language: string;
+      outputFormats?: string[];
       imageMap?: Map<string, DocumentImage>;
     };
   };
@@ -56,8 +57,9 @@ interface EditorScreenProps {
 // ─── Component ──────────────────────────────────────────────────
 
 export default function EditorScreen({ route, navigation }: EditorScreenProps) {
-  const { aiOutput: initialOutput, topic, language } = route.params;
+  const { aiOutput: initialOutput, topic, language, outputFormats: rawFormats } = route.params;
   const { colors } = useTheme();
+  const outputFormats = rawFormats || ['pdf', 'docx', 'pptx', 'xlsx'];
 
   // Editable state for PDF/Word sections
   const [title, setTitle] = useState(initialOutput.pdf_word.title);
@@ -228,32 +230,39 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
         }
       }
 
-      // Generate files
-      const pdfBytes = await generatePDF(editedOutput.pdf_word, imageMap);
-      const pdfFileName = generateFileName(topic, 'pdf');
-      const pdfBase64 = bufferToBase64(pdfBytes);
-      const pdfPath = await saveFile(pdfFileName, pdfBase64);
+      // Generate only selected formats
+      const files: GeneratedFile[] = [];
 
-      const wordBuffer = await generateWord(editedOutput.pdf_word, imageMap);
-      const wordFileName = generateFileName(topic, 'docx');
-      const wordBase64 = wordBuffer.toString('base64');
-      const wordPath = await saveFile(wordFileName, wordBase64);
+      if (outputFormats.includes('pdf')) {
+        const pdfBytes = await generatePDF(editedOutput.pdf_word, imageMap);
+        const pdfFileName = generateFileName(topic, 'pdf');
+        const pdfBase64 = bufferToBase64(pdfBytes);
+        const pdfPath = await saveFile(pdfFileName, pdfBase64);
+        files.push({ name: pdfFileName, path: pdfPath, type: 'pdf' });
+      }
 
-      const pptBase64 = await generatePPT(editedOutput.ppt, editedOutput.pdf_word, imageMap);
-      const pptFileName = generateFileName(topic, 'pptx');
-      const pptPath = await saveFile(pptFileName, pptBase64);
+      if (outputFormats.includes('docx')) {
+        const wordBuffer = await generateWord(editedOutput.pdf_word, imageMap);
+        const wordFileName = generateFileName(topic, 'docx');
+        const wordBase64 = wordBuffer.toString('base64');
+        const wordPath = await saveFile(wordFileName, wordBase64);
+        files.push({ name: wordFileName, path: wordPath, type: 'docx' });
+      }
 
-      const excelBuffer = await generateExcel(editedOutput.excel, editedOutput.pdf_word, imageMap);
-      const excelFileName = generateFileName(topic, 'xlsx');
-      const excelBase64 = excelBuffer.toString('base64');
-      const excelPath = await saveFile(excelFileName, excelBase64);
+      if (outputFormats.includes('pptx')) {
+        const pptBase64 = await generatePPT(editedOutput.ppt, editedOutput.pdf_word, imageMap);
+        const pptFileName = generateFileName(topic, 'pptx');
+        const pptPath = await saveFile(pptFileName, pptBase64);
+        files.push({ name: pptFileName, path: pptPath, type: 'pptx' });
+      }
 
-      const files: GeneratedFile[] = [
-        { name: pdfFileName, path: pdfPath, type: 'pdf' },
-        { name: wordFileName, path: wordPath, type: 'docx' },
-        { name: pptFileName, path: pptPath, type: 'pptx' },
-        { name: excelFileName, path: excelPath, type: 'xlsx' },
-      ];
+      if (outputFormats.includes('xlsx')) {
+        const excelBuffer = await generateExcel(editedOutput.excel, editedOutput.pdf_word, imageMap);
+        const excelFileName = generateFileName(topic, 'xlsx');
+        const excelBase64 = excelBuffer.toString('base64');
+        const excelPath = await saveFile(excelFileName, excelBase64);
+        files.push({ name: excelFileName, path: excelPath, type: 'xlsx' });
+      }
 
       await addHistoryEntry({
         id: generateId(),

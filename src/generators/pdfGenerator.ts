@@ -63,10 +63,11 @@ export async function generatePDF(
 
   // ─── Title Page ──────────────────────────────────────────
   const titlePage = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
-  const titleWidth = fontBold.widthOfTextAtSize(data.title, FONT_SIZE_TITLE);
+  const safeTitle = sanitizeForWinAnsi(data.title);
+  const titleWidth = fontBold.widthOfTextAtSize(safeTitle, FONT_SIZE_TITLE);
   const titleX = Math.max(MARGIN, (PAGE_WIDTH - titleWidth) / 2);
 
-  titlePage.drawText(data.title, {
+  titlePage.drawText(safeTitle, {
     x: titleX,
     y: PAGE_HEIGHT / 2 + 40,
     size: FONT_SIZE_TITLE,
@@ -75,7 +76,7 @@ export async function generatePDF(
     maxWidth: CONTENT_WIDTH,
   });
 
-  const authorText = `By ${data.author || 'AI Writer'}`;
+  const authorText = sanitizeForWinAnsi(`By ${data.author || 'AI Writer'}`);
   const authorWidth = fontRegular.widthOfTextAtSize(authorText, FONT_SIZE_AUTHOR);
   titlePage.drawText(authorText, {
     x: (PAGE_WIDTH - authorWidth) / 2,
@@ -85,7 +86,7 @@ export async function generatePDF(
     color: COLOR_AUTHOR,
   });
 
-  const langText = `Language: ${data.language}`;
+  const langText = sanitizeForWinAnsi(`Language: ${data.language}`);
   const langWidth = fontRegular.widthOfTextAtSize(langText, FONT_SIZE_BODY);
   titlePage.drawText(langText, {
     x: (PAGE_WIDTH - langWidth) / 2,
@@ -108,7 +109,7 @@ export async function generatePDF(
 
     // Section heading
     yPos -= FONT_SIZE_HEADING * LINE_HEIGHT;
-    currentPage.drawText(section.heading, {
+    currentPage.drawText(sanitizeForWinAnsi(section.heading), {
       x: MARGIN,
       y: yPos,
       size: FONT_SIZE_HEADING,
@@ -201,7 +202,7 @@ export async function generatePDF(
           yPos -= imgHeight + 6;
 
           // Photo credit
-          const creditText = `Photo: ${img.photographer} / Pexels`;
+          const creditText = sanitizeForWinAnsi(`Photo: ${img.photographer} / Pexels`);
           const creditWidth = fontRegular.widthOfTextAtSize(creditText, 8);
           currentPage.drawText(creditText, {
             x: MARGIN + (CONTENT_WIDTH - creditWidth) / 2,
@@ -226,7 +227,60 @@ export async function generatePDF(
 // ─── Utilities ──────────────────────────────────────────────────
 
 /**
+ * Sanitize text for WinAnsi encoding.
+ * StandardFonts in pdf-lib only support WinAnsi (code-page 1252).
+ * Characters outside that range (Chinese, Arabic, Hindi, etc.) will
+ * throw "WinAnsi cannot encode" errors.
+ *
+ * Strategy: keep all WinAnsi-safe codepoints; replace everything else
+ * with a transliterated form when possible, otherwise "?".
+ */
+function sanitizeForWinAnsi(text: string): string {
+  // WinAnsi (CP-1252) supports: 0x20-0x7E (Basic Latin), plus
+  // 0x80-0xFF (Latin Supplement) with a few gaps filled by special chars.
+  // Safe set: U+0020..U+007E, U+00A0..U+00FF, plus the CP-1252 extras.
+  const CP1252_EXTRAS = new Set([
+    0x20AC, 0x201A, 0x0192, 0x201E, 0x2026, 0x2020, 0x2021,
+    0x02C6, 0x2030, 0x0160, 0x2039, 0x0152, 0x017D,
+    0x2018, 0x2019, 0x201C, 0x201D, 0x2022, 0x2013, 0x2014,
+    0x02DC, 0x2122, 0x0161, 0x203A, 0x0153, 0x017E, 0x0178,
+  ]);
+
+  let result = '';
+  for (let i = 0; i < text.length; i++) {
+    const code = text.charCodeAt(i);
+    if (
+      (code >= 0x20 && code <= 0x7E) ||
+      (code >= 0xA0 && code <= 0xFF) ||
+      code === 0x09 || code === 0x0A || code === 0x0D ||
+      CP1252_EXTRAS.has(code)
+    ) {
+      result += text[i];
+    } else {
+      // Replace common Unicode punctuation / symbols
+      result += replaceFallback(code, text, i);
+    }
+  }
+  return result;
+}
+
+/** Best-effort fallback for non-WinAnsi characters. */
+function replaceFallback(code: number, _src: string, _idx: number): string {
+  // Smart quotes, dashes, bullets
+  if (code === 0x2018 || code === 0x2019) return "'";
+  if (code === 0x201C || code === 0x201D) return '"';
+  if (code === 0x2013 || code === 0x2014) return '-';
+  if (code === 0x2022) return '*';
+  if (code === 0x2026) return '...';
+  if (code === 0x00AB || code === 0x00BB) return '"';
+  // For anything else (CJK, Arabic, Devanagari, etc.) use space or ?
+  // This preserves layout without crashing.
+  return '?';
+}
+
+/**
  * Simple word-wrap utility for PDF text rendering.
+ * Text is sanitized for WinAnsi before measuring.
  */
 function wrapText(
   text: string,
@@ -234,7 +288,8 @@ function wrapText(
   fontSize: number,
   maxWidth: number
 ): string[] {
-  const words = text.split(' ');
+  const safe = sanitizeForWinAnsi(text);
+  const words = safe.split(' ');
   const lines: string[] = [];
   let currentLine = '';
 

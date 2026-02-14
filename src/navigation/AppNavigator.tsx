@@ -27,6 +27,8 @@ import EditorScreen from '../screens/EditorScreen';
 
 // ─── Types ──────────────────────────────────────────────────────
 
+export type OutputFormat = 'pdf' | 'docx' | 'pptx' | 'xlsx';
+
 export type RootStackParamList = {
   Home: undefined;
   Processing: {
@@ -35,6 +37,12 @@ export type RootStackParamList = {
     languageCode: string;
     uploadedFileUri?: string | null;
     uploadedFileName?: string | null;
+    outputFormats: OutputFormat[];
+    optSummarize?: boolean;
+    optTranslate?: boolean;
+    translateLanguage?: string | null;
+    translateLanguageCode?: string | null;
+    optTables?: boolean;
   };
   Translate: undefined;
   Summarize: undefined;
@@ -56,6 +64,7 @@ export type RootStackParamList = {
     aiOutput: AIWriterOutput;
     topic: string;
     language: string;
+    outputFormats: OutputFormat[];
   };
   Result: {
     topic: string;
