@@ -54,14 +54,31 @@ export default function ResultScreen({ route, navigation }: ResultScreenProps) {
   const { t } = useTranslation();
 
   // ─── Preview ──────────────────────────────────────────────
-  const handlePreview = (file: GeneratedFile) => {
-    // In a full implementation, this would open a file-type-specific viewer
-    // For now, navigate to a preview screen or use an external viewer
-    Alert.alert(
-      t('alert_preview_title'),
-      t('alert_preview_msg', { name: file.name }),
-      [{ text: t('alert_ok') }]
-    );
+  const handlePreview = async (file: GeneratedFile) => {
+    try {
+      // Verify the file exists
+      const fileInfo = await FileSystem.getInfoAsync(file.path);
+      if (!fileInfo.exists) {
+        Alert.alert(t('alert_error'), t('alert_file_not_found'));
+        return;
+      }
+
+      // Check if sharing is available
+      const isAvailable = await Sharing.isAvailableAsync();
+      if (!isAvailable) {
+        Alert.alert(t('alert_error'), t('alert_sharing_not_available_msg'));
+        return;
+      }
+
+      // Use share sheet which allows "Open with" external apps
+      await Sharing.shareAsync(file.path, {
+        mimeType: getMimeType(file.type),
+        dialogTitle: file.name,
+      });
+    } catch (error) {
+      console.error('Preview error:', error);
+      Alert.alert(t('alert_error'), t('alert_preview_failed'));
+    }
   };
 
   // ─── Download (Copy to Downloads) ─────────────────────────

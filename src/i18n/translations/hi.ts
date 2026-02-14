@@ -97,6 +97,7 @@ const hi: Record<string, string> = {
   alert_downloaded_title: 'डाउनलोड हो गया',
   alert_downloaded_msg: '{{name}} सफलतापूर्वक सहेजा गया।',
   alert_download_failed: 'फ़ाइल डाउनलोड विफल। कृपया पुनः प्रयास करें।',
+  alert_preview_failed: 'प्रीव्यू के लिए फ़ाइल नहीं खोली जा सकी। कृपया पुनः प्रयास करें।',
   alert_empty_content_title: 'खाली सामग्री',
   alert_empty_content_msg: 'अपलोड की गई फ़ाइल खाली लगती है या केवल रिक्त स्थान है।',
   alert_short_content_title: 'बहुत छोटी सामग्री',

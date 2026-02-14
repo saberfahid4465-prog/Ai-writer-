@@ -97,6 +97,7 @@ const es: Record<string, string> = {
   alert_downloaded_title: 'Descargado',
   alert_downloaded_msg: '{{name}} se ha guardado correctamente.',
   alert_download_failed: 'Error al descargar el archivo. Inténtalo de nuevo.',
+  alert_preview_failed: 'Error al abrir el archivo para vista previa. Inténtalo de nuevo.',
   alert_empty_content_title: 'Contenido Vacío',
   alert_empty_content_msg: 'El archivo subido parece estar vacío o contiene solo espacios en blanco.',
   alert_short_content_title: 'Contenido Muy Corto',

@@ -97,6 +97,7 @@ const tr: Record<string, string> = {
   alert_downloaded_title: 'İndirildi',
   alert_downloaded_msg: '{{name}} başarıyla kaydedildi.',
   alert_download_failed: 'Dosya indirilemedi. Lütfen tekrar deneyin.',
+  alert_preview_failed: 'Dosya önizleme için açılamadı. Lütfen tekrar deneyin.',
   alert_empty_content_title: 'Boş İçerik',
   alert_empty_content_msg: 'Yüklenen dosya boş görünüyor veya yalnızca boşluk içeriyor.',
   alert_short_content_title: 'Çok Kısa İçerik',

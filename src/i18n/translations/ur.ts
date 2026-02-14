@@ -97,6 +97,7 @@ const ur: Record<string, string> = {
   alert_downloaded_title: 'ڈاؤنلوڈ ہو گیا',
   alert_downloaded_msg: '{{name}} کامیابی سے محفوظ ہو گیا۔',
   alert_download_failed: 'فائل ڈاؤنلوڈ ناکام۔ براہ کرم دوبارہ کوشش کریں۔',
+  alert_preview_failed: 'پریویو کے لیے فائل نہیں کھل سکی۔ براہ کرم دوبارہ کوشش کریں۔',
   alert_empty_content_title: 'خالی مواد',
   alert_empty_content_msg: 'اپلوڈ کی گئی فائل خالی لگتی ہے یا صرف خالی جگہیں ہیں۔',
   alert_short_content_title: 'بہت مختصر مواد',

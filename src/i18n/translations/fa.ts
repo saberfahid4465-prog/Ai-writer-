@@ -97,6 +97,7 @@ const fa: Record<string, string> = {
   alert_downloaded_title: 'دانلود شد',
   alert_downloaded_msg: '{{name}} با موفقیت ذخیره شد.',
   alert_download_failed: 'دانلود فایل ناموفق بود. لطفاً دوباره تلاش کنید.',
+  alert_preview_failed: 'باز کردن فایل برای پیش‌نمایش ناموفق بود. لطفاً دوباره تلاش کنید.',
   alert_empty_content_title: 'محتوای خالی',
   alert_empty_content_msg: 'فایل آپلود شده خالی به نظر می‌رسد یا فقط شامل فاصله است.',
   alert_short_content_title: 'محتوای بسیار کوتاه',

@@ -97,6 +97,7 @@ const de: Record<string, string> = {
   alert_downloaded_title: 'Heruntergeladen',
   alert_downloaded_msg: '{{name}} wurde erfolgreich gespeichert.',
   alert_download_failed: 'Herunterladen fehlgeschlagen. Bitte versuche es erneut.',
+  alert_preview_failed: 'Datei konnte nicht zur Vorschau geöffnet werden. Bitte versuche es erneut.',
   alert_empty_content_title: 'Leerer Inhalt',
   alert_empty_content_msg: 'Die hochgeladene Datei scheint leer zu sein oder enthält nur Leerzeichen.',
   alert_short_content_title: 'Sehr kurzer Inhalt',

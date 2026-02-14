@@ -97,6 +97,7 @@ const fr: Record<string, string> = {
   alert_downloaded_title: 'Téléchargé',
   alert_downloaded_msg: '{{name}} a été enregistré avec succès.',
   alert_download_failed: 'Échec du téléchargement. Veuillez réessayer.',
+  alert_preview_failed: 'Échec de l\'ouverture du fichier pour aperçu. Veuillez réessayer.',
   alert_empty_content_title: 'Contenu Vide',
   alert_empty_content_msg: 'Le fichier téléchargé semble être vide ou ne contient que des espaces.',
   alert_short_content_title: 'Contenu Très Court',

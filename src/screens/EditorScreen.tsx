@@ -111,7 +111,7 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatingStatus, setGeneratingStatus] = useState('');
   const [expandedSection, setExpandedSection] = useState<number | null>(0);
-  const [viewMode, setViewMode] = useState<ViewMode>('edit');
+  const [viewMode, setViewMode] = useState<ViewMode>('preview');
   const [aiLoadingSection, setAiLoadingSection] = useState<number | null>(null);
   const [showAiMenu, setShowAiMenu] = useState<number | null>(null);
 

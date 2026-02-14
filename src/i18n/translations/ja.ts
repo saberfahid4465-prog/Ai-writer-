@@ -97,6 +97,7 @@ const ja: Record<string, string> = {
   alert_downloaded_title: 'ダウンロード完了',
   alert_downloaded_msg: '{{name}}が正常に保存されました。',
   alert_download_failed: 'ダウンロードに失敗しました。もう一度お試しください。',
+  alert_preview_failed: 'ファイルをプレビュー用に開けませんでした。もう一度お試しください。',
   alert_empty_content_title: '空のコンテンツ',
   alert_empty_content_msg: 'アップロードされたファイルは空か、空白のみのようです。',
   alert_short_content_title: '非常に短いコンテンツ',

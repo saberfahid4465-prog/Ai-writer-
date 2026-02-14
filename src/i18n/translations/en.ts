@@ -118,6 +118,7 @@ const en = {
   alert_downloaded_title: 'Downloaded',
   alert_downloaded_msg: '{{name}} has been saved successfully.',
   alert_download_failed: 'Failed to download file. Please try again.',
+  alert_preview_failed: 'Failed to open file for preview. Please try again.',
   alert_permission_denied: 'Storage permission is required to download files. Please grant access and try again.',
   alert_file_warning_title: 'File Read Warning',
   alert_file_warning_continue: 'Would you like to continue without the uploaded file?',

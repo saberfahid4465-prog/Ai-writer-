@@ -97,6 +97,7 @@ const ru: Record<string, string> = {
   alert_downloaded_title: 'Скачано',
   alert_downloaded_msg: '{{name}} успешно сохранён.',
   alert_download_failed: 'Не удалось скачать файл. Попробуйте ещё раз.',
+  alert_preview_failed: 'Не удалось открыть файл для предпросмотра. Попробуйте ещё раз.',
   alert_empty_content_title: 'Пустое содержимое',
   alert_empty_content_msg: 'Загруженный файл пуст или содержит только пробелы.',
   alert_short_content_title: 'Очень короткое содержимое',

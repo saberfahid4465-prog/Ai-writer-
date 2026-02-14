@@ -97,6 +97,7 @@ const zh: Record<string, string> = {
   alert_downloaded_title: '已下载',
   alert_downloaded_msg: '{{name}} 已成功保存。',
   alert_download_failed: '下载失败。请重试。',
+  alert_preview_failed: '无法打开文件进行预览。请重试。',
   alert_empty_content_title: '空内容',
   alert_empty_content_msg: '上传的文件似乎为空或仅包含空格。',
   alert_short_content_title: '内容过短',

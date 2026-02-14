@@ -108,6 +108,7 @@ const ar: Record<string, string> = {
   alert_downloaded_title: 'تم التنزيل',
   alert_downloaded_msg: 'تم حفظ {{name}} بنجاح.',
   alert_download_failed: 'فشل تنزيل الملف. حاول مرة أخرى.',
+  alert_preview_failed: 'فشل فتح الملف للمعاينة. حاول مرة أخرى.',
   alert_empty_content_title: 'محتوى فارغ',
   alert_empty_content_msg: 'يبدو أن الملف المرفوع فارغ أو يحتوي على مسافات فقط.',
   alert_short_content_title: 'محتوى قصير جداً',

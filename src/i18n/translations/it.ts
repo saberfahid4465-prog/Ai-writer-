@@ -97,6 +97,7 @@ const it: Record<string, string> = {
   alert_downloaded_title: 'Scaricato',
   alert_downloaded_msg: '{{name}} è stato salvato con successo.',
   alert_download_failed: 'Scaricamento fallito. Riprova.',
+  alert_preview_failed: 'Impossibile aprire il file per l\'anteprima. Riprova.',
   alert_empty_content_title: 'Contenuto Vuoto',
   alert_empty_content_msg: 'Il file caricato sembra essere vuoto o contiene solo spazi.',
   alert_short_content_title: 'Contenuto Molto Breve',

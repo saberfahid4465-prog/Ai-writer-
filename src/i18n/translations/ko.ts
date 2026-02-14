@@ -97,6 +97,7 @@ const ko: Record<string, string> = {
   alert_downloaded_title: '다운로드 완료',
   alert_downloaded_msg: '{{name}}이(가) 성공적으로 저장되었습니다.',
   alert_download_failed: '파일 다운로드에 실패했습니다. 다시 시도해주세요.',
+  alert_preview_failed: '파일을 미리보기로 열 수 없습니다. 다시 시도해주세요.',
   alert_empty_content_title: '빈 콘텐츠',
   alert_empty_content_msg: '업로드된 파일이 비어 있거나 공백만 포함되어 있습니다.',
   alert_short_content_title: '매우 짧은 콘텐츠',
