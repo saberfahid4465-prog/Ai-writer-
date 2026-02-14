@@ -663,6 +663,12 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
 
             {/* Sections */}
             {sections.map((section, sIndex) => {
+              if (!section) return null;
+              // Safe property access for render
+              const secHeading = typeof section.heading === 'string' ? section.heading : '';
+              const secParagraph = typeof section.paragraph === 'string' ? section.paragraph : '';
+              const secBullets = Array.isArray(section.bullets) ? section.bullets : [];
+
               const isExpanded = expandedSection === sIndex;
               const isAiLoading = aiLoadingSection === sIndex;
               return (
@@ -688,10 +694,10 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
                           style={[styles.sectionTitle, { color: colors.textPrimary }]}
                           numberOfLines={1}
                         >
-                          {section.heading || t('editor_untitled_section')}
+                          {secHeading || t('editor_untitled_section')}
                         </Text>
                         <Text style={[styles.sectionMeta, { color: colors.textMuted }]}>
-                          {t('editor_section_meta', { n: String(sectionWordCount(section)), m: String(section.bullets.length) })}
+                          {t('editor_section_meta', { n: String(sectionWordCount(section)), m: String(secBullets.length) })}
                         </Text>
                       </View>
                     </View>
@@ -783,7 +789,7 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
                           color: colors.inputText,
                           ...rtlStyle,
                         }]}
-                        value={section.heading}
+                        value={secHeading}
                         onChangeText={(v) => updateSection(sIndex, 'heading', v)}
                         placeholder={t('editor_heading_placeholder')}
                         placeholderTextColor={colors.placeholder}
@@ -799,7 +805,7 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
                           color: colors.inputText,
                           ...rtlStyle,
                         }]}
-                        value={section.paragraph}
+                        value={secParagraph}
                         onChangeText={(v) => updateSection(sIndex, 'paragraph', v)}
                         placeholder={t('editor_content_placeholder')}
                         placeholderTextColor={colors.placeholder}
@@ -812,7 +818,7 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
                       {/* Bullets */}
                       <View style={styles.bulletsHeader}>
                         <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>
-                          {t('editor_key_points_label', { n: String(section.bullets.length) })}
+                          {t('editor_key_points_label', { n: String(secBullets.length) })}
                         </Text>
                         <TouchableOpacity
                           style={[styles.addBulletBtn, { backgroundColor: colors.primaryLight }]}
@@ -822,7 +828,7 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
                         </TouchableOpacity>
                       </View>
 
-                      {section.bullets.map((bullet, bIndex) => (
+                      {secBullets.map((bullet, bIndex) => (
                         <View key={bIndex} style={styles.bulletRow}>
                           <Text style={[styles.bulletDot, { color: colors.primary }]}>•</Text>
                           <TextInput
@@ -832,13 +838,13 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
                               color: colors.inputText,
                               ...rtlStyle,
                             }]}
-                            value={bullet}
+                            value={typeof bullet === 'string' ? bullet : ''}
                             onChangeText={(v) => updateBullet(sIndex, bIndex, v)}
                             placeholder={t('editor_bullet_placeholder')}
                             placeholderTextColor={colors.placeholder}
                             maxFontSizeMultiplier={1.3}
                           />
-                          {section.bullets.length > 1 && (
+                          {secBullets.length > 1 && (
                             <TouchableOpacity
                               style={styles.removeBulletBtn}
                               onPress={() => removeBullet(sIndex, bIndex)}
