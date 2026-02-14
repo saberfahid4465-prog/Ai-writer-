@@ -47,11 +47,16 @@ export async function generateWord(
 ): Promise<string> {
   const children: Paragraph[] = [];
 
+  // Detect RTL languages
+  const rtlLanguages = ['arabic', 'hebrew', 'persian', 'farsi', 'urdu'];
+  const isRTL = rtlLanguages.some(lang => data.language.toLowerCase().includes(lang));
+
   // ─── Title ───────────────────────────────────────────────
   children.push(
     new Paragraph({
       alignment: AlignmentType.CENTER,
       spacing: { after: 400 },
+      bidirectional: isRTL,
       children: [
         new TextRun({
           text: data.title,
@@ -59,6 +64,7 @@ export async function generateWord(
           size: 56, // 28pt
           color: THEME_COLOR_PRIMARY,
           font: FONT_FAMILY,
+          rightToLeft: isRTL,
         }),
       ],
     })
@@ -119,6 +125,7 @@ export async function generateWord(
       new Paragraph({
         heading: HeadingLevel.HEADING_1,
         spacing: { before: 400, after: 200 },
+        bidirectional: isRTL,
         children: [
           new TextRun({
             text: section.heading,
@@ -126,6 +133,7 @@ export async function generateWord(
             size: 36, // 18pt
             color: THEME_COLOR_PRIMARY,
             font: FONT_FAMILY,
+            rightToLeft: isRTL,
           }),
         ],
       })
@@ -135,12 +143,14 @@ export async function generateWord(
     children.push(
       new Paragraph({
         spacing: { after: 200 },
+        bidirectional: isRTL,
         children: [
           new TextRun({
             text: section.paragraph,
             size: 24, // 12pt
             color: THEME_COLOR_BODY,
             font: FONT_FAMILY,
+            rightToLeft: isRTL,
           }),
         ],
       })
@@ -155,12 +165,14 @@ export async function generateWord(
           indent: {
             left: convertInchesToTwip(0.5),
           },
+          bidirectional: isRTL,
           children: [
             new TextRun({
               text: bullet,
               size: 22, // 11pt
               color: THEME_COLOR_BODY,
               font: FONT_FAMILY,
+              rightToLeft: isRTL,
             }),
           ],
         })

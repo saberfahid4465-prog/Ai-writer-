@@ -17,6 +17,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { HistoryEntry, loadHistory, deleteHistoryEntry, clearAllHistory } from '../utils/fileStorage';
 import { useTheme } from '../utils/themeContext';
+import { useTranslation } from '../i18n/i18nContext';
 
 // ─── Types ──────────────────────────────────────────────────────
 
@@ -30,6 +31,7 @@ export default function HistoryScreen({ navigation }: HistoryScreenProps) {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   // Reload history whenever the screen is focused
   useFocusEffect(
@@ -47,12 +49,12 @@ export default function HistoryScreen({ navigation }: HistoryScreenProps) {
   // ─── Delete Single Entry ──────────────────────────────────
   const handleDelete = (entry: HistoryEntry) => {
     Alert.alert(
-      'Delete Generation',
-      `Delete "${entry.topic}" and all its files?`,
+      t('alert_delete_gen_title'),
+      t('alert_delete_gen_msg', { topic: entry.topic }),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('alert_cancel'), style: 'cancel' },
         {
-          text: 'Delete',
+          text: t('alert_delete'),
           style: 'destructive',
           onPress: async () => {
             await deleteHistoryEntry(entry.id);
@@ -66,12 +68,12 @@ export default function HistoryScreen({ navigation }: HistoryScreenProps) {
   // ─── Clear All ────────────────────────────────────────────
   const handleClearAll = () => {
     Alert.alert(
-      'Clear All History',
-      'This will delete all generated files. This cannot be undone.',
+      t('alert_clear_all_title'),
+      t('alert_clear_all_msg'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('alert_cancel'), style: 'cancel' },
         {
-          text: 'Clear All',
+          text: t('alert_clear_all_btn'),
           style: 'destructive',
           onPress: async () => {
             await clearAllHistory();
@@ -124,14 +126,14 @@ export default function HistoryScreen({ navigation }: HistoryScreenProps) {
           style={[styles.cardButton, { backgroundColor: colors.primaryLight }]}
           onPress={() => handleView(item)}
         >
-          <Text style={[styles.viewButtonText, { color: colors.primary }]}>View</Text>
+          <Text style={[styles.viewButtonText, { color: colors.primary }]}>{t('history_view')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.cardButton, { backgroundColor: colors.dangerLight }]}
           onPress={() => handleDelete(item)}
         >
-          <Text style={[styles.deleteButtonText, { color: colors.danger }]}>Delete</Text>
+          <Text style={[styles.deleteButtonText, { color: colors.danger }]}>{t('history_delete')}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -141,15 +143,15 @@ export default function HistoryScreen({ navigation }: HistoryScreenProps) {
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
       <Text style={styles.emptyIcon}>📁</Text>
-      <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No History Yet</Text>
+      <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>{t('history_empty_title')}</Text>
       <Text style={[styles.emptySubtitle, { color: colors.textMuted }]}>
-        Your generated documents will appear here.
+        {t('history_empty_subtitle')}
       </Text>
       <TouchableOpacity
         style={[styles.emptyButton, { backgroundColor: colors.primary }]}
         onPress={() => navigation.navigate('HomeTabs')}
       >
-        <Text style={styles.emptyButtonText}>✨ Generate Your First File</Text>
+        <Text style={styles.emptyButtonText}>{t('history_empty_btn')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -159,10 +161,10 @@ export default function HistoryScreen({ navigation }: HistoryScreenProps) {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>📁 History</Text>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>{t('history_title')}</Text>
         {history.length > 0 && (
           <TouchableOpacity onPress={handleClearAll}>
-            <Text style={[styles.clearAllText, { color: colors.danger }]}>Clear All</Text>
+            <Text style={[styles.clearAllText, { color: colors.danger }]}>{t('history_clear_all')}</Text>
           </TouchableOpacity>
         )}
       </View>

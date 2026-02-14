@@ -35,8 +35,8 @@ interface LongcatAPIResponse {
   };
 }
 
-const MAX_RETRIES = 3;
-const RETRY_DELAY_MS = 1000;
+const MAX_RETRIES = 2;
+const RETRY_DELAY_MS = 500;
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -61,6 +61,8 @@ async function callLongcatAPI(
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
       const response = await fetch(LONGCAT_API_URL, {
         method: 'POST',
         headers: {
@@ -70,10 +72,12 @@ async function callLongcatAPI(
         body: JSON.stringify({
           model: LONGCAT_MODEL,
           messages,
-          temperature: 0.7,
-          max_tokens: 4096,
+          temperature: 0.5,
+          max_tokens: 2048,
         }),
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         throw new Error(`API returned status ${response.status}: ${response.statusText}`);

@@ -15,6 +15,7 @@
 import ExcelJS from 'exceljs';
 import { ExcelData, PdfWordData } from '../ai/responseParser';
 import { DocumentImage } from '../services/pexelsService';
+import { uint8ArrayToBase64 } from '../utils/base64Polyfill';
 
 // ─── Theme Constants ────────────────────────────────────────────
 
@@ -205,8 +206,10 @@ export async function generateExcel(
         });
 
         try {
+          // Convert Uint8Array to base64 for ExcelJS (Buffer not available in Hermes)
+          const imgBase64 = uint8ArrayToBase64(img.imageBytes);
           const imageId = workbook.addImage({
-            buffer: Buffer.from(img.imageBytes) as any,
+            base64: imgBase64,
             extension: 'jpeg',
           });
           imgSheet.addImage(imageId, {
@@ -230,9 +233,5 @@ export async function generateExcel(
   // ─── Export as base64 (safe for React Native) ─────────
   const arrayBuffer = await workbook.xlsx.writeBuffer();
   const bytes = new Uint8Array(arrayBuffer as ArrayBuffer);
-  let binary = '';
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
+  return uint8ArrayToBase64(bytes);
 }

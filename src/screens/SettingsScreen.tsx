@@ -9,7 +9,7 @@
  * - App version info
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -18,7 +18,9 @@ import {
   TouchableOpacity,
   Switch,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { useTheme } from '../utils/themeContext';
+import { useTranslation, APP_LANGUAGES } from '../i18n/i18nContext';
 import { getUsageDisplay, DAILY_TOKEN_LIMIT } from '../utils/tokenUsage';
 
 interface SettingsScreenProps {
@@ -27,16 +29,21 @@ interface SettingsScreenProps {
 
 export default function SettingsScreen({ navigation }: SettingsScreenProps) {
   const { mode, isDark, colors, setMode } = useTheme();
+  const { t, language, preference, setLanguage } = useTranslation();
   const [tokenUsage, setTokenUsage] = useState({ used: 0, limit: DAILY_TOKEN_LIMIT, remaining: DAILY_TOKEN_LIMIT, percentage: 0 });
+  const [showLangPicker, setShowLangPicker] = useState(false);
 
-  useEffect(() => {
-    getUsageDisplay().then(setTokenUsage);
-  }, []);
+  // Refresh token usage every time Settings screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      getUsageDisplay().then(setTokenUsage);
+    }, [])
+  );
 
   const themeOptions: Array<{ label: string; value: 'light' | 'dark' | 'system'; icon: string }> = [
-    { label: 'Light', value: 'light', icon: '☀️' },
-    { label: 'Dark', value: 'dark', icon: '🌙' },
-    { label: 'System', value: 'system', icon: '⚙️' },
+    { label: t('theme_light'), value: 'light', icon: '☀️' },
+    { label: t('theme_dark'), value: 'dark', icon: '🌙' },
+    { label: t('theme_system'), value: 'system', icon: '⚙️' },
   ];
 
   return (
@@ -46,15 +53,15 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
     >
       {/* Header */}
       <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>⚙️ Settings</Text>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>{t('settings_title')}</Text>
       </View>
 
       {/* ─── Appearance Section ──────────────────────────────── */}
-      <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>APPEARANCE</Text>
+      <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>{t('settings_appearance_section').toUpperCase()}</Text>
       <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Theme</Text>
+        <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>{t('settings_theme_title')}</Text>
         <Text style={[styles.cardSubtitle, { color: colors.textMuted }]}>
-          Choose how AI Writer looks
+          {t('settings_theme_subtitle')}
         </Text>
 
         <View style={styles.themeOptions}>
@@ -85,11 +92,49 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
         </View>
       </View>
 
+      {/* ─── Language Section ────────────────────────────────── */}
+      <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>{t('settings_language_section').toUpperCase()}</Text>
+      <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>{t('settings_app_language_title')}</Text>
+        <Text style={[styles.cardSubtitle, { color: colors.textMuted }]}>{t('settings_app_language_subtitle')}</Text>
+        <TouchableOpacity
+          style={[styles.langPickerBtn, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}
+          onPress={() => setShowLangPicker(!showLangPicker)}
+        >
+          <Text style={[styles.langPickerText, { color: colors.textPrimary }]}>
+            {APP_LANGUAGES.find(l => l.code === preference)?.nativeName || t('settings_language_auto')}
+          </Text>
+          <Text style={[styles.langPickerArrow, { color: colors.textMuted }]}>{showLangPicker ? '▲' : '▼'}</Text>
+        </TouchableOpacity>
+        {showLangPicker && (
+          <View style={[styles.langDropdown, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <ScrollView nestedScrollEnabled style={{ maxHeight: 260 }}>
+              {APP_LANGUAGES.map((lang) => (
+                <TouchableOpacity
+                  key={lang.code}
+                  style={[
+                    styles.langDropdownItem,
+                    { borderBottomColor: colors.borderLight },
+                    lang.code === preference && { backgroundColor: colors.primaryLight },
+                  ]}
+                  onPress={() => { setLanguage(lang.code); setShowLangPicker(false); }}
+                >
+                  <Text style={[styles.langDropdownLabel, { color: lang.code === preference ? colors.primary : colors.textPrimary }]}>
+                    {lang.nativeName}
+                  </Text>
+                  <Text style={[styles.langDropdownSub, { color: colors.textMuted }]}>{lang.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+      </View>
+
       {/* ─── Daily Usage Section ─────────────────────────────── */}
-      <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>DAILY USAGE</Text>
+      <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>{t('settings_daily_usage_section').toUpperCase()}</Text>
       <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <View style={styles.usageRow}>
-          <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>⚡ Token Usage</Text>
+          <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>{t('settings_token_usage_title')}</Text>
           <Text style={[styles.usageCount, { color: colors.textMuted }]}>
             {tokenUsage.used.toLocaleString()} / {tokenUsage.limit.toLocaleString()}
           </Text>
@@ -104,12 +149,12 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
           ]} />
         </View>
         <Text style={[styles.usageNote, { color: colors.textMuted }]}>
-          {tokenUsage.remaining.toLocaleString()} tokens remaining • Resets daily at midnight
+          {t('settings_usage_note', { n: tokenUsage.remaining.toLocaleString() })}
         </Text>
       </View>
 
       {/* ─── Premium Section ─────────────────────────────────── */}
-      <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>SUBSCRIPTION</Text>
+      <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>{t('settings_subscription_section').toUpperCase()}</Text>
       <TouchableOpacity
         style={[styles.premiumCard, { borderColor: colors.border }]}
         activeOpacity={0.85}
@@ -117,35 +162,35 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
       >
         <View style={styles.premiumGradient}>
           <View style={styles.premiumBadge}>
-            <Text style={styles.premiumBadgeText}>COMING SOON</Text>
+            <Text style={styles.premiumBadgeText}>{t('settings_coming_soon_badge').toUpperCase()}</Text>
           </View>
           <Text style={styles.premiumIcon}>👑</Text>
-          <Text style={styles.premiumTitle}>AI Writer Premium</Text>
+          <Text style={styles.premiumTitle}>{t('settings_premium_title')}</Text>
           <Text style={styles.premiumSubtitle}>
-            Unlimited generations, priority AI, custom templates, and more
+            {t('settings_premium_subtitle')}
           </Text>
           <View style={styles.premiumFeatures}>
-            <Text style={styles.premiumFeature}>✦ Unlimited document generations</Text>
-            <Text style={styles.premiumFeature}>✦ Priority AI processing</Text>
-            <Text style={styles.premiumFeature}>✦ Custom branding & templates</Text>
-            <Text style={styles.premiumFeature}>✦ Advanced export options</Text>
-            <Text style={styles.premiumFeature}>✦ No watermarks</Text>
+            <Text style={styles.premiumFeature}>{t('settings_premium_feature_1')}</Text>
+            <Text style={styles.premiumFeature}>{t('settings_premium_feature_2')}</Text>
+            <Text style={styles.premiumFeature}>{t('settings_premium_feature_3')}</Text>
+            <Text style={styles.premiumFeature}>{t('settings_premium_feature_4')}</Text>
+            <Text style={styles.premiumFeature}>{t('settings_premium_feature_5')}</Text>
           </View>
           <View style={styles.premiumBtn}>
-            <Text style={styles.premiumBtnText}>Learn More →</Text>
+            <Text style={styles.premiumBtnText}>{t('settings_learn_more')}</Text>
           </View>
         </View>
       </TouchableOpacity>
 
       {/* ─── Legal Section ────────────────────────────────────── */}
-      <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>LEGAL</Text>
+      <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>{t('settings_legal_section').toUpperCase()}</Text>
       <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <TouchableOpacity
           style={[styles.menuItem, { borderBottomColor: colors.borderLight }]}
           onPress={() => navigation.navigate('Privacy')}
         >
           <Text style={[styles.menuIcon]}>🔒</Text>
-          <Text style={[styles.menuLabel, { color: colors.textPrimary }]}>Privacy Policy</Text>
+          <Text style={[styles.menuLabel, { color: colors.textPrimary }]}>{t('settings_privacy_policy')}</Text>
           <Text style={[styles.menuArrow, { color: colors.textMuted }]}>›</Text>
         </TouchableOpacity>
 
@@ -154,16 +199,16 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
           onPress={() => navigation.navigate('Terms')}
         >
           <Text style={[styles.menuIcon]}>📋</Text>
-          <Text style={[styles.menuLabel, { color: colors.textPrimary }]}>Terms of Service</Text>
+          <Text style={[styles.menuLabel, { color: colors.textPrimary }]}>{t('settings_terms_of_service')}</Text>
           <Text style={[styles.menuArrow, { color: colors.textMuted }]}>›</Text>
         </TouchableOpacity>
       </View>
 
       {/* ─── About ───────────────────────────────────────────── */}
       <View style={styles.footer}>
-        <Text style={[styles.footerText, { color: colors.textMuted }]}>AI Writer v1.0.0</Text>
+        <Text style={[styles.footerText, { color: colors.textMuted }]}>{t('settings_version')}</Text>
         <Text style={[styles.footerText, { color: colors.textMuted }]}>
-          Powered by Longcat AI
+          {t('settings_powered_by')}
         </Text>
       </View>
     </ScrollView>
@@ -298,6 +343,22 @@ const styles = StyleSheet.create({
   menuIcon: { fontSize: 20, marginRight: 12 },
   menuLabel: { flex: 1, fontSize: 16, fontWeight: '500' },
   menuArrow: { fontSize: 22, fontWeight: '300' },
+
+  // Language Picker
+  langPickerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 14,
+  },
+  langPickerText: { fontSize: 15, fontWeight: '500' },
+  langPickerArrow: { fontSize: 12 },
+  langDropdown: { borderRadius: 12, borderWidth: 1, marginTop: 6, overflow: 'hidden' },
+  langDropdownItem: { paddingVertical: 12, paddingHorizontal: 16, borderBottomWidth: 1, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  langDropdownLabel: { fontSize: 15, fontWeight: '600' },
+  langDropdownSub: { fontSize: 12 },
 
   // Footer
   footer: { alignItems: 'center', marginTop: 24, marginBottom: 20 },

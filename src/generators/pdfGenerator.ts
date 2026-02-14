@@ -13,8 +13,10 @@
  */
 
 import { PDFDocument, rgb, StandardFonts, PDFFont, PDFPage } from 'pdf-lib';
+import fontkit from '@pdf-lib/fontkit';
 import { PdfWordData } from '../ai/responseParser';
 import { DocumentImage } from '../services/pexelsService';
+import { getCachedFont, hasNonLatinText } from '../services/fontCacheService';
 
 // ─── Constants ──────────────────────────────────────────────────
 
@@ -57,40 +59,90 @@ export async function generatePDF(
   pdfDoc.setProducer('AI Writer - pdf-lib');
   pdfDoc.setCreationDate(new Date());
 
-  // Embed fonts
-  const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  // Determine if we need a custom Unicode font
+  const sampleText = data.title + ' ' + (data.sections[0]?.paragraph || '');
+  const isNonLatin = hasNonLatinText(sampleText);
+  let useCustomFont = false;
+  let fontRegular: PDFFont;
+  let fontBold: PDFFont;
+
+  if (isNonLatin) {
+    // Try to load custom Unicode font for non-Latin languages
+    try {
+      const langCode = data.language?.toLowerCase() || '';
+      // Map common language names to codes
+      const langNameToCode: Record<string, string> = {
+        arabic: 'ar', chinese: 'zh', japanese: 'ja', korean: 'ko',
+        hindi: 'hi', urdu: 'ur', persian: 'fa', farsi: 'fa',
+        turkish: 'tr', russian: 'ru',
+      };
+      const code = langNameToCode[langCode] || langCode.split(/[\s-]/)[0] || 'ar';
+      const fontBytes = await getCachedFont(code);
+      if (fontBytes) {
+        pdfDoc.registerFontkit(fontkit);
+        const customFont = await pdfDoc.embedFont(fontBytes, { subset: true });
+        fontRegular = customFont;
+        fontBold = customFont; // Custom fonts don't have bold variant; use same
+        useCustomFont = true;
+      } else {
+        // Fallback to Helvetica + sanitization
+        fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
+        fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+      }
+    } catch (e) {
+      console.warn('Custom font embedding failed, using Helvetica:', e);
+      fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    }
+  } else {
+    // Latin-based: standard Helvetica is fine
+    fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  }
+
+  // Text sanitizer: use raw text for custom fonts, sanitize for Helvetica
+  const safeText = useCustomFont
+    ? (t: string) => t
+    : (t: string) => sanitizeForWinAnsi(t);
 
   // ─── Title Page ──────────────────────────────────────────
   const titlePage = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
-  const safeTitle = sanitizeForWinAnsi(data.title);
-  const titleWidth = fontBold.widthOfTextAtSize(safeTitle, FONT_SIZE_TITLE);
-  const titleX = Math.max(MARGIN, (PAGE_WIDTH - titleWidth) / 2);
+  const safeTitle = safeText(data.title);
 
-  titlePage.drawText(safeTitle, {
-    x: titleX,
-    y: PAGE_HEIGHT / 2 + 40,
-    size: FONT_SIZE_TITLE,
-    font: fontBold,
-    color: COLOR_TITLE,
-    maxWidth: CONTENT_WIDTH,
-  });
+  // Wrap title text to fit within content width
+  const titleLines = wrapText(safeTitle, fontBold, FONT_SIZE_TITLE, CONTENT_WIDTH, (t) => t);
+  const titleLineHeight = FONT_SIZE_TITLE * LINE_HEIGHT;
+  const totalTitleHeight = titleLines.length * titleLineHeight;
+  let titleY = PAGE_HEIGHT / 2 + totalTitleHeight / 2;
 
-  const authorText = sanitizeForWinAnsi(`By ${data.author || 'AI Writer'}`);
+  for (const line of titleLines) {
+    const lineWidth = fontBold.widthOfTextAtSize(line, FONT_SIZE_TITLE);
+    const lineX = Math.max(MARGIN, (PAGE_WIDTH - lineWidth) / 2);
+    titlePage.drawText(line, {
+      x: lineX,
+      y: titleY,
+      size: FONT_SIZE_TITLE,
+      font: fontBold,
+      color: COLOR_TITLE,
+    });
+    titleY -= titleLineHeight;
+  }
+
+  const authorText = safeText(`By ${data.author || 'AI Writer'}`);
   const authorWidth = fontRegular.widthOfTextAtSize(authorText, FONT_SIZE_AUTHOR);
   titlePage.drawText(authorText, {
     x: (PAGE_WIDTH - authorWidth) / 2,
-    y: PAGE_HEIGHT / 2 - 10,
+    y: titleY - 20,
     size: FONT_SIZE_AUTHOR,
     font: fontRegular,
     color: COLOR_AUTHOR,
   });
 
-  const langText = sanitizeForWinAnsi(`Language: ${data.language}`);
+  const langText = safeText(`Language: ${data.language}`);
   const langWidth = fontRegular.widthOfTextAtSize(langText, FONT_SIZE_BODY);
   titlePage.drawText(langText, {
     x: (PAGE_WIDTH - langWidth) / 2,
-    y: PAGE_HEIGHT / 2 - 40,
+    y: titleY - 50,
     size: FONT_SIZE_BODY,
     font: fontRegular,
     color: COLOR_AUTHOR,
@@ -109,7 +161,7 @@ export async function generatePDF(
 
     // Section heading
     yPos -= FONT_SIZE_HEADING * LINE_HEIGHT;
-    currentPage.drawText(sanitizeForWinAnsi(section.heading), {
+    currentPage.drawText(safeText(section.heading), {
       x: MARGIN,
       y: yPos,
       size: FONT_SIZE_HEADING,
@@ -129,7 +181,7 @@ export async function generatePDF(
     yPos -= 16;
 
     // Paragraph — wrap text manually
-    const lines = wrapText(section.paragraph, fontRegular, FONT_SIZE_BODY, CONTENT_WIDTH);
+    const lines = wrapText(section.paragraph, fontRegular, FONT_SIZE_BODY, CONTENT_WIDTH, safeText);
     for (const line of lines) {
       if (yPos < MARGIN + 20) {
         currentPage = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
@@ -155,7 +207,7 @@ export async function generatePDF(
       }
 
       const bulletText = `  •  ${bullet}`;
-      const bulletLines = wrapText(bulletText, fontRegular, FONT_SIZE_BULLET, CONTENT_WIDTH - 20);
+      const bulletLines = wrapText(bulletText, fontRegular, FONT_SIZE_BULLET, CONTENT_WIDTH - 20, safeText);
 
       for (const bLine of bulletLines) {
         currentPage.drawText(bLine, {
@@ -202,7 +254,7 @@ export async function generatePDF(
           yPos -= imgHeight + 6;
 
           // Photo credit
-          const creditText = sanitizeForWinAnsi(`Photo: ${img.photographer} / Pexels`);
+          const creditText = safeText(`Photo: ${img.photographer} / Pexels`);
           const creditWidth = fontRegular.widthOfTextAtSize(creditText, 8);
           currentPage.drawText(creditText, {
             x: MARGIN + (CONTENT_WIDTH - creditWidth) / 2,
@@ -279,16 +331,52 @@ function replaceFallback(code: number, _src: string, _idx: number): string {
 }
 
 /**
- * Simple word-wrap utility for PDF text rendering.
- * Text is sanitized for WinAnsi before measuring.
+ * Check if a character is a CJK ideograph or fullwidth character
+ * that should allow line-breaking before or after it.
+ */
+function isCJKChar(code: number): boolean {
+  return (
+    (code >= 0x4E00 && code <= 0x9FFF) ||   // CJK Unified Ideographs
+    (code >= 0x3400 && code <= 0x4DBF) ||   // CJK Extension A
+    (code >= 0x3000 && code <= 0x303F) ||   // CJK Symbols & Punctuation
+    (code >= 0x3040 && code <= 0x309F) ||   // Hiragana
+    (code >= 0x30A0 && code <= 0x30FF) ||   // Katakana
+    (code >= 0xFF00 && code <= 0xFFEF) ||   // Fullwidth Forms
+    (code >= 0xAC00 && code <= 0xD7AF) ||   // Hangul Syllables
+    (code >= 0x20000 && code <= 0x2A6DF)    // CJK Extension B
+  );
+}
+
+/**
+ * Detect if text contains CJK characters (no-space scripts).
+ */
+function hasCJKText(text: string): boolean {
+  for (let i = 0; i < Math.min(text.length, 200); i++) {
+    if (isCJKChar(text.charCodeAt(i))) return true;
+  }
+  return false;
+}
+
+/**
+ * Word-wrap utility for PDF text rendering.
+ * Supports both space-separated languages (English, Arabic, Hindi, etc.)
+ * and CJK languages (Chinese, Japanese, Korean) that have no spaces.
  */
 function wrapText(
   text: string,
   font: PDFFont,
   fontSize: number,
-  maxWidth: number
+  maxWidth: number,
+  sanitizer?: (t: string) => string
 ): string[] {
-  const safe = sanitizeForWinAnsi(text);
+  const safe = sanitizer ? sanitizer(text) : sanitizeForWinAnsi(text);
+
+  // For CJK text: split character-by-character
+  if (hasCJKText(safe)) {
+    return wrapTextCJK(safe, font, fontSize, maxWidth);
+  }
+
+  // For space-separated text: split on spaces
   const words = safe.split(' ');
   const lines: string[] = [];
   let currentLine = '';
@@ -301,6 +389,44 @@ function wrapText(
       lines.push(currentLine);
       currentLine = word;
     } else {
+      currentLine = testLine;
+    }
+  }
+
+  if (currentLine.length > 0) {
+    lines.push(currentLine);
+  }
+
+  return lines;
+}
+
+/**
+ * Character-level word wrap for CJK text (Chinese, Japanese, Korean).
+ * These scripts don't use spaces between words, so we break at any character boundary.
+ */
+function wrapTextCJK(
+  text: string,
+  font: PDFFont,
+  fontSize: number,
+  maxWidth: number
+): string[] {
+  const lines: string[] = [];
+  let currentLine = '';
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    const testLine = currentLine + char;
+
+    try {
+      const testWidth = font.widthOfTextAtSize(testLine, fontSize);
+      if (testWidth > maxWidth && currentLine.length > 0) {
+        lines.push(currentLine);
+        currentLine = char;
+      } else {
+        currentLine = testLine;
+      }
+    } catch {
+      // If font can't measure this char, just append it
       currentLine = testLine;
     }
   }

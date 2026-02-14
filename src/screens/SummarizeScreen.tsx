@@ -19,6 +19,7 @@ import {
 import * as DocumentPicker from 'expo-document-picker';
 import { SUPPORTED_LANGUAGES, detectDeviceLanguage, LanguageOption } from '../utils/languageConfig';
 import { useTheme } from '../utils/themeContext';
+import { useTranslation } from '../i18n/i18nContext';
 
 interface SummarizeScreenProps {
   navigation: any;
@@ -26,6 +27,7 @@ interface SummarizeScreenProps {
 
 export default function SummarizeScreen({ navigation }: SummarizeScreenProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const detectedLang = detectDeviceLanguage();
 
   const [uploadedFile, setUploadedFile] = useState<DocumentPicker.DocumentPickerResult | null>(null);
@@ -48,13 +50,13 @@ export default function SummarizeScreen({ navigation }: SummarizeScreenProps) {
         setUploadedFile(result);
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to pick document. Please try again.');
+      Alert.alert(t('alert_error'), t('alert_file_pick_failed'));
     }
   };
 
   const handleSummarize = () => {
     if (!uploadedFile || uploadedFile.canceled) {
-      Alert.alert('File Required', 'Please upload a document to summarize.');
+      Alert.alert(t('alert_file_required_title'), t('alert_file_required_summarize_msg'));
       return;
     }
 
@@ -77,24 +79,24 @@ export default function SummarizeScreen({ navigation }: SummarizeScreenProps) {
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerIcon}>📋</Text>
-          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Summarize Document</Text>
+          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>{t('summarize_title')}</Text>
           <Text style={[styles.headerSubtitle, { color: colors.textMuted }]}>
-            Upload a file and AI will extract key points
+            {t('summarize_subtitle')}
           </Text>
         </View>
 
         {/* How it works */}
         <View style={[styles.infoCard, { backgroundColor: colors.primaryLight }]}>
-          <Text style={[styles.infoTitle, { color: colors.primary }]}>How it works</Text>
-          <Text style={[styles.infoItem, { color: colors.textSecondary }]}>📄 Upload any document (Word, PPT, Excel, TXT)</Text>
-          <Text style={[styles.infoItem, { color: colors.textSecondary }]}>🤖 AI reads and identifies key points</Text>
-          <Text style={[styles.infoItem, { color: colors.textSecondary }]}>📊 Get a professional summary in all formats</Text>
-          <Text style={[styles.infoItem, { color: colors.textSecondary }]}>✏️ Edit and customize before downloading</Text>
+          <Text style={[styles.infoTitle, { color: colors.primary }]}>{t('summarize_how_title')}</Text>
+          <Text style={[styles.infoItem, { color: colors.textSecondary }]}>{t('summarize_how_1')}</Text>
+          <Text style={[styles.infoItem, { color: colors.textSecondary }]}>{t('summarize_how_2')}</Text>
+          <Text style={[styles.infoItem, { color: colors.textSecondary }]}>{t('summarize_how_3')}</Text>
+          <Text style={[styles.infoItem, { color: colors.textSecondary }]}>{t('summarize_how_4')}</Text>
         </View>
 
         {/* File Upload */}
         <View style={styles.section}>
-          <Text style={[styles.label, { color: colors.textPrimary }]}>Upload Document</Text>
+          <Text style={[styles.label, { color: colors.textPrimary }]}>{t('summarize_upload_label')}</Text>
           <TouchableOpacity
             style={[styles.uploadButton, {
               backgroundColor: colors.surface,
@@ -108,23 +110,25 @@ export default function SummarizeScreen({ navigation }: SummarizeScreenProps) {
             <Text style={[styles.uploadText, { color: colors.textMuted }]} numberOfLines={2}>
               {uploadedFile && !uploadedFile.canceled
                 ? `📄 ${uploadedFile.assets[0].name}`
-                : 'Tap to upload a file (Word, Excel, PPT, TXT)'}
+                : t('summarize_upload_placeholder')}
             </Text>
           </TouchableOpacity>
 
           {/* File compatibility note */}
           <View style={[styles.noteCard, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}>
             <Text style={[styles.noteText, { color: colors.textMuted }]}>
-              ✅ <Text style={{ fontWeight: '600' }}>TXT</Text> — Best results, full text extracted{"\n"}
-              ⚡ <Text style={{ fontWeight: '600' }}>Word / PPT / Excel</Text> — Partial text extraction{"\n"}
-              🚫 <Text style={{ fontWeight: '600' }}>PDF</Text> — Not supported (text cannot be reliably extracted)
+              ✅ <Text style={{ fontWeight: '600' }}>{t('compat_txt')}</Text> {t('compat_txt_desc')}{"\n"}
+              ✅ <Text style={{ fontWeight: '600' }}>{t('compat_word')}</Text> {t('compat_word_desc')}{"\n"}
+              ✅ <Text style={{ fontWeight: '600' }}>{t('compat_ppt')}</Text> {t('compat_ppt_desc')}{"\n"}
+              ✅ <Text style={{ fontWeight: '600' }}>{t('compat_excel')}</Text> {t('compat_excel_desc')}{"\n"}
+              🚫 <Text style={{ fontWeight: '600' }}>{t('compat_pdf')}</Text> {t('compat_pdf_desc')}
             </Text>
           </View>
         </View>
 
         {/* Output Language */}
         <View style={styles.section}>
-          <Text style={[styles.label, { color: colors.textPrimary }]}>Summary Language</Text>
+          <Text style={[styles.label, { color: colors.textPrimary }]}>{t('summarize_language_label')}</Text>
           <TouchableOpacity
             style={[styles.langButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
             onPress={() => setShowLanguagePicker(!showLanguagePicker)}
@@ -166,7 +170,7 @@ export default function SummarizeScreen({ navigation }: SummarizeScreenProps) {
           style={[styles.summarizeButton, { backgroundColor: colors.headerBg, shadowColor: colors.shadowColor }]}
           onPress={handleSummarize}
         >
-          <Text style={styles.summarizeButtonText}>📋 Summarize Document</Text>
+          <Text style={styles.summarizeButtonText}>{t('summarize_btn')}</Text>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>

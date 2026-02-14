@@ -25,6 +25,7 @@ import { translateDocument } from '../ai/longcatService';
 import { AIWriterOutput } from '../ai/responseParser';
 import { parseUploadedFile } from '../services/fileParserService';
 import { useTheme } from '../utils/themeContext';
+import { useTranslation } from '../i18n/i18nContext';
 import { canMakeRequest, getRemainingTokens } from '../utils/tokenUsage';
 
 interface TranslateProcessingScreenProps {
@@ -41,12 +42,12 @@ interface TranslateProcessingScreenProps {
   navigation: any;
 }
 
-const STEPS = [
-  'Reading uploaded file...',
-  'Checking daily usage...',
-  'Translating with AI...',
-  'Preparing editor...',
-];
+const STEPS_KEYS = [
+  'trans_processing_step_0',
+  'trans_processing_step_1',
+  'trans_processing_step_2',
+  'trans_processing_step_3',
+] as const;
 
 export default function TranslateProcessingScreen({ route, navigation }: TranslateProcessingScreenProps) {
   const {
@@ -56,6 +57,7 @@ export default function TranslateProcessingScreen({ route, navigation }: Transla
     targetLanguage,
   } = route.params;
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
   const cancelledRef = useRef(false);
@@ -81,9 +83,9 @@ export default function TranslateProcessingScreen({ route, navigation }: Transla
       if (!hasTokens) {
         const remaining = await getRemainingTokens();
         Alert.alert(
-          'Daily Limit Reached',
-          `You've used your daily 5,000 token limit. You have ${remaining} tokens remaining. Limit resets at midnight.`,
-          [{ text: 'Go Back', onPress: () => navigation.goBack() }]
+          t('alert_daily_limit_title'),
+          t('alert_daily_limit_msg', { n: String(remaining) }),
+          [{ text: t('alert_go_back'), onPress: () => navigation.goBack() }]
         );
         return;
       }
@@ -112,13 +114,14 @@ export default function TranslateProcessingScreen({ route, navigation }: Transla
         aiOutput,
         topic: `${uploadedFileName} → ${targetLanguage}`,
         language: targetLanguage,
+        outputFormats: ['pdf', 'docx', 'pptx', 'xlsx'],
       });
     } catch (error) {
       if (cancelledRef.current) return;
       const message = error instanceof Error ? error.message : 'An unexpected error occurred.';
-      Alert.alert('Translation Failed', message, [
-        { text: 'Try Again', onPress: () => runTranslation() },
-        { text: 'Go Back', onPress: () => navigation.goBack() },
+      Alert.alert(t('alert_translation_failed_title'), message, [
+        { text: t('alert_try_again'), onPress: () => runTranslation() },
+        { text: t('alert_go_back'), onPress: () => navigation.goBack() },
       ]);
     }
   };
@@ -131,9 +134,9 @@ export default function TranslateProcessingScreen({ route, navigation }: Transla
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ActivityIndicator size="large" color={colors.primary} style={styles.spinner} />
-      <Text style={[styles.title, { color: colors.textPrimary }]}>Translating Document...</Text>
+      <Text style={[styles.title, { color: colors.textPrimary }]}>{t('trans_processing_title')}</Text>
       <Text style={[styles.subtitle, { color: colors.textMuted }]}>
-        {sourceLanguage} → {targetLanguage}
+        {t('trans_processing_direction', { source: sourceLanguage, target: targetLanguage })}
       </Text>
       <Text style={[styles.fileName, { color: colors.textSecondary }]}>📄 {uploadedFileName}</Text>
 
@@ -142,10 +145,10 @@ export default function TranslateProcessingScreen({ route, navigation }: Transla
       </View>
       <Text style={[styles.progressText, { color: colors.primary }]}>{progress}%</Text>
 
-      <Text style={[styles.stepText, { color: colors.textPrimary }]}>{STEPS[currentStep]}</Text>
+      <Text style={[styles.stepText, { color: colors.textPrimary }]}>{t(STEPS_KEYS[currentStep] as any)}</Text>
 
       <View style={styles.stepsContainer}>
-        {STEPS.map((step, index) => (
+        {STEPS_KEYS.map((stepKey, index) => (
           <View key={index} style={styles.stepRow}>
             <View
               style={[
@@ -163,14 +166,14 @@ export default function TranslateProcessingScreen({ route, navigation }: Transla
                 index === currentStep && { color: colors.textPrimary, fontWeight: '600' },
               ]}
             >
-              {step}
+              {t(stepKey as any)}
             </Text>
           </View>
         ))}
       </View>
 
       <TouchableOpacity style={[styles.cancelButton, { borderColor: colors.danger }]} onPress={handleCancel}>
-        <Text style={[styles.cancelText, { color: colors.danger }]}>✖ Cancel</Text>
+        <Text style={[styles.cancelText, { color: colors.danger }]}>{t('trans_processing_cancel')}</Text>
       </TouchableOpacity>
     </View>
   );

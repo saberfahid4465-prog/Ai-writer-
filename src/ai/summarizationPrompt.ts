@@ -16,10 +16,10 @@ Rules:
 6. Ensure grammar, readability, and professional tone in the output language.
 7. Use UTF-8 encoding for all text.
 8. Output must be valid JSON only — no markdown, no code fences, no extra text.
-9. Generate a MINIMUM of 3 sections: Executive Summary, Key Points, and Conclusions.
+9. Generate sections based on content length: for short documents (under 100 words), 1-2 sections is fine; for longer documents, aim for 3+ sections.
 10. Each paragraph should focus on the most critical information.
-11. Each section must have at least 3 bullet points summarizing key details.
-12. The summary should be approximately 30-40% of the original content length.
+11. Each section should have relevant bullet points (1-3 depending on content length).
+12. For short documents, provide a concise but complete summary. For longer ones, aim for 30-40% of the original length.
 
 Output the result as a single JSON object with this exact structure:
 {

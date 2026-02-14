@@ -162,6 +162,7 @@ const THEME_STORAGE_KEY = '@ai_writer_theme_mode';
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const systemScheme = useColorScheme();
   const [mode, setModeState] = useState<ThemeMode>('system');
+  const [loaded, setLoaded] = useState(false);
 
   // Load persisted theme on mount
   useEffect(() => {
@@ -169,7 +170,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       if (stored === 'light' || stored === 'dark' || stored === 'system') {
         setModeState(stored);
       }
-    });
+      setLoaded(true);
+    }).catch(() => setLoaded(true));
   }, []);
 
   const setMode = (newMode: ThemeMode) => {
@@ -181,6 +183,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     mode === 'dark' || (mode === 'system' && systemScheme === 'dark');
 
   const colors = isDark ? DarkTheme : LightTheme;
+
+  if (!loaded) return null; // avoid flash of wrong theme
 
   return (
     <ThemeContext.Provider value={{ mode, isDark, colors, setMode }}>

@@ -16,6 +16,7 @@ import {
   Image,
 } from 'react-native';
 import { useTheme } from '../utils/themeContext';
+import { useTranslation } from '../i18n/i18nContext';
 
 interface PremiumScreenProps {
   navigation: any;
@@ -23,31 +24,32 @@ interface PremiumScreenProps {
 
 export default function PremiumScreen({ navigation }: PremiumScreenProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   const handlePurchase = () => {
     Alert.alert(
-      'Coming Soon',
-      'In-app purchases will be available in the next update. Stay tuned!',
-      [{ text: 'OK' }]
+      t('alert_coming_soon_title'),
+      t('alert_coming_soon_msg'),
+      [{ text: t('alert_ok') }]
     );
   };
 
   const FREE_FEATURES = [
-    '5,000 tokens per day',
-    'PDF, Word, PPT, Excel output',
-    'All 15+ languages',
-    'File upload & topic-based generation',
-    'Summarize & Translate options',
+    t('premium_free_feature_1'),
+    t('premium_free_feature_2'),
+    t('premium_free_feature_3'),
+    t('premium_free_feature_4'),
+    t('premium_free_feature_5'),
   ];
 
   const PREMIUM_FEATURES = [
-    '10,000 tokens per day',
-    'Priority AI processing',
-    'Larger documents & longer content',
-    'All output formats included',
-    'All languages + auto-detect',
-    'Tables & charts in Excel/PPT',
-    'Priority support',
+    t('premium_feature_1'),
+    t('premium_feature_2'),
+    t('premium_feature_3'),
+    t('premium_feature_4'),
+    t('premium_feature_5'),
+    t('premium_feature_6'),
+    t('premium_feature_7'),
   ];
 
   return (
@@ -58,7 +60,7 @@ export default function PremiumScreen({ navigation }: PremiumScreenProps) {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={[styles.backText, { color: colors.primary }]}>← Back</Text>
+          <Text style={[styles.backText, { color: colors.primary }]}>{t('premium_back')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -66,22 +68,22 @@ export default function PremiumScreen({ navigation }: PremiumScreenProps) {
       <View style={styles.hero}>
         <Image source={require('../../assets/logo.png')} style={styles.heroLogo} resizeMode="contain" />
         <Text style={[styles.heroTitle, { color: colors.textPrimary }]}>
-          Upgrade to Premium
+          {t('premium_hero_title')}
         </Text>
         <Text style={[styles.heroSub, { color: colors.textMuted }]}>
-          Double your daily token limit for just $3
+          {t('premium_hero_subtitle')}
         </Text>
       </View>
 
       {/* ── Free Plan Card ───────────────────────────────── */}
       <View style={[styles.planCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <View style={[styles.badge, { backgroundColor: colors.primary }]}>
-          <Text style={styles.badgeText}>CURRENT PLAN</Text>
+          <Text style={styles.badgeText}>{t('premium_current_plan_badge').toUpperCase()}</Text>
         </View>
-        <Text style={[styles.planName, { color: colors.textPrimary }]}>Free</Text>
+        <Text style={[styles.planName, { color: colors.textPrimary }]}>{t('premium_free_name')}</Text>
         <View style={styles.priceRow}>
-          <Text style={[styles.price, { color: colors.textPrimary }]}>$0</Text>
-          <Text style={[styles.period, { color: colors.textMuted }]}> / forever</Text>
+          <Text style={[styles.price, { color: colors.textPrimary }]}>{t('premium_free_price')}</Text>
+          <Text style={[styles.period, { color: colors.textMuted }]}> {t('premium_free_period')}</Text>
         </View>
         <View style={styles.featureList}>
           {FREE_FEATURES.map((f, i) => (
@@ -92,22 +94,22 @@ export default function PremiumScreen({ navigation }: PremiumScreenProps) {
           ))}
         </View>
         <View style={[styles.planBtn, { backgroundColor: colors.surfaceAlt }]}>
-          <Text style={[styles.planBtnText, { color: colors.textMuted }]}>Current Plan</Text>
+          <Text style={[styles.planBtnText, { color: colors.textMuted }]}>{t('premium_free_btn')}</Text>
         </View>
       </View>
 
       {/* ── Premium Plan Card ────────────────────────────── */}
       <View style={[styles.planCard, { backgroundColor: '#2C2E33', borderColor: '#C8A961' }]}>
         <View style={[styles.badge, { backgroundColor: '#C8A961' }]}>
-          <Text style={styles.badgeText}>RECOMMENDED</Text>
+          <Text style={styles.badgeText}>{t('premium_recommended_badge').toUpperCase()}</Text>
         </View>
-        <Text style={[styles.planName, { color: '#FFFFFF' }]}>Premium</Text>
+        <Text style={[styles.planName, { color: '#FFFFFF' }]}>{t('premium_name')}</Text>
         <View style={styles.priceRow}>
-          <Text style={[styles.price, { color: '#FFFFFF' }]}>$3</Text>
-          <Text style={[styles.period, { color: '#9D9EA2' }]}> / one-time</Text>
+          <Text style={[styles.price, { color: '#FFFFFF' }]}>{t('premium_price')}</Text>
+          <Text style={[styles.period, { color: '#9D9EA2' }]}> {t('premium_period')}</Text>
         </View>
         <Text style={[styles.planHighlight, { color: '#C8A961' }]}>
-          10,000 tokens / day — double the free plan!
+          {t('premium_highlight')}
         </Text>
         <View style={styles.featureList}>
           {PREMIUM_FEATURES.map((f, i) => (
@@ -123,56 +125,56 @@ export default function PremiumScreen({ navigation }: PremiumScreenProps) {
           activeOpacity={0.85}
         >
           <Text style={[styles.planBtnText, { color: '#FFF' }]}>
-            Upgrade for $3 →
+            {t('premium_buy_btn')}
           </Text>
         </TouchableOpacity>
       </View>
 
       {/* ── Comparison ───────────────────────────────────── */}
       <View style={[styles.compareCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <Text style={[styles.compareTitle, { color: colors.textPrimary }]}>Quick Comparison</Text>
+        <Text style={[styles.compareTitle, { color: colors.textPrimary }]}>{t('premium_compare_title')}</Text>
         <View style={styles.compareRow}>
-          <Text style={[styles.compareLabel, { color: colors.textMuted }]}>Daily tokens</Text>
-          <Text style={[styles.compareVal, { color: colors.textSecondary }]}>5,000</Text>
-          <Text style={[styles.compareValPremium, { color: '#C8A961' }]}>10,000</Text>
+          <Text style={[styles.compareLabel, { color: colors.textMuted }]}>{t('premium_compare_tokens_label')}</Text>
+          <Text style={[styles.compareVal, { color: colors.textSecondary }]}>{t('premium_compare_tokens_free')}</Text>
+          <Text style={[styles.compareValPremium, { color: '#C8A961' }]}>{t('premium_compare_tokens_premium')}</Text>
         </View>
         <View style={[styles.compareDivider, { backgroundColor: colors.borderLight }]} />
         <View style={styles.compareRow}>
-          <Text style={[styles.compareLabel, { color: colors.textMuted }]}>Price</Text>
-          <Text style={[styles.compareVal, { color: colors.textSecondary }]}>Free</Text>
-          <Text style={[styles.compareValPremium, { color: '#C8A961' }]}>$3 once</Text>
+          <Text style={[styles.compareLabel, { color: colors.textMuted }]}>{t('premium_compare_price_label')}</Text>
+          <Text style={[styles.compareVal, { color: colors.textSecondary }]}>{t('premium_compare_price_free')}</Text>
+          <Text style={[styles.compareValPremium, { color: '#C8A961' }]}>{t('premium_compare_price_premium')}</Text>
         </View>
         <View style={[styles.compareDivider, { backgroundColor: colors.borderLight }]} />
         <View style={styles.compareRow}>
-          <Text style={[styles.compareLabel, { color: colors.textMuted }]}>AI priority</Text>
-          <Text style={[styles.compareVal, { color: colors.textSecondary }]}>Standard</Text>
-          <Text style={[styles.compareValPremium, { color: '#C8A961' }]}>Priority</Text>
+          <Text style={[styles.compareLabel, { color: colors.textMuted }]}>{t('premium_compare_ai_label')}</Text>
+          <Text style={[styles.compareVal, { color: colors.textSecondary }]}>{t('premium_compare_ai_free')}</Text>
+          <Text style={[styles.compareValPremium, { color: '#C8A961' }]}>{t('premium_compare_ai_premium')}</Text>
         </View>
       </View>
 
       {/* ── FAQ ──────────────────────────────────────────── */}
       <View style={[styles.faqCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <Text style={[styles.faqTitle, { color: colors.textPrimary }]}>FAQ</Text>
+        <Text style={[styles.faqTitle, { color: colors.textPrimary }]}>{t('premium_faq_title')}</Text>
 
-        <Text style={[styles.faqQ, { color: colors.textPrimary }]}>Is this a subscription?</Text>
+        <Text style={[styles.faqQ, { color: colors.textPrimary }]}>{t('premium_faq_q1')}</Text>
         <Text style={[styles.faqA, { color: colors.textMuted }]}>
-          No. It's a one-time payment of $3 that permanently doubles your daily token limit to 10,000.
+          {t('premium_faq_a1')}
         </Text>
 
-        <Text style={[styles.faqQ, { color: colors.textPrimary }]}>What are tokens?</Text>
+        <Text style={[styles.faqQ, { color: colors.textPrimary }]}>{t('premium_faq_q2')}</Text>
         <Text style={[styles.faqA, { color: colors.textMuted }]}>
-          Tokens are the units the AI uses to process your text. About 750 words ≈ 1,000 tokens.
+          {t('premium_faq_a2')}
         </Text>
 
-        <Text style={[styles.faqQ, { color: colors.textPrimary }]}>When will purchases be available?</Text>
+        <Text style={[styles.faqQ, { color: colors.textPrimary }]}>{t('premium_faq_q3')}</Text>
         <Text style={[styles.faqA, { color: colors.textMuted }]}>
-          In-app purchases will be enabled in the next update. Your upgrade will apply instantly once available.
+          {t('premium_faq_a3')}
         </Text>
       </View>
 
       <View style={styles.footer}>
         <Text style={[styles.footerText, { color: colors.textMuted }]}>
-          Questions? Contact support@aiwriter.app
+          {t('premium_footer')}
         </Text>
       </View>
     </ScrollView>

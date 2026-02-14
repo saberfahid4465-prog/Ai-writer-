@@ -48,11 +48,16 @@ export async function ensureOutputDirectory(): Promise<void> {
  * Sanitize a topic string into a valid file name component.
  */
 export function sanitizeTopic(topic: string): string {
-  return topic
+  // Keep alphanumeric, Unicode letters, and spaces; fallback to 'ai_writer_doc'
+  let sanitized = topic
     .toLowerCase()
-    .replace(/[^a-z0-9\s]/gi, '')
+    .replace(/[^\p{L}\p{N}\s]/gu, '')
     .replace(/\s+/g, '_')
     .substring(0, 40);
+  if (!sanitized || sanitized === '_') {
+    sanitized = 'ai_writer_doc';
+  }
+  return sanitized;
 }
 
 /**
@@ -117,8 +122,16 @@ export async function addHistoryEntry(entry: HistoryEntry): Promise<void> {
   const history = await loadHistory();
   history.unshift(entry); // Add to front (newest first)
 
-  // Keep only the last 50 entries
+  // Keep only the last 50 entries; delete files for trimmed entries
   const trimmed = history.slice(0, 50);
+  const removed = history.slice(50);
+  for (const old of removed) {
+    for (const file of old.files) {
+      try {
+        await deleteFile(file.path);
+      } catch { /* ignore cleanup errors */ }
+    }
+  }
 
   await AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(trimmed));
 }

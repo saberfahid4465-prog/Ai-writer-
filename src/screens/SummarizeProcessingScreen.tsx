@@ -24,6 +24,7 @@ import { summarizeDocument } from '../ai/longcatService';
 import { AIWriterOutput } from '../ai/responseParser';
 import { parseUploadedFile } from '../services/fileParserService';
 import { useTheme } from '../utils/themeContext';
+import { useTranslation } from '../i18n/i18nContext';
 import { canMakeRequest, getRemainingTokens } from '../utils/tokenUsage';
 
 interface SummarizeProcessingScreenProps {
@@ -38,12 +39,12 @@ interface SummarizeProcessingScreenProps {
   navigation: any;
 }
 
-const STEPS = [
-  'Reading uploaded file...',
-  'Checking daily usage...',
-  'AI is analyzing & summarizing...',
-  'Preparing editor...',
-];
+const STEPS_KEYS = [
+  'sum_processing_step_0',
+  'sum_processing_step_1',
+  'sum_processing_step_2',
+  'sum_processing_step_3',
+] as const;
 
 export default function SummarizeProcessingScreen({ route, navigation }: SummarizeProcessingScreenProps) {
   const {
@@ -52,6 +53,7 @@ export default function SummarizeProcessingScreen({ route, navigation }: Summari
     language,
   } = route.params;
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
   const cancelledRef = useRef(false);
@@ -77,9 +79,9 @@ export default function SummarizeProcessingScreen({ route, navigation }: Summari
       if (!hasTokens) {
         const remaining = await getRemainingTokens();
         Alert.alert(
-          'Daily Limit Reached',
-          `You've used your daily 5,000 token limit. You have ${remaining} tokens remaining. Limit resets at midnight.`,
-          [{ text: 'Go Back', onPress: () => navigation.goBack() }]
+          t('alert_daily_limit_title'),
+          t('alert_daily_limit_msg', { n: String(remaining) }),
+          [{ text: t('alert_go_back'), onPress: () => navigation.goBack() }]
         );
         return;
       }
@@ -107,13 +109,14 @@ export default function SummarizeProcessingScreen({ route, navigation }: Summari
         aiOutput,
         topic: `Summary: ${uploadedFileName}`,
         language,
+        outputFormats: ['pdf', 'docx', 'pptx', 'xlsx'],
       });
     } catch (error) {
       if (cancelledRef.current) return;
       const message = error instanceof Error ? error.message : 'An unexpected error occurred.';
-      Alert.alert('Summarization Failed', message, [
-        { text: 'Try Again', onPress: () => runSummarization() },
-        { text: 'Go Back', onPress: () => navigation.goBack() },
+      Alert.alert(t('alert_summarization_failed_title'), message, [
+        { text: t('alert_try_again'), onPress: () => runSummarization() },
+        { text: t('alert_go_back'), onPress: () => navigation.goBack() },
       ]);
     }
   };
@@ -126,7 +129,7 @@ export default function SummarizeProcessingScreen({ route, navigation }: Summari
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ActivityIndicator size="large" color={colors.primary} style={styles.spinner} />
-      <Text style={[styles.title, { color: colors.textPrimary }]}>Summarizing Document...</Text>
+      <Text style={[styles.title, { color: colors.textPrimary }]}>{t('sum_processing_title')}</Text>
       <Text style={[styles.fileName, { color: colors.textSecondary }]}>📄 {uploadedFileName}</Text>
       <Text style={[styles.langText, { color: colors.textMuted }]}>🌐 {language}</Text>
 
@@ -135,10 +138,10 @@ export default function SummarizeProcessingScreen({ route, navigation }: Summari
       </View>
       <Text style={[styles.progressText, { color: colors.primary }]}>{progress}%</Text>
 
-      <Text style={[styles.stepText, { color: colors.textPrimary }]}>{STEPS[currentStep]}</Text>
+      <Text style={[styles.stepText, { color: colors.textPrimary }]}>{t(STEPS_KEYS[currentStep] as any)}</Text>
 
       <View style={styles.stepsContainer}>
-        {STEPS.map((step, index) => (
+        {STEPS_KEYS.map((stepKey, index) => (
           <View key={index} style={styles.stepRow}>
             <View
               style={[
@@ -156,14 +159,14 @@ export default function SummarizeProcessingScreen({ route, navigation }: Summari
                 index === currentStep && { color: colors.textPrimary, fontWeight: '600' },
               ]}
             >
-              {step}
+              {t(stepKey as any)}
             </Text>
           </View>
         ))}
       </View>
 
       <TouchableOpacity style={[styles.cancelButton, { borderColor: colors.danger }]} onPress={handleCancel}>
-        <Text style={[styles.cancelText, { color: colors.danger }]}>✖ Cancel</Text>
+        <Text style={[styles.cancelText, { color: colors.danger }]}>{t('sum_processing_cancel')}</Text>
       </TouchableOpacity>
     </View>
   );

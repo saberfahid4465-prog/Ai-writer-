@@ -14,6 +14,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useTheme } from '../utils/themeContext';
+import { useTranslation } from '../i18n/i18nContext';
 import { AIWriterOutput } from '../ai/responseParser';
 
 // ─── Screens ────────────────────────────────────────────────────
@@ -106,6 +107,7 @@ const iconStyles = StyleSheet.create({
 
 function BottomTabs() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   return (
     <Tab.Navigator
@@ -134,7 +136,7 @@ function BottomTabs() {
         component={HomeScreen}
         options={{
           tabBarIcon: ({ focused, color }) => (
-            <TabIcon emoji="✏️" label="Generate" focused={focused} color={color} />
+            <TabIcon emoji="✏️" label={t('tab_generate')} focused={focused} color={color} />
           ),
         }}
       />
@@ -143,7 +145,7 @@ function BottomTabs() {
         component={SummarizeScreen}
         options={{
           tabBarIcon: ({ focused, color }) => (
-            <TabIcon emoji="📋" label="Summarize" focused={focused} color={color} />
+            <TabIcon emoji="📋" label={t('tab_summarize')} focused={focused} color={color} />
           ),
         }}
       />
@@ -152,7 +154,7 @@ function BottomTabs() {
         component={TranslateScreen}
         options={{
           tabBarIcon: ({ focused, color }) => (
-            <TabIcon emoji="🌍" label="Translate" focused={focused} color={color} />
+            <TabIcon emoji="🌍" label={t('tab_translate')} focused={focused} color={color} />
           ),
         }}
       />
@@ -161,7 +163,7 @@ function BottomTabs() {
         component={HistoryScreen}
         options={{
           tabBarIcon: ({ focused, color }) => (
-            <TabIcon emoji="📁" label="History" focused={focused} color={color} />
+            <TabIcon emoji="📁" label={t('tab_history')} focused={focused} color={color} />
           ),
         }}
       />
@@ -170,7 +172,7 @@ function BottomTabs() {
         component={SettingsScreen}
         options={{
           tabBarIcon: ({ focused, color }) => (
-            <TabIcon emoji="⚙️" label="Settings" focused={focused} color={color} />
+            <TabIcon emoji="⚙️" label={t('tab_settings')} focused={focused} color={color} />
           ),
         }}
       />

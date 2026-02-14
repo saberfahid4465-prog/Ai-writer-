@@ -22,6 +22,7 @@ import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
 import { GeneratedFile } from '../utils/fileStorage';
 import { useTheme } from '../utils/themeContext';
+import { useTranslation } from '../i18n/i18nContext';
 
 // ─── Types ──────────────────────────────────────────────────────
 
@@ -38,11 +39,11 @@ interface ResultScreenProps {
 
 // ─── File Type Config ───────────────────────────────────────────
 
-const FILE_TYPE_CONFIG: Record<string, { icon: string; label: string; color: string }> = {
-  pdf: { icon: '📕', label: 'PDF Document', color: '#E53E3E' },
-  docx: { icon: '📘', label: 'Word Document', color: '#2B6CB0' },
-  pptx: { icon: '📙', label: 'PowerPoint Presentation', color: '#DD6B20' },
-  xlsx: { icon: '📗', label: 'Excel Spreadsheet', color: '#38A169' },
+const FILE_TYPE_CONFIG: Record<string, { icon: string; labelKey: string; color: string }> = {
+  pdf: { icon: '📕', labelKey: 'filetype_pdf', color: '#E53E3E' },
+  docx: { icon: '📘', labelKey: 'filetype_docx', color: '#2B6CB0' },
+  pptx: { icon: '📙', labelKey: 'filetype_pptx', color: '#DD6B20' },
+  xlsx: { icon: '📗', labelKey: 'filetype_xlsx', color: '#38A169' },
 };
 
 // ─── Component ──────────────────────────────────────────────────
@@ -50,15 +51,16 @@ const FILE_TYPE_CONFIG: Record<string, { icon: string; label: string; color: str
 export default function ResultScreen({ route, navigation }: ResultScreenProps) {
   const { topic, language, files } = route.params;
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   // ─── Preview ──────────────────────────────────────────────
   const handlePreview = (file: GeneratedFile) => {
     // In a full implementation, this would open a file-type-specific viewer
     // For now, navigate to a preview screen or use an external viewer
     Alert.alert(
-      'Preview',
-      `Opening ${file.name} for preview.\n\nIn the full app, this would open an in-app viewer (PDF viewer, text renderer, slide viewer, or grid viewer).`,
-      [{ text: 'OK' }]
+      t('alert_preview_title'),
+      t('alert_preview_msg', { name: file.name }),
+      [{ text: t('alert_ok') }]
     );
   };
 
@@ -68,7 +70,7 @@ export default function ResultScreen({ route, navigation }: ResultScreenProps) {
       // Check if the file actually exists
       const fileInfo = await FileSystem.getInfoAsync(file.path);
       if (!fileInfo.exists) {
-        Alert.alert('Error', 'File not found. It may have been deleted.');
+        Alert.alert(t('alert_error'), t('alert_file_not_found'));
         return;
       }
 
@@ -87,7 +89,9 @@ export default function ResultScreen({ route, navigation }: ResultScreenProps) {
           await FileSystem.writeAsStringAsync(uri, base64, {
             encoding: FileSystem.EncodingType.Base64,
           });
-          Alert.alert('Downloaded', `${file.name} has been saved successfully.`);
+          Alert.alert(t('alert_downloaded_title'), t('alert_downloaded_msg', { name: file.name }));
+        } else {
+          Alert.alert(t('alert_error'), t('alert_permission_denied'));
         }
       } else {
         // iOS: Use share sheet to save
@@ -97,16 +101,23 @@ export default function ResultScreen({ route, navigation }: ResultScreenProps) {
         });
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to download file. Please try again.');
+      Alert.alert(t('alert_error'), t('alert_download_failed'));
     }
   };
 
   // ─── Share ────────────────────────────────────────────────
   const handleShare = async (file: GeneratedFile) => {
     try {
+      // Verify the file exists before attempting to share
+      const fileInfo = await FileSystem.getInfoAsync(file.path);
+      if (!fileInfo.exists) {
+        Alert.alert(t('alert_error'), t('alert_file_not_found'));
+        return;
+      }
+
       const isAvailable = await Sharing.isAvailableAsync();
       if (!isAvailable) {
-        Alert.alert('Sharing not available', 'Sharing is not supported on this device.');
+        Alert.alert(t('alert_sharing_not_available_title'), t('alert_sharing_not_available_msg'));
         return;
       }
 
@@ -115,7 +126,7 @@ export default function ResultScreen({ route, navigation }: ResultScreenProps) {
         dialogTitle: `Share ${file.name}`,
       });
     } catch (error) {
-      Alert.alert('Error', 'Failed to share file. Please try again.');
+      Alert.alert(t('alert_error'), t('alert_share_failed'));
     }
   };
 
@@ -129,9 +140,9 @@ export default function ResultScreen({ route, navigation }: ResultScreenProps) {
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.scroll}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>✨ Files Ready!</Text>
-        <Text style={[styles.topicText, { color: colors.textSecondary }]}>📄 Topic: "{topic}"</Text>
-        <Text style={[styles.languageText, { color: colors.textMuted }]}>🌐 Language: {language}</Text>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>{t('result_title')}</Text>
+        <Text style={[styles.topicText, { color: colors.textSecondary }]}>{t('result_topic_prefix', { topic })}</Text>
+        <Text style={[styles.languageText, { color: colors.textMuted }]}>{t('result_language_prefix', { language })}</Text>
       </View>
 
       {/* File Cards */}
@@ -142,7 +153,7 @@ export default function ResultScreen({ route, navigation }: ResultScreenProps) {
             <View style={styles.fileHeader}>
               <Text style={styles.fileIcon}>{config.icon}</Text>
               <View style={styles.fileInfo}>
-                <Text style={[styles.fileLabel, { color: colors.textPrimary }]}>{config.label}</Text>
+                <Text style={[styles.fileLabel, { color: colors.textPrimary }]}>{t(config.labelKey as any)}</Text>
                 <Text style={[styles.fileName, { color: colors.textMuted }]}>{file.name}</Text>
               </View>
             </View>
@@ -152,21 +163,21 @@ export default function ResultScreen({ route, navigation }: ResultScreenProps) {
                 style={[styles.actionButton, { backgroundColor: colors.primaryLight }]}
                 onPress={() => handlePreview(file)}
               >
-                <Text style={[styles.previewButtonText, { color: colors.primary }]}>👁 Preview</Text>
+                <Text style={[styles.previewButtonText, { color: colors.primary }]}>{t('result_preview')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={[styles.actionButton, { backgroundColor: colors.successLight || '#E8FAF0' }]}
                 onPress={() => handleDownload(file)}
               >
-                <Text style={[styles.downloadButtonText, { color: colors.success }]}>⬇ Download</Text>
+                <Text style={[styles.downloadButtonText, { color: colors.success }]}>{t('result_download')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={[styles.actionButton, { backgroundColor: colors.warningLight || '#FFF3E0' }]}
                 onPress={() => handleShare(file)}
               >
-                <Text style={[styles.shareButtonText, { color: colors.warning || '#DD6B20' }]}>↗ Share</Text>
+                <Text style={[styles.shareButtonText, { color: colors.warning || '#DD6B20' }]}>{t('result_share')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -175,7 +186,7 @@ export default function ResultScreen({ route, navigation }: ResultScreenProps) {
 
       {/* Generate New */}
       <TouchableOpacity style={[styles.newButton, { backgroundColor: colors.primary, shadowColor: colors.primary }]} onPress={handleNewGeneration}>
-        <Text style={styles.newButtonText}>✨ Generate New Files</Text>
+        <Text style={styles.newButtonText}>{t('result_generate_new')}</Text>
       </TouchableOpacity>
 
       {/* History Link */}
@@ -183,7 +194,7 @@ export default function ResultScreen({ route, navigation }: ResultScreenProps) {
         style={styles.historyLink}
         onPress={() => navigation.navigate('History')}
       >
-        <Text style={[styles.historyText, { color: colors.primary }]}>📁 View All History</Text>
+        <Text style={[styles.historyText, { color: colors.primary }]}>{t('result_view_history')}</Text>
       </TouchableOpacity>
     </ScrollView>
   );

@@ -8,6 +8,7 @@
 import React from 'react';
 import { StatusBar } from 'react-native';
 import { ThemeProvider, useTheme } from './utils/themeContext';
+import { I18nProvider } from './i18n/i18nContext';
 import AppNavigator from './navigation/AppNavigator';
 
 function AppContent() {
@@ -23,8 +24,10 @@ function AppContent() {
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <AppContent />
-    </ThemeProvider>
+    <I18nProvider>
+      <ThemeProvider>
+        <AppContent />
+      </ThemeProvider>
+    </I18nProvider>
   );
 }

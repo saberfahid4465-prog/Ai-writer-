@@ -16,9 +16,9 @@ Rules:
 6. Do NOT translate proper nouns, brand names, or technical terms unless they have well-known translations.
 7. Use UTF-8 encoding for all text.
 8. Output must be valid JSON only — no markdown, no code fences, no extra text.
-9. Generate a MINIMUM of 3 sections from the content.
-10. Each paragraph must be at least 2 sentences long.
-11. Each section must have at least 2 bullet points.
+9. Generate sections proportional to the content: for short text (under 100 words), 1 section is fine; for longer documents, create multiple sections.
+10. Each paragraph should faithfully translate the original text.
+11. Include bullet points only when the original content warrants them.
 
 Output the result as a single JSON object with this exact structure:
 {

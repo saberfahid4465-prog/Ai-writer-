@@ -16,6 +16,7 @@
 import PptxGenJS from 'pptxgenjs';
 import { PptData, PdfWordData } from '../ai/responseParser';
 import { DocumentImage } from '../services/pexelsService';
+import { uint8ArrayToBase64 } from '../utils/base64Polyfill';
 
 // ─── Theme Constants ────────────────────────────────────────────
 
@@ -52,6 +53,13 @@ export async function generatePPT(
   pptx.title = metaData.title;
   pptx.company = 'AI Writer';
   pptx.layout = 'LAYOUT_WIDE'; // 16:9 widescreen
+
+  // Detect RTL languages
+  const rtlLanguages = ['arabic', 'hebrew', 'persian', 'farsi', 'urdu'];
+  const isRTL = rtlLanguages.some(lang => metaData.language.toLowerCase().includes(lang));
+  if (isRTL) {
+    pptx.rtlMode = true;
+  }
 
   // ─── Title Slide ─────────────────────────────────────────
   const titleSlide = pptx.addSlide();
@@ -150,11 +158,7 @@ export async function generatePPT(
 
       try {
         // Convert Uint8Array to base64 for pptxgenjs
-        let binary = '';
-        for (let i = 0; i < slideImage.imageBytes.byteLength; i++) {
-          binary += String.fromCharCode(slideImage.imageBytes[i]);
-        }
-        const imgBase64 = btoa(binary);
+        const imgBase64 = uint8ArrayToBase64(slideImage.imageBytes);
 
         contentSlide.addImage({
           data: `image/jpeg;base64,${imgBase64}`,

@@ -20,6 +20,7 @@ import {
 import * as DocumentPicker from 'expo-document-picker';
 import { SUPPORTED_LANGUAGES, detectDeviceLanguage, LanguageOption } from '../utils/languageConfig';
 import { useTheme } from '../utils/themeContext';
+import { useTranslation } from '../i18n/i18nContext';
 
 interface TranslateScreenProps {
   navigation: any;
@@ -27,6 +28,7 @@ interface TranslateScreenProps {
 
 export default function TranslateScreen({ navigation }: TranslateScreenProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const detectedLang = detectDeviceLanguage();
 
   const [uploadedFile, setUploadedFile] = useState<DocumentPicker.DocumentPickerResult | null>(null);
@@ -53,7 +55,7 @@ export default function TranslateScreen({ navigation }: TranslateScreenProps) {
         setUploadedFile(result);
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to pick document. Please try again.');
+      Alert.alert(t('alert_error'), t('alert_file_pick_failed'));
     }
   };
 
@@ -65,12 +67,12 @@ export default function TranslateScreen({ navigation }: TranslateScreenProps) {
 
   const handleTranslate = () => {
     if (!uploadedFile || uploadedFile.canceled) {
-      Alert.alert('File Required', 'Please upload a document to translate.');
+      Alert.alert(t('alert_file_required_title'), t('alert_file_required_translate_msg'));
       return;
     }
 
     if (sourceLanguage.code === targetLanguage.code) {
-      Alert.alert('Same Language', 'Source and target languages must be different.');
+      Alert.alert(t('alert_same_language_title'), t('alert_same_language_msg'));
       return;
     }
 
@@ -124,15 +126,15 @@ export default function TranslateScreen({ navigation }: TranslateScreenProps) {
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerIcon}>🌐</Text>
-          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Translate Document</Text>
+          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>{t('translate_title')}</Text>
           <Text style={[styles.headerSubtitle, { color: colors.textMuted }]}>
-            Upload a file and translate it to any language
+            {t('translate_subtitle')}
           </Text>
         </View>
 
         {/* File Upload */}
         <View style={styles.section}>
-          <Text style={[styles.label, { color: colors.textPrimary }]}>Upload Document</Text>
+          <Text style={[styles.label, { color: colors.textPrimary }]}>{t('translate_upload_label')}</Text>
           <TouchableOpacity
             style={[styles.uploadButton, {
               backgroundColor: colors.surface,
@@ -146,23 +148,25 @@ export default function TranslateScreen({ navigation }: TranslateScreenProps) {
             <Text style={[styles.uploadText, { color: colors.textMuted }]} numberOfLines={2}>
               {uploadedFile && !uploadedFile.canceled
                 ? `📄 ${uploadedFile.assets[0].name}`
-                : 'Tap to upload a file (Word, Excel, PPT, TXT)'}
+                : t('translate_upload_placeholder')}
             </Text>
           </TouchableOpacity>
 
           {/* File compatibility note */}
           <View style={[styles.noteCard, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}>
             <Text style={[styles.noteText, { color: colors.textMuted }]}>
-              ✅ <Text style={{ fontWeight: '600' }}>TXT</Text> — Best results, full text extracted{"\n"}
-              ⚡ <Text style={{ fontWeight: '600' }}>Word / PPT / Excel</Text> — Partial text extraction{"\n"}
-              🚫 <Text style={{ fontWeight: '600' }}>PDF</Text> — Not supported (text cannot be reliably extracted)
+              ✅ <Text style={{ fontWeight: '600' }}>{t('compat_txt')}</Text> {t('compat_txt_desc')}{"\n"}
+              ✅ <Text style={{ fontWeight: '600' }}>{t('compat_word')}</Text> {t('compat_word_desc')}{"\n"}
+              ✅ <Text style={{ fontWeight: '600' }}>{t('compat_ppt')}</Text> {t('compat_ppt_desc')}{"\n"}
+              ✅ <Text style={{ fontWeight: '600' }}>{t('compat_excel')}</Text> {t('compat_excel_desc')}{"\n"}
+              🚫 <Text style={{ fontWeight: '600' }}>{t('compat_pdf')}</Text> {t('compat_pdf_desc')}
             </Text>
           </View>
         </View>
 
         {/* Source Language */}
         <View style={styles.section}>
-          <Text style={[styles.label, { color: colors.textPrimary }]}>Source Language</Text>
+          <Text style={[styles.label, { color: colors.textPrimary }]}>{t('translate_source_label')}</Text>
           <TouchableOpacity
             style={[styles.langButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
             onPress={() => { setShowSourcePicker(!showSourcePicker); setShowTargetPicker(false); }}
@@ -180,13 +184,13 @@ export default function TranslateScreen({ navigation }: TranslateScreenProps) {
         {/* Swap Button */}
         <TouchableOpacity style={styles.swapBtn} onPress={handleSwapLanguages}>
           <View style={[styles.swapInner, { backgroundColor: colors.primaryLight }]}>
-            <Text style={[styles.swapText, { color: colors.primary }]}>⇅ Swap Languages</Text>
+            <Text style={[styles.swapText, { color: colors.primary }]}>{t('translate_swap')}</Text>
           </View>
         </TouchableOpacity>
 
         {/* Target Language */}
         <View style={styles.section}>
-          <Text style={[styles.label, { color: colors.textPrimary }]}>Target Language</Text>
+          <Text style={[styles.label, { color: colors.textPrimary }]}>{t('translate_target_label')}</Text>
           <TouchableOpacity
             style={[styles.langButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
             onPress={() => { setShowTargetPicker(!showTargetPicker); setShowSourcePicker(false); }}
@@ -206,7 +210,7 @@ export default function TranslateScreen({ navigation }: TranslateScreenProps) {
           style={[styles.translateButton, { backgroundColor: colors.headerBg, shadowColor: colors.shadowColor }]}
           onPress={handleTranslate}
         >
-          <Text style={styles.translateButtonText}>🌐 Translate Document</Text>
+          <Text style={styles.translateButtonText}>{t('translate_btn')}</Text>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>

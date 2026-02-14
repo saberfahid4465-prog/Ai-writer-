@@ -32,9 +32,9 @@ Excel:
 5. Use UTF-8 encoding for all text.
 6. Include all content necessary for the requested formats.
 7. Do NOT skip sections or produce empty content.
-8. Generate a MINIMUM of 5 sections for any topic.
-9. Each paragraph must be at least 3 sentences long.
-10. Each section must have at least 3 bullet points.
+8. Generate 3-5 sections (3 minimum). Keep it concise but professional.
+9. Each paragraph must be 2-3 sentences.
+10. Each section must have 3 bullet points.
 11. Output must be valid JSON only — no markdown, no code fences, no extra text.
 
 Output the result as a single JSON object with this exact structure:

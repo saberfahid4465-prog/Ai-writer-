@@ -22,6 +22,7 @@ import {
 import * as DocumentPicker from 'expo-document-picker';
 import { SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE, LanguageOption } from '../utils/languageConfig';
 import { useTheme } from '../utils/themeContext';
+import { useTranslation } from '../i18n/i18nContext';
 import { getUsageDisplay, DAILY_TOKEN_LIMIT } from '../utils/tokenUsage';
 
 // ─── Types ──────────────────────────────────────────────────────
@@ -56,6 +57,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   const [showLanguagePicker, setShowLanguagePicker] = useState(false);
   const [tokenUsage, setTokenUsage] = useState({ used: 0, limit: DAILY_TOKEN_LIMIT, remaining: DAILY_TOKEN_LIMIT, percentage: 0 });
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   const refreshTokenUsage = useCallback(async () => {
     const usage = await getUsageDisplay();
@@ -98,7 +100,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         setUploadedFile(result);
       }
     } catch {
-      Alert.alert('Error', 'Failed to pick document. Please try again.');
+      Alert.alert(t('alert_error'), t('alert_file_pick_failed'));
     }
   };
 
@@ -108,11 +110,11 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   const handleGenerate = () => {
     const trimmed = topic.trim();
     if (trimmed.length < 3 && !uploadedFile) {
-      Alert.alert('Input Required', 'Enter a topic (3+ chars) or upload a file.');
+      Alert.alert(t('alert_input_required_title'), t('alert_input_required_msg'));
       return;
     }
     if (selectedFormats.size === 0) {
-      Alert.alert('Format Required', 'Pick at least one output format.');
+      Alert.alert(t('alert_format_required_title'), t('alert_format_required_msg'));
       return;
     }
 
@@ -138,16 +140,16 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         {/* Header with Logo */}
         <View style={styles.header}>
           <Image source={require('../../assets/logo.png')} style={styles.logo} resizeMode="contain" />
-          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>AI Writer</Text>
+          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>{t('home_title')}</Text>
           <Text style={[styles.headerSub, { color: colors.textMuted }]}>
-            Generate professional documents instantly
+            {t('home_subtitle')}
           </Text>
         </View>
 
         {/* ── Topic Input ──────────────────────────────────── */}
         <View style={styles.section}>
           <Text style={[styles.label, { color: colors.textPrimary }]}>
-            📝  Topic or Prompt
+            {t('home_topic_label')}
           </Text>
           <TextInput
             style={[styles.textInput, {
@@ -155,7 +157,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
               borderColor: colors.inputBorder,
               color: colors.inputText,
             }]}
-            placeholder='e.g. "Business Plan for Coffee Shop"'
+            placeholder={t('home_topic_placeholder')}
             placeholderTextColor={colors.placeholder}
             multiline
             numberOfLines={4}
@@ -182,7 +184,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
             <View style={styles.uploadedRow}>
               <Text style={styles.uploadIcon}>📎</Text>
               <Text style={[styles.uploadText, { color: colors.textMuted }]}>
-                Upload PDF, Word, Excel, PPT, or TXT
+                {t('home_upload_placeholder')}
               </Text>
             </View>
           )}
@@ -191,7 +193,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         {/* ── Output Format Selector ───────────────────────── */}
         <View style={styles.section}>
           <Text style={[styles.label, { color: colors.textPrimary }]}>
-            📦  Output Format
+            {t('home_format_label')}
           </Text>
           <View style={styles.formatGrid}>
             {FORMAT_OPTIONS.map((fmt) => {
@@ -227,9 +229,9 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         {/* ── Language Selector ─────────────────────────────── */}
         <View style={styles.section}>
           <View style={styles.labelRow}>
-            <Text style={[styles.label, { color: colors.textPrimary }]}>🌐  Language</Text>
+            <Text style={[styles.label, { color: colors.textPrimary }]}>{t('home_language_label')}</Text>
             <Text style={[styles.badgeSmall, { color: colors.primary, backgroundColor: colors.primaryLight }]}>
-              Auto-detect
+              {t('home_language_badge')}
             </Text>
           </View>
           <TouchableOpacity
@@ -273,13 +275,13 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
           onPress={handleGenerate}
           activeOpacity={0.85}
         >
-          <Text style={styles.generateText}>✨  Generate File</Text>
+          <Text style={styles.generateText}>{t('home_generate_btn')}</Text>
         </TouchableOpacity>
 
         {/* ── Daily Token Usage ─────────────────────────────── */}
         <View style={[styles.tokenBar, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.tokenRow}>
-            <Text style={[styles.tokenLabel, { color: colors.textSecondary }]}>⚡ Daily Usage</Text>
+            <Text style={[styles.tokenLabel, { color: colors.textSecondary }]}>{t('home_daily_usage_label')}</Text>
             <Text style={[styles.tokenCount, { color: colors.textMuted }]}>
               {tokenUsage.used.toLocaleString()} / {tokenUsage.limit.toLocaleString()}
             </Text>
@@ -291,17 +293,17 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
             }]} />
           </View>
           <Text style={[styles.tokenRem, { color: colors.textMuted }]}>
-            {tokenUsage.remaining.toLocaleString()} tokens remaining today
+            {t('home_tokens_remaining', { n: tokenUsage.remaining.toLocaleString() })}
           </Text>
         </View>
 
         {/* ── Bottom Links ─────────────────────────────────── */}
         <View style={styles.bottomLinks}>
           <TouchableOpacity onPress={() => navigation.navigate('Privacy')}>
-            <Text style={[styles.linkText, { color: colors.textMuted }]}>Privacy</Text>
+            <Text style={[styles.linkText, { color: colors.textMuted }]}>{t('link_privacy')}</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => navigation.navigate('Terms')}>
-            <Text style={[styles.linkText, { color: colors.textMuted }]}>Terms</Text>
+            <Text style={[styles.linkText, { color: colors.textMuted }]}>{t('link_terms')}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

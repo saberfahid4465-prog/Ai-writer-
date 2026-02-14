@@ -66,14 +66,18 @@ const imageCache = new Map<string, DocumentImage>();
 async function searchPhoto(keyword: string): Promise<PexelsPhoto | null> {
   try {
     const query = encodeURIComponent(keyword);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000);
     const response = await fetch(
-      `${PEXELS_BASE_URL}/search?query=${query}&per_page=5&orientation=landscape`,
+      `${PEXELS_BASE_URL}/search?query=${query}&per_page=1&orientation=landscape`,
       {
         headers: {
           Authorization: PEXELS_API_KEY,
         },
+        signal: controller.signal,
       }
     );
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       console.warn(`Pexels API error for "${keyword}": ${response.status}`);
@@ -101,7 +105,10 @@ async function searchPhoto(keyword: string): Promise<PexelsPhoto | null> {
  */
 async function downloadImage(url: string): Promise<Uint8Array | null> {
   try {
-    const response = await fetch(url);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    const response = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeoutId);
     if (!response.ok) {
       console.warn(`Image download failed: ${response.status}`);
       return null;
@@ -134,8 +141,8 @@ export async function fetchImageForKeyword(
   const photo = await searchPhoto(keyword);
   if (!photo) return null;
 
-  // Use 'medium' size — good quality at ~350x250 px, keeps file sizes small
-  const imageBytes = await downloadImage(photo.src.medium);
+  // Use 'small' size — fast download, keeps file sizes minimal
+  const imageBytes = await downloadImage(photo.src.small);
   if (!imageBytes) return null;
 
   const docImage: DocumentImage = {
@@ -175,18 +182,14 @@ export async function fetchImagesForKeywords(
 
   if (uniqueKeywords.length === 0) return results;
 
-  // Fetch in batches of 3 to respect rate limits
-  const BATCH_SIZE = 3;
-  for (let i = 0; i < uniqueKeywords.length; i += BATCH_SIZE) {
-    const batch = uniqueKeywords.slice(i, i + BATCH_SIZE);
-    const promises = batch.map(async (keyword) => {
-      const image = await fetchImageForKeyword(keyword);
-      if (image) {
-        results.set(keyword, image);
-      }
-    });
-    await Promise.all(promises);
-  }
+  // Fetch all in parallel for speed
+  const promises = uniqueKeywords.map(async (keyword) => {
+    const image = await fetchImageForKeyword(keyword);
+    if (image) {
+      results.set(keyword, image);
+    }
+  });
+  await Promise.all(promises);
 
   return results;
 }

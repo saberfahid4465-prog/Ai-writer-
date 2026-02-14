@@ -11,6 +11,7 @@
     "lint": "eslint src/ --ext .ts,.tsx"
   },
   "dependencies": {
+    "@pdf-lib/fontkit": "^1.1.1",
     "@react-native-async-storage/async-storage": "1.21.0",
     "@react-navigation/bottom-tabs": "^6.6.1",
     "@react-navigation/native": "^6.1.0",
@@ -25,6 +26,7 @@
     "expo-localization": "~14.8.0",
     "expo-sharing": "~11.10.0",
     "expo-status-bar": "~1.11.0",
+    "jszip": "^3.10.1",
     "pdf-lib": "^1.17.1",
     "pptxgenjs": "^3.12.0",
     "react": "18.2.0",
@@ -35,6 +37,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
+    "@types/jszip": "^3.4.0",
     "@types/react": "~18.2.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
