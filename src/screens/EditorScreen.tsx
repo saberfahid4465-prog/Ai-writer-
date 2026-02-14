@@ -74,6 +74,12 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
   const { t } = useTranslation();
   const outputFormats = rawFormats || ['pdf', 'docx', 'pptx', 'xlsx'];
 
+  // Defensive extraction of AI output with fallbacks
+  const safePdfWord = initialOutput?.pdf_word || { title: topic || 'Untitled', author: 'AI Writer', language: language || 'English', sections: [] };
+  const safePpt = initialOutput?.ppt || { slides: [] };
+  const safeSections = Array.isArray(safePdfWord.sections) ? safePdfWord.sections : [];
+  const safeSlides = Array.isArray(safePpt.slides) ? safePpt.slides : [];
+
   // Detect RTL language for proper text direction in editor
   const isRTL = useMemo(() => {
     return SUPPORTED_LANGUAGES.find(l => l.name === language)?.direction === 'rtl' || false;
@@ -83,13 +89,22 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
     [isRTL]
   );
 
-  // Core state
-  const [title, setTitle] = useState(initialOutput.pdf_word.title);
+  // Core state - use safe defaults
+  const [title, setTitle] = useState(typeof safePdfWord.title === 'string' ? safePdfWord.title : topic || 'Untitled');
   const [sections, setSections] = useState<PdfWordSection[]>(
-    initialOutput.pdf_word.sections.map((s) => ({ ...s, bullets: [...s.bullets] }))
+    safeSections.map((s) => ({
+      heading: typeof s?.heading === 'string' ? s.heading : 'Section',
+      paragraph: typeof s?.paragraph === 'string' ? s.paragraph : '',
+      bullets: Array.isArray(s?.bullets) ? [...s.bullets] : [],
+      image_keyword: typeof s?.image_keyword === 'string' ? s.image_keyword : undefined,
+    }))
   );
   const [slides, setSlides] = useState<PptSlide[]>(
-    initialOutput.ppt.slides.map((s) => ({ ...s, bullets: [...s.bullets] }))
+    safeSlides.map((s) => ({
+      title: typeof s?.title === 'string' ? s.title : 'Slide',
+      bullets: Array.isArray(s?.bullets) ? [...s.bullets] : [],
+      image_keyword: typeof s?.image_keyword === 'string' ? s.image_keyword : undefined,
+    }))
   );
 
   // UI state
@@ -102,22 +117,30 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
 
   // ─── Word Count ───────────────────────────────────────────
   const totalWordCount = useMemo(() => {
-    let count = title.split(/\s+/).filter(Boolean).length;
+    let count = (title || '').split(/\s+/).filter(Boolean).length;
     for (const s of sections) {
-      count += s.heading.split(/\s+/).filter(Boolean).length;
-      count += s.paragraph.split(/\s+/).filter(Boolean).length;
-      for (const b of s.bullets) {
-        count += b.split(/\s+/).filter(Boolean).length;
+      if (!s) continue;
+      count += (s.heading || '').split(/\s+/).filter(Boolean).length;
+      count += (s.paragraph || '').split(/\s+/).filter(Boolean).length;
+      const bullets = Array.isArray(s.bullets) ? s.bullets : [];
+      for (const b of bullets) {
+        if (typeof b === 'string') {
+          count += b.split(/\s+/).filter(Boolean).length;
+        }
       }
     }
     return count;
   }, [title, sections]);
 
   const sectionWordCount = useCallback((s: PdfWordSection): number => {
-    let count = s.heading.split(/\s+/).filter(Boolean).length;
-    count += s.paragraph.split(/\s+/).filter(Boolean).length;
-    for (const b of s.bullets) {
-      count += b.split(/\s+/).filter(Boolean).length;
+    if (!s) return 0;
+    let count = (s.heading || '').split(/\s+/).filter(Boolean).length;
+    count += (s.paragraph || '').split(/\s+/).filter(Boolean).length;
+    const bullets = Array.isArray(s.bullets) ? s.bullets : [];
+    for (const b of bullets) {
+      if (typeof b === 'string') {
+        count += b.split(/\s+/).filter(Boolean).length;
+      }
     }
     return count;
   }, []);
@@ -126,6 +149,7 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
   const updateSection = useCallback((index: number, field: keyof PdfWordSection, value: string) => {
     setSections((prev: PdfWordSection[]) => {
       const updated = [...prev];
+      if (!updated[index]) return updated;
       updated[index] = { ...updated[index], [field]: value };
       return updated;
     });
@@ -143,19 +167,19 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
   const updateBullet = useCallback((sectionIndex: number, bulletIndex: number, value: string) => {
     setSections((prev: PdfWordSection[]) => {
       const updated = [...prev];
-      const newBullets = [...updated[sectionIndex].bullets];
+      if (!updated[sectionIndex]) return updated;
+      const newBullets = Array.isArray(updated[sectionIndex].bullets) ? [...updated[sectionIndex].bullets] : [];
       newBullets[bulletIndex] = value;
       updated[sectionIndex] = { ...updated[sectionIndex], bullets: newBullets };
       return updated;
     });
     setSlides((prev: PptSlide[]) => {
       const updated = [...prev];
-      if (updated[sectionIndex]) {
-        const newBullets = [...updated[sectionIndex].bullets];
-        if (bulletIndex < newBullets.length) {
-          newBullets[bulletIndex] = value;
-          updated[sectionIndex] = { ...updated[sectionIndex], bullets: newBullets };
-        }
+      if (!updated[sectionIndex]) return updated;
+      const newBullets = Array.isArray(updated[sectionIndex].bullets) ? [...updated[sectionIndex].bullets] : [];
+      if (bulletIndex < newBullets.length) {
+        newBullets[bulletIndex] = value;
+        updated[sectionIndex] = { ...updated[sectionIndex], bullets: newBullets };
       }
       return updated;
     });
@@ -164,20 +188,22 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
   const addBullet = useCallback((sectionIndex: number) => {
     setSections((prev: PdfWordSection[]) => {
       const updated = [...prev];
+      if (!updated[sectionIndex]) return updated;
+      const existingBullets = Array.isArray(updated[sectionIndex].bullets) ? updated[sectionIndex].bullets : [];
       updated[sectionIndex] = {
         ...updated[sectionIndex],
-        bullets: [...updated[sectionIndex].bullets, ''],
+        bullets: [...existingBullets, ''],
       };
       return updated;
     });
     setSlides((prev: PptSlide[]) => {
       const updated = [...prev];
-      if (updated[sectionIndex]) {
-        updated[sectionIndex] = {
-          ...updated[sectionIndex],
-          bullets: [...updated[sectionIndex].bullets, ''],
-        };
-      }
+      if (!updated[sectionIndex]) return updated;
+      const existingBullets = Array.isArray(updated[sectionIndex].bullets) ? updated[sectionIndex].bullets : [];
+      updated[sectionIndex] = {
+        ...updated[sectionIndex],
+        bullets: [...existingBullets, ''],
+      };
       return updated;
     });
   }, []);
@@ -185,16 +211,18 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
   const removeBullet = useCallback((sectionIndex: number, bulletIndex: number) => {
     setSections((prev: PdfWordSection[]) => {
       const updated = [...prev];
-      const newBullets = updated[sectionIndex].bullets.filter((_: string, i: number) => i !== bulletIndex);
+      if (!updated[sectionIndex]) return updated;
+      const bullets = Array.isArray(updated[sectionIndex].bullets) ? updated[sectionIndex].bullets : [];
+      const newBullets = bullets.filter((_: string, i: number) => i !== bulletIndex);
       updated[sectionIndex] = { ...updated[sectionIndex], bullets: newBullets };
       return updated;
     });
     setSlides((prev: PptSlide[]) => {
       const updated = [...prev];
-      if (updated[sectionIndex]) {
-        const newBullets = updated[sectionIndex].bullets.filter((_: string, i: number) => i !== bulletIndex);
-        updated[sectionIndex] = { ...updated[sectionIndex], bullets: newBullets };
-      }
+      if (!updated[sectionIndex]) return updated;
+      const bullets = Array.isArray(updated[sectionIndex].bullets) ? updated[sectionIndex].bullets : [];
+      const newBullets = bullets.filter((_: string, i: number) => i !== bulletIndex);
+      updated[sectionIndex] = { ...updated[sectionIndex], bullets: newBullets };
       return updated;
     });
   }, []);
@@ -202,28 +230,29 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
   // ─── Section Management ───────────────────────────────────
   const addSection = useCallback(() => {
     const newSection: PdfWordSection = {
-      heading: t('editor_new_section_heading'),
-      paragraph: t('editor_new_section_paragraph'),
-      bullets: [t('editor_new_section_bullet')],
+      heading: t('editor_new_section_heading') || 'New Section',
+      paragraph: t('editor_new_section_paragraph') || 'Add content here...',
+      bullets: [t('editor_new_section_bullet') || 'Key point'],
       image_keyword: '',
     };
     setSections((prev: PdfWordSection[]) => [...prev, newSection]);
     setSlides((prev: PptSlide[]) => [
       ...prev,
-      { title: t('editor_new_section_heading'), bullets: [t('editor_new_section_bullet')], image_keyword: '' },
+      { title: t('editor_new_section_heading') || 'New Section', bullets: [t('editor_new_section_bullet') || 'Key point'], image_keyword: '' },
     ]);
     setExpandedSection(sections.length);
-  }, [sections.length]);
+  }, [sections.length, t]);
 
   const removeSection = useCallback((index: number) => {
     if (sections.length <= 1) {
-      Alert.alert(t('alert_cannot_remove_title'), t('alert_cannot_remove_msg'));
+      Alert.alert(t('alert_cannot_remove_title') || 'Cannot Remove', t('alert_cannot_remove_msg') || 'At least one section is required.');
       return;
     }
-    Alert.alert(t('alert_delete_section_title'), t('alert_delete_section_msg', { heading: sections[index].heading }), [
-      { text: t('alert_cancel'), style: 'cancel' },
+    const sectionHeading = sections[index]?.heading || 'this section';
+    Alert.alert(t('alert_delete_section_title') || 'Delete Section?', t('alert_delete_section_msg', { heading: sectionHeading }) || `Delete "${sectionHeading}"?`, [
+      { text: t('alert_cancel') || 'Cancel', style: 'cancel' },
       {
-        text: t('alert_delete'),
+        text: t('alert_delete') || 'Delete',
         style: 'destructive',
         onPress: () => {
           setSections((prev: PdfWordSection[]) => prev.filter((_: PdfWordSection, i: number) => i !== index));
@@ -232,7 +261,7 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
         },
       },
     ]);
-  }, [sections]);
+  }, [sections, t]);
 
   const moveSection = useCallback((index: number, direction: 'up' | 'down') => {
     const newIndex = direction === 'up' ? index - 1 : index + 1;
@@ -255,10 +284,12 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
 
   const duplicateSection = useCallback((index: number) => {
     const src = sections[index];
+    if (!src) return;
+    const srcBullets = Array.isArray(src.bullets) ? src.bullets : [];
     const copy: PdfWordSection = {
-      heading: `${src.heading} ${t('editor_copy_suffix')}`,
-      paragraph: src.paragraph,
-      bullets: [...src.bullets],
+      heading: `${src.heading || 'Section'} ${t('editor_copy_suffix') || '(Copy)'}`,
+      paragraph: src.paragraph || '',
+      bullets: [...srcBullets],
       image_keyword: src.image_keyword,
     };
     setSections((prev: PdfWordSection[]) => {
@@ -270,55 +301,58 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
       const updated = [...prev];
       updated.splice(index + 1, 0, {
         title: copy.heading,
-        bullets: [...copy.bullets],
+        bullets: [...srcBullets],
         image_keyword: copy.image_keyword,
       });
       return updated;
     });
     setExpandedSection(index + 1);
-  }, [sections]);
+  }, [sections, t]);
 
   // ─── AI Section Actions ───────────────────────────────────
   const handleAIAction = useCallback(async (index: number, action: AIAction) => {
+    const section = sections[index];
+    if (!section) return;
+
     setShowAiMenu(null);
     setAiLoadingSection(index);
     try {
       const sectionData: SectionContent = {
-        heading: sections[index].heading,
-        paragraph: sections[index].paragraph,
-        bullets: sections[index].bullets,
+        heading: section.heading || 'Section',
+        paragraph: section.paragraph || '',
+        bullets: Array.isArray(section.bullets) ? section.bullets : [],
       };
 
       const result = await aiEditSection(action, sectionData, language, title);
 
       setSections((prev: PdfWordSection[]) => {
         const updated = [...prev];
+        if (!updated[index]) return updated;
         updated[index] = {
           ...updated[index],
-          heading: result.heading,
-          paragraph: result.paragraph,
-          bullets: result.bullets,
+          heading: result.heading || updated[index].heading,
+          paragraph: result.paragraph || updated[index].paragraph,
+          bullets: Array.isArray(result.bullets) ? result.bullets : updated[index].bullets,
         };
         return updated;
       });
       setSlides((prev: PptSlide[]) => {
         const updated = [...prev];
-        if (updated[index]) {
-          updated[index] = {
-            ...updated[index],
-            title: result.heading,
-            bullets: result.bullets,
-          };
-        }
+        if (!updated[index]) return updated;
+        updated[index] = {
+          ...updated[index],
+          title: result.heading || updated[index].title,
+          bullets: Array.isArray(result.bullets) ? result.bullets : updated[index].bullets,
+        };
         return updated;
       });
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'AI operation failed.';
-      Alert.alert(t('alert_ai_error_title'), msg);
+      Alert.alert(t('alert_ai_error_title') || 'AI Error', msg);
     } finally {
       setAiLoadingSection(null);
     }
-  }, [sections, language, title]);
+  }, [sections, language, title, t]);
 
   // ─── Generate Files ───────────────────────────────────────
   const handleGenerateFiles = async () => {

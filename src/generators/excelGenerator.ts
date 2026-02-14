@@ -201,7 +201,7 @@ export async function generateExcel(
   });
 
   // ─── Images Sheet ──────────────────────────────────
-  if (images && images.size > 0) {
+  if (images && typeof images.size === 'number' && images.size > 0 && typeof images.entries === 'function') {
     try {
       const imgSheet = workbook.addWorksheet('Images', {
         properties: { defaultColWidth: 30 },
