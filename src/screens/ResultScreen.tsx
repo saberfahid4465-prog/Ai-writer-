@@ -16,7 +16,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
-  Platform,
 } from 'react-native';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
@@ -81,7 +80,7 @@ export default function ResultScreen({ route, navigation }: ResultScreenProps) {
     }
   };
 
-  // ─── Download (Copy to Downloads) ─────────────────────────
+  // ─── Download (Use share sheet to save) ───────────────────
   const handleDownload = async (file: GeneratedFile) => {
     try {
       // Check if the file actually exists
@@ -91,33 +90,20 @@ export default function ResultScreen({ route, navigation }: ResultScreenProps) {
         return;
       }
 
-      if (Platform.OS === 'android') {
-        // Use Storage Access Framework to let user choose save location
-        const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
-        if (permissions.granted) {
-          const base64 = await FileSystem.readAsStringAsync(file.path, {
-            encoding: FileSystem.EncodingType.Base64,
-          });
-          const uri = await FileSystem.StorageAccessFramework.createFileAsync(
-            permissions.directoryUri,
-            file.name,
-            getMimeType(file.type)
-          );
-          await FileSystem.writeAsStringAsync(uri, base64, {
-            encoding: FileSystem.EncodingType.Base64,
-          });
-          Alert.alert(t('alert_downloaded_title'), t('alert_downloaded_msg', { name: file.name }));
-        } else {
-          Alert.alert(t('alert_error'), t('alert_permission_denied'));
-        }
-      } else {
-        // iOS: Use share sheet to save
-        await Sharing.shareAsync(file.path, {
-          mimeType: getMimeType(file.type),
-          dialogTitle: `Save ${file.name}`,
-        });
+      // Check if sharing is available
+      const isAvailable = await Sharing.isAvailableAsync();
+      if (!isAvailable) {
+        Alert.alert(t('alert_error'), t('alert_sharing_not_available_msg'));
+        return;
       }
+
+      // Use share sheet - user can choose "Save to Files" or any app
+      await Sharing.shareAsync(file.path, {
+        mimeType: getMimeType(file.type),
+        dialogTitle: t('alert_downloaded_title'),
+      });
     } catch (error) {
+      console.error('Download error:', error);
       Alert.alert(t('alert_error'), t('alert_download_failed'));
     }
   };

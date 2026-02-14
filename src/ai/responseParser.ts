@@ -69,13 +69,37 @@ export function parseAIResponse(rawContent: string): AIWriterOutput {
     throw new Error(`Invalid JSON from AI: ${cleaned.substring(0, 200)}...`);
   }
 
-  // Step 3: Validate structure
+  // Step 3: Validate structure with defaults for missing sections
   const obj = parsed as Record<string, unknown>;
+  
+  // Provide default structures if missing
+  if (!obj.pdf_word || typeof obj.pdf_word !== 'object') {
+    obj.pdf_word = {
+      title: 'Untitled Document',
+      author: 'AI Writer',
+      language: 'English',
+      sections: [{ heading: 'Content', paragraph: 'Content generation in progress...', bullets: [] }]
+    };
+  }
+  
+  if (!obj.ppt || typeof obj.ppt !== 'object') {
+    obj.ppt = {
+      slides: [{ title: 'Presentation', bullets: ['Content generation in progress...'] }]
+    };
+  }
+  
+  if (!obj.excel || typeof obj.excel !== 'object') {
+    obj.excel = {
+      headers: ['Item', 'Description'],
+      rows: [['1', 'Content generation in progress...']]
+    };
+  }
+  
   validatePdfWord(obj.pdf_word);
   validatePpt(obj.ppt);
   validateExcel(obj.excel);
 
-  return parsed as AIWriterOutput;
+  return obj as unknown as AIWriterOutput;
 }
 
 // ─── Validators ─────────────────────────────────────────────────
