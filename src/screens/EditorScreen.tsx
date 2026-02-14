@@ -347,9 +347,12 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
       // Build matching slides from valid sections only
       const validSlides = validSections.map(({ section: s, originalIndex }) => {
         const matchingSlide = slides[originalIndex] || { title: s.heading, bullets: s.bullets, image_keyword: s.image_keyword };
-        const filteredBullets = matchingSlide.bullets.filter((b) => b.trim());
+        // Defensive check: ensure bullets is an array
+        const slideBullets = Array.isArray(matchingSlide.bullets) ? matchingSlide.bullets : [];
+        const filteredBullets = slideBullets.filter((b) => typeof b === 'string' && b.trim());
         return {
           ...matchingSlide,
+          title: typeof matchingSlide.title === 'string' ? matchingSlide.title : s.heading,
           bullets: filteredBullets.length > 0 ? filteredBullets : [s.heading],
         };
       });

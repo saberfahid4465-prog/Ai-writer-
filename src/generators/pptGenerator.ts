@@ -46,17 +46,29 @@ export async function generatePPT(
   metaData: PdfWordData,
   images?: Map<string, DocumentImage>
 ): Promise<string> {
+  // Defensive checks for required parameters
+  if (!pptData || typeof pptData !== 'object') {
+    throw new Error('PPT generation failed: Invalid pptData');
+  }
+  if (!metaData || typeof metaData !== 'object') {
+    throw new Error('PPT generation failed: Invalid metaData');
+  }
+
   const pptx = new PptxGenJS();
 
-  // Set presentation metadata
-  pptx.author = metaData.author || 'AI Writer';
-  pptx.title = metaData.title;
+  // Set presentation metadata with fallbacks
+  const safeTitle = typeof metaData.title === 'string' ? metaData.title : 'Untitled';
+  const safeAuthor = typeof metaData.author === 'string' ? metaData.author : 'AI Writer';
+  const safeLanguage = typeof metaData.language === 'string' ? metaData.language : 'English';
+
+  pptx.author = safeAuthor;
+  pptx.title = safeTitle;
   pptx.company = 'AI Writer';
   pptx.layout = 'LAYOUT_WIDE'; // 16:9 widescreen
 
   // Detect RTL languages
   const rtlLanguages = ['arabic', 'hebrew', 'persian', 'farsi', 'urdu'];
-  const isRTL = rtlLanguages.some(lang => metaData.language.toLowerCase().includes(lang));
+  const isRTL = rtlLanguages.some(lang => safeLanguage.toLowerCase().includes(lang));
   if (isRTL) {
     pptx.rtlMode = true;
   }
@@ -66,7 +78,7 @@ export async function generatePPT(
   titleSlide.background = { color: THEME.PRIMARY_BG };
 
   // Title text
-  titleSlide.addText(metaData.title, {
+  titleSlide.addText(safeTitle, {
     x: 0.8,
     y: 1.8,
     w: 8.4,
@@ -80,7 +92,7 @@ export async function generatePPT(
   });
 
   // Subtitle / author
-  titleSlide.addText(`By ${metaData.author || 'AI Writer'}  |  ${metaData.language}`, {
+  titleSlide.addText(`By ${safeAuthor}  |  ${safeLanguage}`, {
     x: 0.8,
     y: 3.4,
     w: 8.4,
@@ -101,7 +113,12 @@ export async function generatePPT(
   });
 
   // ─── Content Slides ──────────────────────────────────────
-  for (const slide of pptData.slides) {
+  // Defensive check: ensure slides is an array
+  const slidesArray = Array.isArray(pptData?.slides) ? pptData.slides : [];
+
+  for (const slide of slidesArray) {
+    if (!slide || typeof slide !== 'object') continue;
+
     const contentSlide = pptx.addSlide();
     contentSlide.background = { color: THEME.SLIDE_BG };
 
@@ -115,7 +132,8 @@ export async function generatePPT(
     });
 
     // Slide title
-    contentSlide.addText(slide.title, {
+    const slideTitle = typeof slide.title === 'string' ? slide.title : 'Untitled';
+    contentSlide.addText(slideTitle, {
       x: 0.8,
       y: 0.15,
       w: 8.4,
@@ -129,10 +147,12 @@ export async function generatePPT(
     });
 
     // Bullet points — PP21 fix: auto-shrink font if many bullets
-    const bulletFontSize = slide.bullets.length > 8 ? 13 : slide.bullets.length > 12 ? 11 : 16;
-    const bulletSpacing = slide.bullets.length > 8 ? 4 : 8;
-    const bulletItems = slide.bullets.map((bullet) => ({
-      text: bullet,
+    // Defensive check: ensure bullets is an array
+    const bulletsArray = Array.isArray(slide.bullets) ? slide.bullets : [];
+    const bulletFontSize = bulletsArray.length > 8 ? 13 : bulletsArray.length > 12 ? 11 : 16;
+    const bulletSpacing = bulletsArray.length > 8 ? 4 : 8;
+    const bulletItems = bulletsArray.map((bullet) => ({
+      text: typeof bullet === 'string' ? bullet : String(bullet || ''),
       options: {
         fontSize: bulletFontSize,
         fontFace: THEME.FONT,
@@ -144,7 +164,7 @@ export async function generatePPT(
     }));
 
     // Check if we have an image for this slide
-    const slideImage = images && slide.image_keyword
+    const slideImage = images && typeof images.get === 'function' && slide.image_keyword
       ? images.get(slide.image_keyword)
       : null;
 
@@ -181,13 +201,28 @@ export async function generatePPT(
     }
 
     // Add bullets: half-width if image succeeded, full-width otherwise
-    contentSlide.addText(bulletItems as any, {
-      x: 0.8,
-      y: 1.6,
-      w: imageEmbedded ? 4.8 : 8.4,
-      h: 4.5,
-      valign: 'top',
-    });
+    // Only add bullets if there are any (pptxgenjs may fail on empty array)
+    if (bulletItems.length > 0) {
+      contentSlide.addText(bulletItems as any, {
+        x: 0.8,
+        y: 1.6,
+        w: imageEmbedded ? 4.8 : 8.4,
+        h: 4.5,
+        valign: 'top',
+      });
+    } else {
+      // Add placeholder text for empty slides
+      contentSlide.addText('No content', {
+        x: 0.8,
+        y: 1.6,
+        w: 8.4,
+        h: 0.5,
+        fontSize: 14,
+        fontFace: THEME.FONT,
+        color: THEME.SUBTITLE_COLOR,
+        italic: true,
+      });
+    }
 
     // Accent line under header
     contentSlide.addShape('rect' as any, {
