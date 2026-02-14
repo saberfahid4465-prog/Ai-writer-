@@ -16,12 +16,9 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
-  Platform,
-  ToastAndroid,
 } from 'react-native';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
-import { StorageAccessFramework } from 'expo-file-system';
 import { GeneratedFile } from '../utils/fileStorage';
 import { useTheme } from '../utils/themeContext';
 import { useTranslation } from '../i18n/i18nContext';
@@ -83,7 +80,7 @@ export default function ResultScreen({ route, navigation }: ResultScreenProps) {
     }
   };
 
-  // ─── Download (Direct save to Downloads folder) ───────────
+  // ─── Download (Share sheet allows saving to files) ────────
   const handleDownload = async (file: GeneratedFile) => {
     try {
       // Check if the file actually exists
@@ -93,45 +90,11 @@ export default function ResultScreen({ route, navigation }: ResultScreenProps) {
         return;
       }
 
-      if (Platform.OS === 'android') {
-        // Use Storage Access Framework to save directly to Downloads
-        const permissions = await StorageAccessFramework.requestDirectoryPermissionsAsync();
-        
-        if (!permissions.granted) {
-          // Fallback to share sheet if permission denied
-          await Sharing.shareAsync(file.path, {
-            mimeType: getMimeType(file.type),
-            dialogTitle: t('alert_downloaded_title'),
-          });
-          return;
-        }
-
-        // Read the file content
-        const fileContent = await FileSystem.readAsStringAsync(file.path, {
-          encoding: FileSystem.EncodingType.Base64,
-        });
-
-        // Create file in the selected directory
-        const newFileUri = await StorageAccessFramework.createFileAsync(
-          permissions.directoryUri,
-          file.name,
-          getMimeType(file.type)
-        );
-
-        // Write content to the new file
-        await FileSystem.writeAsStringAsync(newFileUri, fileContent, {
-          encoding: FileSystem.EncodingType.Base64,
-        });
-
-        // Show success toast
-        ToastAndroid.show(`✅ ${file.name} saved!`, ToastAndroid.SHORT);
-      } else {
-        // iOS: Use share sheet (standard iOS behavior)
-        await Sharing.shareAsync(file.path, {
-          mimeType: getMimeType(file.type),
-          dialogTitle: t('alert_downloaded_title'),
-        });
-      }
+      // Use share sheet - allows saving to Files/Downloads
+      await Sharing.shareAsync(file.path, {
+        mimeType: getMimeType(file.type),
+        dialogTitle: t('alert_downloaded_title'),
+      });
     } catch (error) {
       console.error('Download error:', error);
       Alert.alert(t('alert_error'), t('alert_download_failed'));
