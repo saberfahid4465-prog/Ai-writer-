@@ -97,6 +97,10 @@ const ko: Record<string, string> = {
   alert_downloaded_title: '다운로드 완료',
   alert_downloaded_msg: '{{name}}이(가) 성공적으로 저장되었습니다.',
   alert_download_failed: '파일 다운로드에 실패했습니다. 다시 시도해주세요.',
+  alert_empty_content_title: '빈 콘텐츠',
+  alert_empty_content_msg: '업로드된 파일이 비어 있거나 공백만 포함되어 있습니다.',
+  alert_short_content_title: '매우 짧은 콘텐츠',
+  alert_short_content_msg: '콘텐츠가 매우 짧아 결과가 부족할 수 있습니다. 계속하시겠습니까?',
   alert_sharing_not_available_title: '공유 불가',
   alert_sharing_not_available_msg: '이 기기에서는 공유가 지원되지 않습니다.',
   alert_share_failed: '파일 공유에 실패했습니다. 다시 시도해주세요.',
@@ -136,6 +140,9 @@ const ko: Record<string, string> = {
   editor_new_section_bullet: '포인트 1',
   editor_copy_suffix: '(복사)',
   editor_generating: ' 파일 생성 중...',
+  editor_generating_formats: '문서를 생성하는 중...',
+  editor_generating_format: '{{format}} 생성 중...',
+  editor_generating_saving: '파일 저장 중...',
   editor_generate_final: '✨ 최종 파일 생성',
   alert_cannot_remove_title: '삭제 불가',
   alert_cannot_remove_msg: '최소 하나의 섹션이 필요합니다.',
@@ -244,6 +251,10 @@ const ko: Record<string, string> = {
   premium_footer: '문의: support@aiwriter.app',
   alert_coming_soon_title: '출시 예정',
   alert_coming_soon_msg: '앱 내 구매는 다음 업데이트에서 이용 가능합니다. 기대해주세요!',
+  alert_cancel_partial_title: '처리를 취소하시겠습니까?',
+  alert_cancel_partial_msg: '{{completed}}개 청크가 이미 처리되었습니다. 부분 결과를 유지하시겠습니까?',
+  alert_discard: '삭제',
+  alert_keep_partial: '부분 유지',
 };
 
 export default ko;

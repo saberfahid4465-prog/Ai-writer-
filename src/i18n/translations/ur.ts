@@ -97,6 +97,10 @@ const ur: Record<string, string> = {
   alert_downloaded_title: 'ڈاؤنلوڈ ہو گیا',
   alert_downloaded_msg: '{{name}} کامیابی سے محفوظ ہو گیا۔',
   alert_download_failed: 'فائل ڈاؤنلوڈ ناکام۔ براہ کرم دوبارہ کوشش کریں۔',
+  alert_empty_content_title: 'خالی مواد',
+  alert_empty_content_msg: 'اپلوڈ کی گئی فائل خالی لگتی ہے یا صرف خالی جگہیں ہیں۔',
+  alert_short_content_title: 'بہت مختصر مواد',
+  alert_short_content_msg: 'مواد بہت مختصر ہے اور کم نتائج دے سکتا ہے۔ کیا آپ جاری رکھنا چاہتے ہیں؟',
   alert_sharing_not_available_title: 'شیئرنگ دستیاب نہیں',
   alert_sharing_not_available_msg: 'اس ڈیوائس پر شیئرنگ معاون نہیں ہے۔',
   alert_share_failed: 'فائل شیئر ناکام۔ براہ کرم دوبارہ کوشش کریں۔',
@@ -136,6 +140,9 @@ const ur: Record<string, string> = {
   editor_new_section_bullet: 'نکتہ 1',
   editor_copy_suffix: '(کاپی)',
   editor_generating: ' فائلیں بن رہی ہیں...',
+  editor_generating_formats: 'دستاویزات بنائی جا رہی ہیں...',
+  editor_generating_format: '{{format}} بنایا جا رہا ہے...',
+  editor_generating_saving: 'فائلیں محفوظ ہو رہی ہیں...',
   editor_generate_final: '✨ حتمی فائلیں بنائیں',
   alert_cannot_remove_title: 'ہٹایا نہیں جا سکتا',
   alert_cannot_remove_msg: 'کم از کم ایک حصہ ضروری ہے۔',
@@ -244,6 +251,10 @@ const ur: Record<string, string> = {
   premium_footer: 'سوالات؟ support@aiwriter.app پر رابطہ کریں',
   alert_coming_soon_title: 'جلد آ رہا ہے',
   alert_coming_soon_msg: 'ان ایپ خریداری اگلی اپڈیٹ میں دستیاب ہوگی۔ منتظر رہیں!',
+  alert_cancel_partial_title: 'پروسیسنگ منسوخ کریں؟',
+  alert_cancel_partial_msg: '{{completed}} حصے پہلے سے پروسیس ہو چکے ہیں۔ جزوی نتائج رکھیں؟',
+  alert_discard: 'حذف کریں',
+  alert_keep_partial: 'جزوی رکھیں',
 };
 
 export default ur;

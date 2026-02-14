@@ -21,12 +21,12 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
-import { translateDocument } from '../ai/longcatService';
+import { translateDocumentChunked } from '../ai/longcatService';
 import { AIWriterOutput } from '../ai/responseParser';
-import { parseUploadedFile } from '../services/fileParserService';
+import { parseUploadedFile, splitIntoChunks } from '../services/fileParserService';
 import { useTheme } from '../utils/themeContext';
 import { useTranslation } from '../i18n/i18nContext';
-import { canMakeRequest, getRemainingTokens } from '../utils/tokenUsage';
+import { canMakeRequest, getRemainingTokens, estimateRequestCost, calculateTokenAnalysis } from '../utils/tokenUsage';
 
 interface TranslateProcessingScreenProps {
   route: {
@@ -60,7 +60,12 @@ export default function TranslateProcessingScreen({ route, navigation }: Transla
   const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [chunkInfo, setChunkInfo] = useState('');
   const cancelledRef = useRef(false);
+
+  // Checkpoint: store completed chunk outputs for retry resume
+  const completedChunksRef = useRef<AIWriterOutput[]>([]);
+  const nextChunkIndexRef = useRef(0);
 
   useEffect(() => {
     runTranslation();
@@ -69,19 +74,131 @@ export default function TranslateProcessingScreen({ route, navigation }: Transla
 
   const runTranslation = async () => {
     try {
+      // T35: Defense-in-depth — block same source/target language
+      if (sourceLanguage.toLowerCase() === targetLanguage.toLowerCase()) {
+        Alert.alert(
+          t('alert_same_language_title'),
+          t('alert_same_language_msg'),
+          [{ text: t('alert_ok'), onPress: () => navigation.goBack() }]
+        );
+        return;
+      }
+
       // Step 0: Read file
       setCurrentStep(0);
       setProgress(10);
 
-      const parsed = await parseUploadedFile(uploadedFileUri, uploadedFileName);
+      const parsed = await parseUploadedFile(uploadedFileUri, uploadedFileName, { maxChars: 500000 });
       if (cancelledRef.current) return;
-      setProgress(25);
+      setProgress(20);
 
-      // Step 1: Check token limit
+      // S39: Validate content is not just whitespace
+      if (!parsed.content || parsed.content.trim().length === 0) {
+        Alert.alert(
+          t('alert_empty_content_title'),
+          t('alert_empty_content_msg'),
+          [{ text: t('alert_ok'), onPress: () => navigation.goBack() }]
+        );
+        return;
+      }
+
+      // T36: Warn about very short content
+      if (parsed.content.trim().length < 50) {
+        const proceed = await new Promise<boolean>((resolve) => {
+          Alert.alert(
+            t('alert_short_content_title'),
+            t('alert_short_content_msg'),
+            [
+              { text: t('alert_go_back'), onPress: () => resolve(false), style: 'cancel' },
+              { text: t('alert_continue'), onPress: () => resolve(true) },
+            ]
+          );
+        });
+        if (!proceed) {
+          navigation.goBack();
+          return;
+        }
+      }
+
+      // If content was truncated at the safety limit (very large doc), warn user
+      if (parsed.wasTruncated) {
+        const kept = parsed.content.length;
+        const total = parsed.originalLength || kept;
+        const pct = Math.round((kept / total) * 100);
+        const userWants = await new Promise<boolean>((resolve) => {
+          Alert.alert(
+            t('alert_truncated_title'),
+            t('alert_truncated_msg', {
+              kept: kept.toLocaleString(),
+              total: total.toLocaleString(),
+              pct: String(pct),
+            }),
+            [
+              { text: t('alert_go_back'), onPress: () => resolve(false), style: 'cancel' },
+              { text: t('alert_continue'), onPress: () => resolve(true) },
+            ]
+          );
+        });
+        if (!userWants) {
+          cancelledRef.current = true;
+          navigation.goBack();
+          return;
+        }
+      }
+
+      // Split into chunks for processing
+      const chunks = splitIntoChunks(parsed.content);
+
+      // Step 1: Token calculator — show user exactly what's needed
       setCurrentStep(1);
+      const analysis = calculateTokenAnalysis(parsed.content.length, chunks.length);
+      const remaining = await getRemainingTokens();
+      const hasEnough = analysis.totalTokensNeeded <= remaining;
+      const verdict = hasEnough
+        ? t('alert_token_sufficient')
+        : t('alert_token_insufficient');
+
+      if (!hasEnough) {
+        // T03-BUG fix: block operation entirely if tokens are insufficient
+        // to prevent wasting tokens on partial chunk processing
+        Alert.alert(
+          t('alert_token_warning_title'),
+          t('alert_token_warning_msg', {
+            chars: analysis.totalChars.toLocaleString(),
+            chunks: String(analysis.chunks),
+            cost: analysis.totalTokensNeeded.toLocaleString(),
+            remaining: remaining.toLocaleString(),
+            verdict,
+          }),
+          [{ text: t('alert_go_back'), onPress: () => navigation.goBack() }]
+        );
+        return;
+      }
+
+      const userApproves = await new Promise<boolean>((resolve) => {
+        Alert.alert(
+          t('alert_token_warning_title'),
+          t('alert_token_warning_msg', {
+            chars: analysis.totalChars.toLocaleString(),
+            chunks: String(analysis.chunks),
+            cost: analysis.totalTokensNeeded.toLocaleString(),
+            remaining: remaining.toLocaleString(),
+            verdict,
+          }),
+          [
+            { text: t('alert_go_back'), onPress: () => resolve(false), style: 'cancel' },
+            { text: t('alert_continue'), onPress: () => resolve(true) },
+          ]
+        );
+      });
+      if (!userApproves) {
+        navigation.goBack();
+        return;
+      }
+
+      // Verify effective token availability
       const hasTokens = await canMakeRequest();
       if (!hasTokens) {
-        const remaining = await getRemainingTokens();
         Alert.alert(
           t('alert_daily_limit_title'),
           t('alert_daily_limit_msg', { n: String(remaining) }),
@@ -89,26 +206,39 @@ export default function TranslateProcessingScreen({ route, navigation }: Transla
         );
         return;
       }
-      if (cancelledRef.current) return;
-      setProgress(35);
 
-      // Step 2: Translate with AI
+      // Step 2: Translate with AI (chunked)
       setCurrentStep(2);
-      setProgress(40);
+      setProgress(30);
 
-      const aiOutput: AIWriterOutput = await translateDocument(
+      const aiOutput: AIWriterOutput = await translateDocumentChunked(
         parsed.content,
         sourceLanguage,
         targetLanguage,
-        uploadedFileName
+        uploadedFileName,
+        (current, total) => {
+          if (total > 1) {
+            setChunkInfo(t('processing_chunk_progress', { current: String(current), total: String(total) }));
+          }
+          setProgress(30 + Math.round((current / total) * 60));
+        },
+        () => cancelledRef.current,
+        (chunkIndex, output) => {
+          // Checkpoint: save completed chunk for retry resume
+          completedChunksRef.current = [...completedChunksRef.current.slice(0, chunkIndex), output];
+          nextChunkIndexRef.current = chunkIndex + 1;
+        },
+        nextChunkIndexRef.current,
+        completedChunksRef.current
       );
 
       if (cancelledRef.current) return;
-      setProgress(85);
+      setProgress(95);
 
       // Step 3: Navigate to editor
       setCurrentStep(3);
       setProgress(100);
+      setChunkInfo('');
 
       navigation.replace('Editor', {
         aiOutput,
@@ -128,7 +258,50 @@ export default function TranslateProcessingScreen({ route, navigation }: Transla
 
   const handleCancel = () => {
     cancelledRef.current = true;
-    navigation.goBack();
+    // T031 fix: if we have completed chunks, offer to keep partial results
+    if (completedChunksRef.current.length > 0) {
+      Alert.alert(
+        t('alert_cancel_partial_title') || 'Cancel Translation?',
+        t('alert_cancel_partial_msg', {
+          completed: String(completedChunksRef.current.length),
+        }) || `${completedChunksRef.current.length} chunk(s) already processed. Keep partial results?`,
+        [
+          {
+            text: t('alert_discard') || 'Discard',
+            style: 'destructive',
+            onPress: () => navigation.goBack(),
+          },
+          {
+            text: t('alert_keep_partial') || 'Keep Partial',
+            onPress: () => {
+              try {
+                // Merge completed chunks and navigate to editor with partial output
+                const partialOutput = completedChunksRef.current.reduce((acc, curr) => ({
+                  pdf_word: {
+                    title: acc.pdf_word.title,
+                    author: acc.pdf_word.author,
+                    language: acc.pdf_word.language,
+                    sections: [...acc.pdf_word.sections, ...curr.pdf_word.sections],
+                  },
+                  ppt: { slides: [...acc.ppt.slides, ...curr.ppt.slides] },
+                  excel: { headers: acc.excel.headers, rows: [...acc.excel.rows, ...curr.excel.rows] },
+                }));
+                navigation.replace('Editor', {
+                  aiOutput: partialOutput,
+                  topic: `${uploadedFileName} → ${targetLanguage} (partial)`,
+                  language: targetLanguage,
+                  outputFormats: ['pdf', 'docx', 'pptx', 'xlsx'],
+                });
+              } catch {
+                navigation.goBack();
+              }
+            },
+          },
+        ]
+      );
+    } else {
+      navigation.goBack();
+    }
   };
 
   return (
@@ -146,6 +319,7 @@ export default function TranslateProcessingScreen({ route, navigation }: Transla
       <Text style={[styles.progressText, { color: colors.primary }]}>{progress}%</Text>
 
       <Text style={[styles.stepText, { color: colors.textPrimary }]}>{t(STEPS_KEYS[currentStep] as any)}</Text>
+      {chunkInfo ? <Text style={[styles.chunkInfoText, { color: colors.textMuted }]}>{chunkInfo}</Text> : null}
 
       <View style={styles.stepsContainer}>
         {STEPS_KEYS.map((stepKey, index) => (
@@ -188,7 +362,8 @@ const styles = StyleSheet.create({
   progressBarOuter: { width: '100%', height: 8, borderRadius: 4, overflow: 'hidden', marginBottom: 8 },
   progressBarInner: { height: '100%', borderRadius: 4 },
   progressText: { fontSize: 14, fontWeight: '600', marginBottom: 16 },
-  stepText: { fontSize: 15, fontWeight: '500', marginBottom: 24 },
+  stepText: { fontSize: 15, fontWeight: '500', marginBottom: 4 },
+  chunkInfoText: { fontSize: 13, textAlign: 'center', marginBottom: 20 },
   stepsContainer: { width: '100%', marginBottom: 32 },
   stepRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
   stepDot: { width: 10, height: 10, borderRadius: 5, marginRight: 10 },

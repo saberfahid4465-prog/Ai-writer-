@@ -7,6 +7,18 @@
 
 const SUMMARIZATION_SYSTEM_PROMPT = `You are AI Writer, an intelligent assistant specialized in summarizing professional documents.
 
+STRUCTURE MARKERS — The input may contain markers at the start of each line indicating document structure:
+- [TITLE] = Document title
+- [SUBTITLE] = Document subtitle
+- [H1], [H2], [H3] = Heading levels 1, 2, 3
+- [LIST] = Bullet or numbered list item (indented [LIST] = sub-item)
+- [P] = Normal body paragraph
+- [Slide N] = PowerPoint slide (for PPTX files)
+- [Sheet N] = Excel sheet (for XLSX files)
+
+When these markers are present, use them to understand the original document hierarchy.
+Strip the markers from the output — do NOT include [H1], [P], [LIST], etc. in the summary text.
+
 Rules:
 1. Read the uploaded document content and extract ONLY the most important information.
 2. Identify key points, main arguments, important data, conclusions, and action items.
@@ -67,6 +79,37 @@ export function buildSummarizationPrompt(
   userMessage += `Document Content:\n---\n${uploadedContent}\n---\n\n`;
   userMessage += `Please create a professional summary of the above content in ${language}.\n`;
   userMessage += `Extract the most important points, data, conclusions, and action items.\n`;
+  userMessage += `Generate output for PDF/Word, PPT, and Excel formats.\n`;
+  userMessage += `Return ONLY valid JSON matching the required schema.`;
+
+  return [
+    { role: 'system', content: SUMMARIZATION_SYSTEM_PROMPT },
+    { role: 'user', content: userMessage },
+  ];
+}
+
+/**
+ * Build prompt messages for a single chunk of a multi-chunk summarization.
+ */
+export function buildSummarizationChunkPrompt(
+  chunkContent: string,
+  language: string,
+  fileName: string,
+  chunkIndex: number,
+  totalChunks: number
+): Array<{ role: 'system' | 'user'; content: string }> {
+  let userMessage = `Task: Summarize the following portion of a document, extracting key points.\n\n`;
+  userMessage += `Original File: ${fileName}\n`;
+  userMessage += `Part: ${chunkIndex + 1} of ${totalChunks}\n`;
+  userMessage += `Output Language: ${language}\n\n`;
+
+  if (chunkIndex > 0) {
+    userMessage += `Note: This is a continuation. Summarize only this portion without repeating earlier points.\n\n`;
+  }
+
+  userMessage += `Document Content (Part ${chunkIndex + 1}):\n---\n${chunkContent}\n---\n\n`;
+  userMessage += `Please create a professional summary of the above content in ${language}.\n`;
+  userMessage += `Extract the most important points, data, conclusions, and action items from this portion.\n`;
   userMessage += `Generate output for PDF/Word, PPT, and Excel formats.\n`;
   userMessage += `Return ONLY valid JSON matching the required schema.`;
 

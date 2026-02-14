@@ -170,18 +170,17 @@ function uint8ArrayToBase64(bytes: Uint8Array): string {
   // Use a lookup table approach for environments without btoa
   const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
   let result = '';
-  let i = 0;
-  while (i < binary.length) {
-    const a = binary.charCodeAt(i++);
-    const b = i < binary.length ? binary.charCodeAt(i++) : 0;
-    const c = i < binary.length ? binary.charCodeAt(i++) : 0;
-    const bitsCount = i <= binary.length + 1 ? (i <= binary.length ? 3 : 2) : 1;
+  const len = binary.length;
+  for (let i = 0; i < len; i += 3) {
+    const a = binary.charCodeAt(i);
+    const b = i + 1 < len ? binary.charCodeAt(i + 1) : 0;
+    const c = i + 2 < len ? binary.charCodeAt(i + 2) : 0;
 
     const triplet = (a << 16) | (b << 8) | c;
     result += CHARS[(triplet >> 18) & 0x3F];
     result += CHARS[(triplet >> 12) & 0x3F];
-    result += bitsCount > 1 ? CHARS[(triplet >> 6) & 0x3F] : '=';
-    result += bitsCount > 2 ? CHARS[triplet & 0x3F] : '=';
+    result += i + 1 < len ? CHARS[(triplet >> 6) & 0x3F] : '=';
+    result += i + 2 < len ? CHARS[triplet & 0x3F] : '=';
   }
   return result;
 }

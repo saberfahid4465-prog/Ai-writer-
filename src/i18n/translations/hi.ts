@@ -97,6 +97,10 @@ const hi: Record<string, string> = {
   alert_downloaded_title: 'डाउनलोड हो गया',
   alert_downloaded_msg: '{{name}} सफलतापूर्वक सहेजा गया।',
   alert_download_failed: 'फ़ाइल डाउनलोड विफल। कृपया पुनः प्रयास करें।',
+  alert_empty_content_title: 'खाली सामग्री',
+  alert_empty_content_msg: 'अपलोड की गई फ़ाइल खाली लगती है या केवल रिक्त स्थान है।',
+  alert_short_content_title: 'बहुत छोटी सामग्री',
+  alert_short_content_msg: 'सामग्री बहुत छोटी है और विरल परिणाम दे सकती है। फिर भी जारी रखें?',
   alert_sharing_not_available_title: 'शेयरिंग उपलब्ध नहीं',
   alert_sharing_not_available_msg: 'इस डिवाइस पर शेयरिंग समर्थित नहीं है।',
   alert_share_failed: 'फ़ाइल शेयर विफल। कृपया पुनः प्रयास करें।',
@@ -136,6 +140,9 @@ const hi: Record<string, string> = {
   editor_new_section_bullet: 'बिंदु 1',
   editor_copy_suffix: '(प्रति)',
   editor_generating: ' फ़ाइलें बन रही हैं...',
+  editor_generating_formats: 'दस्तावेज़ बनाए जा रहे हैं...',
+  editor_generating_format: '{{format}} बनाया जा रहा है...',
+  editor_generating_saving: 'फ़ाइलें सहेजी जा रही हैं...',
   editor_generate_final: '✨ अंतिम फ़ाइलें बनाएँ',
   alert_cannot_remove_title: 'हटाया नहीं जा सकता',
   alert_cannot_remove_msg: 'कम से कम एक अनुभाग आवश्यक है।',
@@ -244,6 +251,10 @@ const hi: Record<string, string> = {
   premium_footer: 'प्रश्न? support@aiwriter.app पर संपर्क करें',
   alert_coming_soon_title: 'जल्द आ रहा है',
   alert_coming_soon_msg: 'इन-ऐप खरीदारी अगले अपडेट में उपलब्ध होगी। बने रहें!',
+  alert_cancel_partial_title: 'प्रसंस्करण रद्द करें?',
+  alert_cancel_partial_msg: '{{completed}} भाग पहले से संसाधित। आंशिक परिणाम रखें?',
+  alert_discard: 'हटाएं',
+  alert_keep_partial: 'आंशिक रखें',
 };
 
 export default hi;

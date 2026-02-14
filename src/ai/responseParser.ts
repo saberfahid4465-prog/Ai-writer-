@@ -103,10 +103,11 @@ function validatePdfWord(data: unknown): asserts data is PdfWordData {
       throw new Error(`pdf_word.sections[${i}].heading is missing or empty`);
     }
     if (typeof section.paragraph !== 'string' || section.paragraph.length === 0) {
-      throw new Error(`pdf_word.sections[${i}].paragraph is missing or empty`);
+      // W39 fix: lenient — default to single space instead of throwing
+      section.paragraph = section.paragraph || ' ';
     }
-    if (!Array.isArray(section.bullets) || section.bullets.length === 0) {
-      throw new Error(`pdf_word.sections[${i}].bullets is missing or empty`);
+    if (!Array.isArray(section.bullets)) {
+      section.bullets = [];
     }
   }
 }
@@ -127,8 +128,8 @@ function validatePpt(data: unknown): asserts data is PptData {
     if (typeof slide.title !== 'string' || slide.title.length === 0) {
       throw new Error(`ppt.slides[${i}].title is missing or empty`);
     }
-    if (!Array.isArray(slide.bullets) || slide.bullets.length === 0) {
-      throw new Error(`ppt.slides[${i}].bullets is missing or empty`);
+    if (!Array.isArray(slide.bullets)) {
+      slide.bullets = [];
     }
   }
 }
@@ -143,7 +144,7 @@ function validateExcel(data: unknown): asserts data is ExcelData {
   if (!Array.isArray(d.headers) || d.headers.length === 0) {
     throw new Error('excel.headers is missing or empty');
   }
-  if (!Array.isArray(d.rows) || d.rows.length === 0) {
-    throw new Error('excel.rows is missing or empty');
+  if (!Array.isArray(d.rows)) {
+    d.rows = [];
   }
 }

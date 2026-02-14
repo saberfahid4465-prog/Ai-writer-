@@ -74,10 +74,16 @@ export async function generatePDF(
       const langNameToCode: Record<string, string> = {
         arabic: 'ar', chinese: 'zh', japanese: 'ja', korean: 'ko',
         hindi: 'hi', urdu: 'ur', persian: 'fa', farsi: 'fa',
-        turkish: 'tr', russian: 'ru',
+        turkish: 'tr', russian: 'ru', thai: 'th', bengali: 'bn',
+        hebrew: 'he', greek: 'el', vietnamese: 'vi', ukrainian: 'uk',
       };
       const code = langNameToCode[langCode] || langCode.split(/[\s-]/)[0] || 'ar';
-      const fontBytes = await getCachedFont(code);
+      // P38 fix: try mapped code first, then raw language name
+      let fontBytes = await getCachedFont(code);
+      if (!fontBytes && langNameToCode[langCode] === undefined) {
+        // Unknown language — try the full name as a font code too
+        fontBytes = await getCachedFont(langCode);
+      }
       if (fontBytes) {
         pdfDoc.registerFontkit(fontkit);
         const customFont = await pdfDoc.embedFont(fontBytes, { subset: true });
@@ -113,7 +119,11 @@ export async function generatePDF(
   const titleLines = wrapText(safeTitle, fontBold, FONT_SIZE_TITLE, CONTENT_WIDTH, (t) => t);
   const titleLineHeight = FONT_SIZE_TITLE * LINE_HEIGHT;
   const totalTitleHeight = titleLines.length * titleLineHeight;
-  let titleY = PAGE_HEIGHT / 2 + totalTitleHeight / 2;
+  // Clamp start Y so title stays within page bounds
+  let titleY = Math.min(
+    PAGE_HEIGHT / 2 + totalTitleHeight / 2,
+    PAGE_HEIGHT - MARGIN
+  );
 
   for (const line of titleLines) {
     const lineWidth = fontBold.widthOfTextAtSize(line, FONT_SIZE_TITLE);
@@ -152,6 +162,9 @@ export async function generatePDF(
   let currentPage = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
   let yPos = PAGE_HEIGHT - MARGIN;
 
+  // GEN-27-W4 fix: Cache embedded image XObjects to deduplicate same-keyword images
+  const embeddedImageCache = new Map<string, any>();
+
   for (const section of data.sections) {
     // Check if we need a new page (at least 150pt needed for heading + content)
     if (yPos < MARGIN + 150) {
@@ -159,16 +172,22 @@ export async function generatePDF(
       yPos = PAGE_HEIGHT - MARGIN;
     }
 
-    // Section heading
-    yPos -= FONT_SIZE_HEADING * LINE_HEIGHT;
-    currentPage.drawText(safeText(section.heading), {
-      x: MARGIN,
-      y: yPos,
-      size: FONT_SIZE_HEADING,
-      font: fontBold,
-      color: COLOR_HEADING,
-      maxWidth: CONTENT_WIDTH,
-    });
+    // Section heading — wrap text for long headings
+    const headingLines = wrapText(section.heading, fontBold, FONT_SIZE_HEADING, CONTENT_WIDTH, safeText);
+    for (const hLine of headingLines) {
+      if (yPos < MARGIN + 20) {
+        currentPage = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+        yPos = PAGE_HEIGHT - MARGIN;
+      }
+      yPos -= FONT_SIZE_HEADING * LINE_HEIGHT;
+      currentPage.drawText(hLine, {
+        x: MARGIN,
+        y: yPos,
+        size: FONT_SIZE_HEADING,
+        font: fontBold,
+        color: COLOR_HEADING,
+      });
+    }
     yPos -= 8; // Extra spacing after heading
 
     // Draw a subtle line under heading
@@ -224,11 +243,17 @@ export async function generatePDF(
     yPos -= 20; // Space between sections
 
     // ─── Section Image ───────────────────────────────────
+    // GEN-27-W4 fix: Cache embedded image XObjects to avoid duplicating same image
     if (images && section.image_keyword) {
       const img = images.get(section.image_keyword);
       if (img) {
         try {
-          const embeddedImg = await pdfDoc.embedJpg(img.imageBytes);
+          const cacheKey = section.image_keyword;
+          let embeddedImg = embeddedImageCache.get(cacheKey);
+          if (!embeddedImg) {
+            embeddedImg = await pdfDoc.embedJpg(img.imageBytes);
+            embeddedImageCache.set(cacheKey, embeddedImg);
+          }
           const imgMaxWidth = CONTENT_WIDTH;
           const imgMaxHeight = 200;
           const scale = Math.min(
@@ -325,9 +350,46 @@ function replaceFallback(code: number, _src: string, _idx: number): string {
   if (code === 0x2022) return '*';
   if (code === 0x2026) return '...';
   if (code === 0x00AB || code === 0x00BB) return '"';
-  // For anything else (CJK, Arabic, Devanagari, etc.) use space or ?
-  // This preserves layout without crashing.
-  return '?';
+  // Turkish special characters (T18 fix)
+  if (code === 0x011E || code === 0x011F) return 'g'; // Ğğ
+  if (code === 0x015E || code === 0x015F) return 's'; // Şş
+  if (code === 0x0130) return 'I'; // İ
+  if (code === 0x0131) return 'i'; // ı
+  // Common Cyrillic transliteration (P06 fix)
+  const cyrillicMap: Record<number, string> = {
+    0x0410: 'A', 0x0411: 'B', 0x0412: 'V', 0x0413: 'G', 0x0414: 'D',
+    0x0415: 'E', 0x0416: 'Zh', 0x0417: 'Z', 0x0418: 'I', 0x0419: 'Y',
+    0x041A: 'K', 0x041B: 'L', 0x041C: 'M', 0x041D: 'N', 0x041E: 'O',
+    0x041F: 'P', 0x0420: 'R', 0x0421: 'S', 0x0422: 'T', 0x0423: 'U',
+    0x0424: 'F', 0x0425: 'Kh', 0x0426: 'Ts', 0x0427: 'Ch', 0x0428: 'Sh',
+    0x0429: 'Shch', 0x042A: '', 0x042B: 'Y', 0x042C: '', 0x042D: 'E',
+    0x042E: 'Yu', 0x042F: 'Ya',
+  };
+  // Lowercase Cyrillic = uppercase - 0x20
+  if (cyrillicMap[code]) return cyrillicMap[code];
+  if (code >= 0x0430 && code <= 0x044F && cyrillicMap[code - 0x20]) {
+    return cyrillicMap[code - 0x20].toLowerCase();
+  }
+  // Greek letters (common)
+  const greekMap: Record<number, string> = {
+    0x0391: 'A', 0x0392: 'B', 0x0393: 'G', 0x0394: 'D', 0x0395: 'E',
+    0x0396: 'Z', 0x0397: 'H', 0x0398: 'Th', 0x0399: 'I', 0x039A: 'K',
+    0x039B: 'L', 0x039C: 'M', 0x039D: 'N', 0x039E: 'X', 0x039F: 'O',
+    0x03A0: 'P', 0x03A1: 'R', 0x03A3: 'S', 0x03A4: 'T', 0x03A5: 'Y',
+    0x03A6: 'Ph', 0x03A7: 'Ch', 0x03A8: 'Ps', 0x03A9: 'O',
+  };
+  if (greekMap[code]) return greekMap[code];
+  if (code >= 0x03B1 && code <= 0x03C9) {
+    const upper = code - 0x20;
+    if (greekMap[upper]) return greekMap[upper].toLowerCase();
+  }
+  // Vietnamese diacritics → base Latin
+  if (code >= 0x1EA0 && code <= 0x1EF9) return 'a'; // simplified
+  // Thai digits (P06 fix) → Arabic numerals
+  if (code >= 0x0E50 && code <= 0x0E59) return String(code - 0x0E50);
+  // For anything else (CJK, Arabic, Devanagari, Thai letters, etc.)
+  // use space to preserve layout without crashing.
+  return ' ';
 }
 
 /**
@@ -351,7 +413,7 @@ function isCJKChar(code: number): boolean {
  * Detect if text contains CJK characters (no-space scripts).
  */
 function hasCJKText(text: string): boolean {
-  for (let i = 0; i < Math.min(text.length, 200); i++) {
+  for (let i = 0; i < Math.min(text.length, 1000); i++) {
     if (isCJKChar(text.charCodeAt(i))) return true;
   }
   return false;
@@ -391,6 +453,19 @@ function wrapText(
     } else {
       currentLine = testLine;
     }
+
+    // P48 fix: if a single word exceeds maxWidth, split it character-by-character
+    try {
+      if (currentLine.length > 0 && font.widthOfTextAtSize(currentLine, fontSize) > maxWidth) {
+        const subLines = wrapTextCJK(currentLine, font, fontSize, maxWidth);
+        if (subLines.length > 1) {
+          for (let s = 0; s < subLines.length - 1; s++) {
+            lines.push(subLines[s]);
+          }
+          currentLine = subLines[subLines.length - 1];
+        }
+      }
+    } catch { /* measurement error, continue */ }
   }
 
   if (currentLine.length > 0) {

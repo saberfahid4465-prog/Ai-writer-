@@ -75,7 +75,7 @@ export async function generatePPT(
     fontFace: THEME.FONT,
     color: THEME.TITLE_COLOR,
     bold: true,
-    align: 'left',
+    align: isRTL ? 'right' : 'left',
     valign: 'middle',
   });
 
@@ -88,7 +88,7 @@ export async function generatePPT(
     fontSize: 16,
     fontFace: THEME.FONT,
     color: THEME.SUBTITLE_COLOR,
-    align: 'left',
+    align: isRTL ? 'right' : 'left',
   });
 
   // Accent bar
@@ -124,20 +124,22 @@ export async function generatePPT(
       fontFace: THEME.FONT,
       color: THEME.TITLE_COLOR,
       bold: true,
-      align: 'left',
+      align: isRTL ? 'right' : 'left',
       valign: 'middle',
     });
 
-    // Bullet points
+    // Bullet points — PP21 fix: auto-shrink font if many bullets
+    const bulletFontSize = slide.bullets.length > 8 ? 13 : slide.bullets.length > 12 ? 11 : 16;
+    const bulletSpacing = slide.bullets.length > 8 ? 4 : 8;
     const bulletItems = slide.bullets.map((bullet) => ({
       text: bullet,
       options: {
-        fontSize: 16,
+        fontSize: bulletFontSize,
         fontFace: THEME.FONT,
         color: THEME.BULLET_COLOR,
         bullet: { code: '2022' }, // Unicode bullet character •
-        paraSpaceBefore: 8,
-        paraSpaceAfter: 8,
+        paraSpaceBefore: bulletSpacing,
+        paraSpaceAfter: bulletSpacing,
       },
     }));
 
@@ -146,18 +148,10 @@ export async function generatePPT(
       ? images.get(slide.image_keyword)
       : null;
 
+    // PP11 fix: try image embed first, decide bullet width based on success
+    let imageEmbedded = false;
     if (slideImage) {
-      // Layout: bullets on left, image on right
-      contentSlide.addText(bulletItems as any, {
-        x: 0.8,
-        y: 1.6,
-        w: 4.8,
-        h: 4.5,
-        valign: 'top',
-      });
-
       try {
-        // Convert Uint8Array to base64 for pptxgenjs
         const imgBase64 = uint8ArrayToBase64(slideImage.imageBytes);
 
         contentSlide.addImage({
@@ -180,19 +174,20 @@ export async function generatePPT(
           color: '999999',
           align: 'center',
         });
+        imageEmbedded = true;
       } catch (e) {
         console.warn('Failed to embed image in PPT slide:', e);
       }
-    } else {
-      // Full-width bullets (no image)
-      contentSlide.addText(bulletItems as any, {
-        x: 0.8,
-        y: 1.6,
-        w: 8.4,
-        h: 4.5,
-        valign: 'top',
-      });
     }
+
+    // Add bullets: half-width if image succeeded, full-width otherwise
+    contentSlide.addText(bulletItems as any, {
+      x: 0.8,
+      y: 1.6,
+      w: imageEmbedded ? 4.8 : 8.4,
+      h: 4.5,
+      valign: 'top',
+    });
 
     // Accent line under header
     contentSlide.addShape('rect' as any, {

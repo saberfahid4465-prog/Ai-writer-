@@ -139,15 +139,31 @@ export async function generateWord(
       })
     );
 
-    // Paragraph content
+    // Paragraph content — W38 fix: split on newlines for proper line breaks
+    const paraLines = section.paragraph.split('\n').filter(l => l.length > 0);
+    const paraChildren: TextRun[] = [];
+    paraLines.forEach((line, idx) => {
+      if (idx > 0) {
+        paraChildren.push(new TextRun({ break: 1, text: '' }));
+      }
+      paraChildren.push(
+        new TextRun({
+          text: line,
+          size: 24, // 12pt
+          color: THEME_COLOR_BODY,
+          font: FONT_FAMILY,
+          rightToLeft: isRTL,
+        })
+      );
+    });
     children.push(
       new Paragraph({
         spacing: { after: 200 },
         bidirectional: isRTL,
-        children: [
+        children: paraChildren.length > 0 ? paraChildren : [
           new TextRun({
             text: section.paragraph,
-            size: 24, // 12pt
+            size: 24,
             color: THEME_COLOR_BODY,
             font: FONT_FAMILY,
             rightToLeft: isRTL,

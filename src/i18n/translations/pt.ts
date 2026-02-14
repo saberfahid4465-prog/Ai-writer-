@@ -97,6 +97,10 @@ const pt: Record<string, string> = {
   alert_downloaded_title: 'Baixado',
   alert_downloaded_msg: '{{name}} foi salvo com sucesso.',
   alert_download_failed: 'Falha ao baixar o arquivo. Tente novamente.',
+  alert_empty_content_title: 'Conteúdo Vazio',
+  alert_empty_content_msg: 'O arquivo enviado parece estar vazio ou contém apenas espaços em branco.',
+  alert_short_content_title: 'Conteúdo Muito Curto',
+  alert_short_content_msg: 'O conteúdo é muito curto e pode produzir resultados escassos. Continuar mesmo assim?',
   alert_sharing_not_available_title: 'Compartilhamento indisponível',
   alert_sharing_not_available_msg: 'Compartilhamento não é suportado neste dispositivo.',
   alert_share_failed: 'Falha ao compartilhar o arquivo. Tente novamente.',
@@ -136,6 +140,9 @@ const pt: Record<string, string> = {
   editor_new_section_bullet: 'Ponto 1',
   editor_copy_suffix: '(Cópia)',
   editor_generating: ' Gerando Arquivos...',
+  editor_generating_formats: 'Criando documentos...',
+  editor_generating_format: 'Gerando {{format}}...',
+  editor_generating_saving: 'Salvando arquivos...',
   editor_generate_final: '✨ Gerar Arquivos Finais',
   alert_cannot_remove_title: 'Não é Possível Remover',
   alert_cannot_remove_msg: 'Você precisa de pelo menos uma seção.',
@@ -244,6 +251,10 @@ const pt: Record<string, string> = {
   premium_footer: 'Dúvidas? Entre em contato: support@aiwriter.app',
   alert_coming_soon_title: 'Em Breve',
   alert_coming_soon_msg: 'As compras no app estarão disponíveis na próxima atualização. Fique atento!',
+  alert_cancel_partial_title: 'Cancelar processamento?',
+  alert_cancel_partial_msg: '{{completed}} fragmento(s) já processado(s). Manter resultados parciais?',
+  alert_discard: 'Descartar',
+  alert_keep_partial: 'Manter parcial',
 };
 
 export default pt;

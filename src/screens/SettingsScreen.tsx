@@ -17,6 +17,8 @@ import {
   ScrollView,
   TouchableOpacity,
   Switch,
+  SafeAreaView,
+  useWindowDimensions,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTheme } from '../utils/themeContext';
@@ -32,6 +34,8 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
   const { t, language, preference, setLanguage } = useTranslation();
   const [tokenUsage, setTokenUsage] = useState({ used: 0, limit: DAILY_TOKEN_LIMIT, remaining: DAILY_TOKEN_LIMIT, percentage: 0 });
   const [showLangPicker, setShowLangPicker] = useState(false);
+  const { width, height } = useWindowDimensions();
+  const isLandscape = width > height;
 
   // Refresh token usage every time Settings screen is focused
   useFocusEffect(
@@ -47,9 +51,10 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
   ];
 
   return (
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
     <ScrollView
-      style={[styles.container, { backgroundColor: colors.background }]}
-      contentContainerStyle={styles.scroll}
+      style={{ flex: 1 }}
+      contentContainerStyle={[styles.scroll, isLandscape && styles.scrollLandscape]}
     >
       {/* Header */}
       <View style={styles.header}>
@@ -64,7 +69,7 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
           {t('settings_theme_subtitle')}
         </Text>
 
-        <View style={styles.themeOptions}>
+        <View style={[styles.themeOptions, isLandscape && styles.themeOptionsLandscape]}>
           {themeOptions.map((opt) => (
             <TouchableOpacity
               key={opt.value}
@@ -212,6 +217,7 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
         </Text>
       </View>
     </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -219,7 +225,8 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  scroll: { padding: 20, paddingTop: 60, paddingBottom: 40 },
+  scroll: { padding: 20, paddingTop: 20, paddingBottom: 40 },
+  scrollLandscape: { paddingHorizontal: 60 },
   header: { marginBottom: 24 },
   backBtn: { marginBottom: 12 },
   backText: { fontSize: 16, fontWeight: '500' },
@@ -263,6 +270,7 @@ const styles = StyleSheet.create({
 
   // Theme
   themeOptions: { flexDirection: 'row', gap: 10 },
+  themeOptionsLandscape: { maxWidth: 400 },
   themeOption: {
     flex: 1,
     alignItems: 'center',

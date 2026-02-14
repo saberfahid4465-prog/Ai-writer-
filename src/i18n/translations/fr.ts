@@ -97,6 +97,10 @@ const fr: Record<string, string> = {
   alert_downloaded_title: 'Téléchargé',
   alert_downloaded_msg: '{{name}} a été enregistré avec succès.',
   alert_download_failed: 'Échec du téléchargement. Veuillez réessayer.',
+  alert_empty_content_title: 'Contenu Vide',
+  alert_empty_content_msg: 'Le fichier téléchargé semble être vide ou ne contient que des espaces.',
+  alert_short_content_title: 'Contenu Très Court',
+  alert_short_content_msg: 'Le contenu est très court et peut produire des résultats peu fournis. Continuer quand même ?',
   alert_sharing_not_available_title: 'Partage non disponible',
   alert_sharing_not_available_msg: 'Le partage n\'est pas pris en charge sur cet appareil.',
   alert_share_failed: 'Échec du partage. Veuillez réessayer.',
@@ -136,6 +140,9 @@ const fr: Record<string, string> = {
   editor_new_section_bullet: 'Point 1',
   editor_copy_suffix: '(Copie)',
   editor_generating: ' Génération en Cours...',
+  editor_generating_formats: 'Création des documents...',
+  editor_generating_format: 'Génération de {{format}}...',
+  editor_generating_saving: 'Enregistrement des fichiers...',
   editor_generate_final: '✨ Générer les Fichiers Finaux',
   alert_cannot_remove_title: 'Impossible de Supprimer',
   alert_cannot_remove_msg: 'Vous avez besoin d\'au moins une section.',
@@ -244,6 +251,10 @@ const fr: Record<string, string> = {
   premium_footer: 'Questions ? Contactez support@aiwriter.app',
   alert_coming_soon_title: 'Bientôt Disponible',
   alert_coming_soon_msg: 'Les achats intégrés seront disponibles dans la prochaine mise à jour. Restez à l\'écoute !',
+  alert_cancel_partial_title: 'Annuler le traitement ?',
+  alert_cancel_partial_msg: '{{completed}} fragment(s) déjà traité(s). Conserver les résultats partiels ?',
+  alert_discard: 'Supprimer',
+  alert_keep_partial: 'Garder partiel',
 };
 
 export default fr;

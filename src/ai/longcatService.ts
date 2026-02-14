@@ -7,8 +7,9 @@
  */
 
 import { buildPromptMessages } from './promptBuilder';
-import { buildTranslationPrompt } from './translationPrompt';
-import { buildSummarizationPrompt } from './summarizationPrompt';
+import { buildTranslationPrompt, buildTranslationChunkPrompt } from './translationPrompt';
+import { buildSummarizationPrompt, buildSummarizationChunkPrompt } from './summarizationPrompt';
+import { splitIntoChunks } from '../services/fileParserService';
 import { parseAIResponse, AIWriterOutput } from './responseParser';
 import {
   canMakeRequest,
@@ -48,12 +49,12 @@ function sleep(ms: number): Promise<void> {
 async function callLongcatAPI(
   messages: Array<{ role: 'system' | 'user'; content: string }>
 ): Promise<AIWriterOutput> {
-  // Check daily token limit
+  // Check daily token limit (uses effective limit with bonus)
   const hasTokens = await canMakeRequest();
   if (!hasTokens) {
     const remaining = await getRemainingTokens();
     throw new Error(
-      `Daily token limit reached (5,000 tokens/day). You have ${remaining} tokens remaining. Limit resets at midnight.`
+      `Daily token limit reached. You have ${remaining} tokens remaining. Limit resets at midnight.`
     );
   }
 
@@ -73,7 +74,7 @@ async function callLongcatAPI(
           model: LONGCAT_MODEL,
           messages,
           temperature: 0.5,
-          max_tokens: 2048,
+          max_tokens: 4096,
         }),
         signal: controller.signal,
       });
@@ -158,4 +159,119 @@ export async function summarizeDocument(
 ): Promise<AIWriterOutput> {
   const messages = buildSummarizationPrompt(uploadedContent, language, fileName);
   return callLongcatAPI(messages);
+}
+
+// ─── Chunked Processing ─────────────────────────────────────────
+
+/**
+ * Merge multiple AI outputs into a single unified output.
+ * Takes title/author/language from the first chunk,
+ * concatenates all sections, slides, and rows.
+ */
+function mergeAIOutputs(outputs: AIWriterOutput[]): AIWriterOutput {
+  if (outputs.length === 0) throw new Error('No AI outputs to merge.');
+  if (outputs.length === 1) return outputs[0];
+
+  return {
+    pdf_word: {
+      title: outputs[0].pdf_word.title,
+      author: outputs[0].pdf_word.author,
+      language: outputs[0].pdf_word.language,
+      sections: outputs.flatMap(o => o.pdf_word.sections),
+    },
+    ppt: {
+      slides: outputs.flatMap(o => o.ppt.slides),
+    },
+    excel: {
+      headers: outputs[0].excel.headers,
+      rows: outputs.flatMap(o => o.excel.rows),
+    },
+  };
+}
+
+/**
+ * Translate a document in chunks, processing each chunk separately
+ * and merging results into a single document.
+ * For small documents (single chunk), falls back to single-call translation.
+ *
+ * @param onProgress - Called after each chunk with (currentChunk, totalChunks).
+ * @param isCancelled - Optional callback to check if user cancelled.
+ * @param onChunkComplete - Called after each chunk succeeds with (chunkIndex, output).
+ * @param startFromChunk - Resume from this chunk index (skips already-completed chunks).
+ * @param previousOutputs - Outputs from previously completed chunks (for checkpoint resume).
+ */
+export async function translateDocumentChunked(
+  uploadedContent: string,
+  sourceLanguage: string,
+  targetLanguage: string,
+  fileName: string,
+  onProgress?: (current: number, total: number) => void,
+  isCancelled?: () => boolean,
+  onChunkComplete?: (chunkIndex: number, output: AIWriterOutput) => void,
+  startFromChunk: number = 0,
+  previousOutputs: AIWriterOutput[] = []
+): Promise<AIWriterOutput> {
+  const chunks = splitIntoChunks(uploadedContent);
+
+  if (chunks.length === 1 && startFromChunk === 0) {
+    onProgress?.(1, 1);
+    return translateDocument(uploadedContent, sourceLanguage, targetLanguage, fileName);
+  }
+
+  const outputs: AIWriterOutput[] = [...previousOutputs];
+  for (let i = startFromChunk; i < chunks.length; i++) {
+    if (isCancelled?.()) throw new Error('Operation cancelled by user.');
+    onProgress?.(i + 1, chunks.length);
+    const messages = buildTranslationChunkPrompt(
+      chunks[i], sourceLanguage, targetLanguage, fileName, i, chunks.length
+    );
+    const output = await callLongcatAPI(messages);
+    outputs.push(output);
+    onChunkComplete?.(i, output);
+  }
+
+  return mergeAIOutputs(outputs);
+}
+
+/**
+ * Summarize a document in chunks, processing each chunk separately
+ * and merging results into a single summary document.
+ * For small documents (single chunk), falls back to single-call summarization.
+ *
+ * @param onProgress - Called after each chunk with (currentChunk, totalChunks).
+ * @param isCancelled - Optional callback to check if user cancelled.
+ * @param onChunkComplete - Called after each chunk succeeds with (chunkIndex, output).
+ * @param startFromChunk - Resume from this chunk index (skips already-completed chunks).
+ * @param previousOutputs - Outputs from previously completed chunks (for checkpoint resume).
+ */
+export async function summarizeDocumentChunked(
+  uploadedContent: string,
+  language: string,
+  fileName: string,
+  onProgress?: (current: number, total: number) => void,
+  isCancelled?: () => boolean,
+  onChunkComplete?: (chunkIndex: number, output: AIWriterOutput) => void,
+  startFromChunk: number = 0,
+  previousOutputs: AIWriterOutput[] = []
+): Promise<AIWriterOutput> {
+  const chunks = splitIntoChunks(uploadedContent);
+
+  if (chunks.length === 1 && startFromChunk === 0) {
+    onProgress?.(1, 1);
+    return summarizeDocument(uploadedContent, language, fileName);
+  }
+
+  const outputs: AIWriterOutput[] = [...previousOutputs];
+  for (let i = startFromChunk; i < chunks.length; i++) {
+    if (isCancelled?.()) throw new Error('Operation cancelled by user.');
+    onProgress?.(i + 1, chunks.length);
+    const messages = buildSummarizationChunkPrompt(
+      chunks[i], language, fileName, i, chunks.length
+    );
+    const output = await callLongcatAPI(messages);
+    outputs.push(output);
+    onChunkComplete?.(i, output);
+  }
+
+  return mergeAIOutputs(outputs);
 }

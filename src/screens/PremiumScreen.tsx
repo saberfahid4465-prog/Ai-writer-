@@ -23,7 +23,7 @@ interface PremiumScreenProps {
 }
 
 export default function PremiumScreen({ navigation }: PremiumScreenProps) {
-  const { colors } = useTheme();
+  const { isDark, colors } = useTheme();
   const { t } = useTranslation();
 
   const handlePurchase = () => {
@@ -66,7 +66,7 @@ export default function PremiumScreen({ navigation }: PremiumScreenProps) {
 
       {/* Hero */}
       <View style={styles.hero}>
-        <Image source={require('../../assets/logo.png')} style={styles.heroLogo} resizeMode="contain" />
+        <Image source={isDark ? require('../../assets/logo.png') : require('../../assets/logo-light.png')} style={styles.heroLogo} resizeMode="contain" />
         <Text style={[styles.heroTitle, { color: colors.textPrimary }]}>
           {t('premium_hero_title')}
         </Text>

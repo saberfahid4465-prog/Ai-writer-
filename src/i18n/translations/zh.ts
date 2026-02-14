@@ -97,6 +97,10 @@ const zh: Record<string, string> = {
   alert_downloaded_title: '已下载',
   alert_downloaded_msg: '{{name}} 已成功保存。',
   alert_download_failed: '下载失败。请重试。',
+  alert_empty_content_title: '空内容',
+  alert_empty_content_msg: '上传的文件似乎为空或仅包含空格。',
+  alert_short_content_title: '内容过短',
+  alert_short_content_msg: '内容非常短，可能产生稀疏的结果。是否继续？',
   alert_sharing_not_available_title: '分享不可用',
   alert_sharing_not_available_msg: '此设备不支持分享。',
   alert_share_failed: '分享失败。请重试。',
@@ -136,6 +140,9 @@ const zh: Record<string, string> = {
   editor_new_section_bullet: '要点 1',
   editor_copy_suffix: '（副本）',
   editor_generating: ' 正在生成文件...',
+  editor_generating_formats: '正在创建文档...',
+  editor_generating_format: '正在生成 {{format}}...',
+  editor_generating_saving: '正在保存文件...',
   editor_generate_final: '✨ 生成最终文件',
   alert_cannot_remove_title: '无法删除',
   alert_cannot_remove_msg: '至少需要一个段落。',
@@ -244,6 +251,10 @@ const zh: Record<string, string> = {
   premium_footer: '有问题？联系 support@aiwriter.app',
   alert_coming_soon_title: '即将推出',
   alert_coming_soon_msg: '应用内购买将在下次更新中推出。敬请期待！',
+  alert_cancel_partial_title: '取消处理？',
+  alert_cancel_partial_msg: '已处理{{completed}}个分块。是否保留部分结果？',
+  alert_discard: '丢弃',
+  alert_keep_partial: '保留部分',
 };
 
 export default zh;

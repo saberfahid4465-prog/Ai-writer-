@@ -97,6 +97,10 @@ const fa: Record<string, string> = {
   alert_downloaded_title: 'دانلود شد',
   alert_downloaded_msg: '{{name}} با موفقیت ذخیره شد.',
   alert_download_failed: 'دانلود فایل ناموفق بود. لطفاً دوباره تلاش کنید.',
+  alert_empty_content_title: 'محتوای خالی',
+  alert_empty_content_msg: 'فایل آپلود شده خالی به نظر می‌رسد یا فقط شامل فاصله است.',
+  alert_short_content_title: 'محتوای بسیار کوتاه',
+  alert_short_content_msg: 'محتوا بسیار کوتاه است و ممکن است نتایج ناقصی تولید کند. ادامه می‌دهید؟',
   alert_sharing_not_available_title: 'اشتراک‌گذاری در دسترس نیست',
   alert_sharing_not_available_msg: 'اشتراک‌گذاری در این دستگاه پشتیبانی نمی‌شود.',
   alert_share_failed: 'اشتراک‌گذاری فایل ناموفق بود. لطفاً دوباره تلاش کنید.',
@@ -136,6 +140,9 @@ const fa: Record<string, string> = {
   editor_new_section_bullet: 'نکته ۱',
   editor_copy_suffix: '(کپی)',
   editor_generating: ' در حال ایجاد فایل‌ها...',
+  editor_generating_formats: 'در حال ساخت اسناد...',
+  editor_generating_format: 'در حال تولید {{format}}...',
+  editor_generating_saving: 'در حال ذخیره فایل‌ها...',
   editor_generate_final: '✨ ایجاد فایل‌های نهایی',
   alert_cannot_remove_title: 'امکان حذف نیست',
   alert_cannot_remove_msg: 'حداقل یک بخش لازم است.',
@@ -244,6 +251,10 @@ const fa: Record<string, string> = {
   premium_footer: 'سؤالی دارید؟ با support@aiwriter.app تماس بگیرید',
   alert_coming_soon_title: 'به‌زودی',
   alert_coming_soon_msg: 'خرید درون‌برنامه‌ای در به‌روزرسانی بعدی در دسترس خواهد بود. منتظر بمانید!',
+  alert_cancel_partial_title: 'لغو پردازش؟',
+  alert_cancel_partial_msg: '{{completed}} بخش پردازش شده است. نتایج جزئی حفظ شود؟',
+  alert_discard: 'حذف',
+  alert_keep_partial: 'حفظ جزئی',
 };
 
 export default fa;

@@ -97,6 +97,10 @@ const tr: Record<string, string> = {
   alert_downloaded_title: 'İndirildi',
   alert_downloaded_msg: '{{name}} başarıyla kaydedildi.',
   alert_download_failed: 'Dosya indirilemedi. Lütfen tekrar deneyin.',
+  alert_empty_content_title: 'Boş İçerik',
+  alert_empty_content_msg: 'Yüklenen dosya boş görünüyor veya yalnızca boşluk içeriyor.',
+  alert_short_content_title: 'Çok Kısa İçerik',
+  alert_short_content_msg: 'İçerik çok kısa ve yetersiz sonuçlar üretebilir. Yine de devam edilsin mi?',
   alert_sharing_not_available_title: 'Paylaşım kullanılamıyor',
   alert_sharing_not_available_msg: 'Bu cihazda paylaşım desteklenmiyor.',
   alert_share_failed: 'Dosya paylaşılamadı. Lütfen tekrar deneyin.',
@@ -136,6 +140,9 @@ const tr: Record<string, string> = {
   editor_new_section_bullet: 'Madde 1',
   editor_copy_suffix: '(Kopya)',
   editor_generating: ' Dosyalar Oluşturuluyor...',
+  editor_generating_formats: 'Belgeler oluşturuluyor...',
+  editor_generating_format: '{{format}} oluşturuluyor...',
+  editor_generating_saving: 'Dosyalar kaydediliyor...',
   editor_generate_final: '✨ Son Dosyaları Oluştur',
   alert_cannot_remove_title: 'Kaldırılamaz',
   alert_cannot_remove_msg: 'En az bir bölüme ihtiyacınız var.',
@@ -244,6 +251,10 @@ const tr: Record<string, string> = {
   premium_footer: 'Sorularınız mı var? support@aiwriter.app adresine yazın',
   alert_coming_soon_title: 'Yakında',
   alert_coming_soon_msg: 'Uygulama içi satın almalar bir sonraki güncellemede kullanılabilir olacak. Takipte kalın!',
+  alert_cancel_partial_title: 'İşleme iptal edilsin mi?',
+  alert_cancel_partial_msg: '{{completed}} parça zaten işlendi. Kısmi sonuçlar korunsun mu?',
+  alert_discard: 'Sil',
+  alert_keep_partial: 'Kısmı koru',
 };
 
 export default tr;

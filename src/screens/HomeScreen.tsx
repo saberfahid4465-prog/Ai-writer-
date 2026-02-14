@@ -56,7 +56,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   const [selectedLanguage, setSelectedLanguage] = useState<LanguageOption>(DEFAULT_LANGUAGE);
   const [showLanguagePicker, setShowLanguagePicker] = useState(false);
   const [tokenUsage, setTokenUsage] = useState({ used: 0, limit: DAILY_TOKEN_LIMIT, remaining: DAILY_TOKEN_LIMIT, percentage: 0 });
-  const { colors } = useTheme();
+  const { isDark, colors } = useTheme();
   const { t } = useTranslation();
 
   const refreshTokenUsage = useCallback(async () => {
@@ -139,7 +139,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         {/* Header with Logo */}
         <View style={styles.header}>
-          <Image source={require('../../assets/logo.png')} style={styles.logo} resizeMode="contain" />
+          <Image source={isDark ? require('../../assets/logo.png') : require('../../assets/logo-light.png')} style={styles.logo} resizeMode="contain" />
           <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>{t('home_title')}</Text>
           <Text style={[styles.headerSub, { color: colors.textMuted }]}>
             {t('home_subtitle')}

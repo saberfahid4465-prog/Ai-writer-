@@ -9,7 +9,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const TOKEN_USAGE_KEY = '@ai_writer_token_usage';
-const DAILY_TOKEN_LIMIT = 5000;
+const DAILY_TOKEN_LIMIT = 15000;
+
+/**
+ * Background bonus: extra buffer so in-progress chunks can finish.
+ */
+const BACKGROUND_BONUS = 2000;
 
 interface TokenUsageData {
   date: string; // YYYY-MM-DD
@@ -45,7 +50,7 @@ export async function getTokenUsage(): Promise<TokenUsageData> {
 }
 
 /**
- * Get the number of tokens remaining today.
+ * Get the number of tokens remaining today (visible to user = hard limit).
  */
 export async function getRemainingTokens(): Promise<number> {
   const usage = await getTokenUsage();
@@ -53,10 +58,20 @@ export async function getRemainingTokens(): Promise<number> {
 }
 
 /**
- * Check if the user can make a request (has tokens remaining).
+ * Get the effective remaining tokens including background bonus.
+ * Used internally by canMakeRequest so large operations can finish.
+ */
+export async function getEffectiveRemainingTokens(): Promise<number> {
+  const usage = await getTokenUsage();
+  return Math.max(0, DAILY_TOKEN_LIMIT + BACKGROUND_BONUS - usage.tokensUsed);
+}
+
+/**
+ * Check if the user can make a request.
+ * Uses effective limit (with bonus) so chunked operations can complete.
  */
 export async function canMakeRequest(): Promise<boolean> {
-  const remaining = await getRemainingTokens();
+  const remaining = await getEffectiveRemainingTokens();
   return remaining > 0;
 }
 
@@ -76,6 +91,40 @@ export async function recordTokenUsage(tokensUsed: number): Promise<void> {
  */
 export function estimateTokens(text: string): number {
   return Math.ceil(text.length / 4);
+}
+
+/**
+ * Estimate the total token cost of an AI request based on content length.
+ * Accounts for system prompt (~400 tokens) + content + expected output (~4096 max).
+ */
+export function estimateRequestCost(contentLength: number): number {
+  const inputTokens = 400 + Math.ceil(contentLength / 4);
+  // Assume AI uses ~40% of max_tokens on average
+  const estimatedOutputTokens = Math.round(4096 * 0.4);
+  return inputTokens + estimatedOutputTokens;
+}
+
+/**
+ * Calculate detailed token analysis for a file before processing.
+ * Returns all info needed for the token calculator alert.
+ */
+export function calculateTokenAnalysis(
+  contentLength: number,
+  chunkCount: number
+): {
+  totalChars: number;
+  chunks: number;
+  tokensPerChunk: number;
+  totalTokensNeeded: number;
+} {
+  const tokensPerChunk = estimateRequestCost(Math.ceil(contentLength / chunkCount));
+  const totalTokensNeeded = tokensPerChunk * chunkCount;
+  return {
+    totalChars: contentLength,
+    chunks: chunkCount,
+    tokensPerChunk,
+    totalTokensNeeded,
+  };
 }
 
 /**

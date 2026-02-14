@@ -97,6 +97,10 @@ const ru: Record<string, string> = {
   alert_downloaded_title: 'Скачано',
   alert_downloaded_msg: '{{name}} успешно сохранён.',
   alert_download_failed: 'Не удалось скачать файл. Попробуйте ещё раз.',
+  alert_empty_content_title: 'Пустое содержимое',
+  alert_empty_content_msg: 'Загруженный файл пуст или содержит только пробелы.',
+  alert_short_content_title: 'Очень короткое содержимое',
+  alert_short_content_msg: 'Содержимое очень короткое и может дать скудные результаты. Продолжить?',
   alert_sharing_not_available_title: 'Общий доступ недоступен',
   alert_sharing_not_available_msg: 'На этом устройстве не поддерживается общий доступ.',
   alert_share_failed: 'Не удалось поделиться файлом. Попробуйте ещё раз.',
@@ -136,6 +140,9 @@ const ru: Record<string, string> = {
   editor_new_section_bullet: 'Пункт 1',
   editor_copy_suffix: '(Копия)',
   editor_generating: ' Генерация файлов...',
+  editor_generating_formats: 'Создание документов...',
+  editor_generating_format: 'Создание {{format}}...',
+  editor_generating_saving: 'Сохранение файлов...',
   editor_generate_final: '✨ Создать итоговые файлы',
   alert_cannot_remove_title: 'Невозможно удалить',
   alert_cannot_remove_msg: 'Нужен хотя бы один раздел.',
@@ -244,6 +251,10 @@ const ru: Record<string, string> = {
   premium_footer: 'Вопросы? Напишите на support@aiwriter.app',
   alert_coming_soon_title: 'Скоро',
   alert_coming_soon_msg: 'Встроенные покупки будут доступны в следующем обновлении. Следите за обновлениями!',
+  alert_cancel_partial_title: 'Отменить обработку?',
+  alert_cancel_partial_msg: '{{completed}} фрагмент(ов) уже обработано. Сохранить частичные результаты?',
+  alert_discard: 'Удалить',
+  alert_keep_partial: 'Сохранить частично',
 };
 
 export default ru;

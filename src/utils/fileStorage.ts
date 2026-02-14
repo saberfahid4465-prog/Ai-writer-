@@ -69,7 +69,8 @@ export function generateFileName(topic: string, extension: string): string {
     .toISOString()
     .replace(/[-:T]/g, '')
     .substring(0, 14);
-  return `${sanitized}_${timestamp}.${extension}`;
+  const rand = Math.random().toString(36).substring(2, 6);
+  return `${sanitized}_${timestamp}_${rand}.${extension}`;
 }
 
 /**

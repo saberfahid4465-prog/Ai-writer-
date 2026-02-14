@@ -97,6 +97,10 @@ const de: Record<string, string> = {
   alert_downloaded_title: 'Heruntergeladen',
   alert_downloaded_msg: '{{name}} wurde erfolgreich gespeichert.',
   alert_download_failed: 'Herunterladen fehlgeschlagen. Bitte versuche es erneut.',
+  alert_empty_content_title: 'Leerer Inhalt',
+  alert_empty_content_msg: 'Die hochgeladene Datei scheint leer zu sein oder enthält nur Leerzeichen.',
+  alert_short_content_title: 'Sehr kurzer Inhalt',
+  alert_short_content_msg: 'Der Inhalt ist sehr kurz und kann zu spärlichen Ergebnissen führen. Trotzdem fortfahren?',
   alert_sharing_not_available_title: 'Teilen nicht verfügbar',
   alert_sharing_not_available_msg: 'Teilen wird auf diesem Gerät nicht unterstützt.',
   alert_share_failed: 'Teilen fehlgeschlagen. Bitte versuche es erneut.',
@@ -136,6 +140,9 @@ const de: Record<string, string> = {
   editor_new_section_bullet: 'Punkt 1',
   editor_copy_suffix: '(Kopie)',
   editor_generating: ' Dateien werden erstellt...',
+  editor_generating_formats: 'Dokumente werden erstellt...',
+  editor_generating_format: '{{format}} wird generiert...',
+  editor_generating_saving: 'Dateien werden gespeichert...',
   editor_generate_final: '✨ Endgültige Dateien Erstellen',
   alert_cannot_remove_title: 'Kann Nicht Entfernt Werden',
   alert_cannot_remove_msg: 'Du brauchst mindestens einen Abschnitt.',
@@ -244,6 +251,10 @@ const de: Record<string, string> = {
   premium_footer: 'Fragen? Kontaktiere support@aiwriter.app',
   alert_coming_soon_title: 'Demnächst Verfügbar',
   alert_coming_soon_msg: 'In-App-Käufe werden im nächsten Update verfügbar sein. Bleib dran!',
+  alert_cancel_partial_title: 'Verarbeitung abbrechen?',
+  alert_cancel_partial_msg: '{{completed}} Teil(e) bereits verarbeitet. Teilergebnisse behalten?',
+  alert_discard: 'Verwerfen',
+  alert_keep_partial: 'Teilweise behalten',
 };
 
 export default de;

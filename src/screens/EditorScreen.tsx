@@ -44,6 +44,7 @@ import {
   DocumentImage,
 } from '../services/pexelsService';
 import { aiEditSection, SectionContent } from '../ai/sectionAIHelper';
+import { SUPPORTED_LANGUAGES } from '../utils/languageConfig';
 import { uint8ArrayToBase64 } from '../utils/base64Polyfill';
 import * as FileSystem from 'expo-file-system';
 
@@ -73,6 +74,15 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
   const { t } = useTranslation();
   const outputFormats = rawFormats || ['pdf', 'docx', 'pptx', 'xlsx'];
 
+  // Detect RTL language for proper text direction in editor
+  const isRTL = useMemo(() => {
+    return SUPPORTED_LANGUAGES.find(l => l.name === language)?.direction === 'rtl' || false;
+  }, [language]);
+  const rtlStyle = useMemo(
+    () => isRTL ? { writingDirection: 'rtl' as const, textAlign: 'right' as const } : {},
+    [isRTL]
+  );
+
   // Core state
   const [title, setTitle] = useState(initialOutput.pdf_word.title);
   const [sections, setSections] = useState<PdfWordSection[]>(
@@ -84,6 +94,7 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
 
   // UI state
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generatingStatus, setGeneratingStatus] = useState('');
   const [expandedSection, setExpandedSection] = useState<number | null>(0);
   const [viewMode, setViewMode] = useState<ViewMode>('edit');
   const [aiLoadingSection, setAiLoadingSection] = useState<number | null>(null);
@@ -316,13 +327,26 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
     try {
       // Filter sections: must have heading AND paragraph, then strip empty bullets
       const validSections = sections
-        .filter((s) => s.heading.trim() && s.paragraph.trim())
-        .map((s) => ({ ...s, bullets: s.bullets.filter((b) => b.trim()) }))
-        .map((s) => (s.bullets.length === 0 ? { ...s, bullets: [s.heading] } : s));
+        .map((s, idx) => ({ section: s, originalIndex: idx }))
+        .filter(({ section: s }) => s.heading.trim() && s.paragraph.trim())
+        .map(({ section: s, originalIndex }) => ({
+          section: { ...s, bullets: s.bullets.filter((b) => b.trim()) },
+          originalIndex,
+        }))
+        .map(({ section: s, originalIndex }) => ({
+          section: s.bullets.length === 0 ? { ...s, bullets: [s.heading] } : s,
+          originalIndex,
+        }));
+
+      if (validSections.length === 0) {
+        Alert.alert(t('alert_error'), t('alert_no_valid_sections') || 'No sections with content found. Please add at least one section with a heading and paragraph.');
+        setIsGenerating(false);
+        return;
+      }
 
       // Build matching slides from valid sections only
-      const validSlides = validSections.map((s, i) => {
-        const matchingSlide = slides[sections.indexOf(s)] || { title: s.heading, bullets: s.bullets, image_keyword: s.image_keyword };
+      const validSlides = validSections.map(({ section: s, originalIndex }) => {
+        const matchingSlide = slides[originalIndex] || { title: s.heading, bullets: s.bullets, image_keyword: s.image_keyword };
         const filteredBullets = matchingSlide.bullets.filter((b) => b.trim());
         return {
           ...matchingSlide,
@@ -330,19 +354,21 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
         };
       });
 
+      const sectionData = validSections.map(({ section }) => section);
+
       const editedOutput: AIWriterOutput = {
         pdf_word: {
           title,
           author: 'AI Writer',
           language,
-          sections: validSections,
+          sections: sectionData,
         },
         ppt: {
           slides: validSlides,
         },
         excel: {
           headers: ['Section', 'Key Points', 'Image Keyword'],
-          rows: validSections.map((s) => [
+          rows: sectionData.map((s) => [
             s.heading,
             s.bullets.join('; '),
             s.image_keyword || '',
@@ -365,47 +391,95 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
         }
       }
 
-      // Generate all selected formats in parallel for speed
-      const filePromises: Promise<void>[] = [];
+      // GEN-48-W7 fix: Cap total image data to prevent OOM on low-RAM devices
+      const MAX_IMAGE_BYTES = 10 * 1024 * 1024; // 10 MB cap
+      let totalImageBytes = 0;
+      for (const [, img] of imageMap) {
+        totalImageBytes += img.imageBytes.length;
+      }
+      if (totalImageBytes > MAX_IMAGE_BYTES) {
+        console.warn(`Image data ${(totalImageBytes / 1024 / 1024).toFixed(1)}MB exceeds cap, stripping images`);
+        imageMap = new Map();
+      }
+
+      // Generate all selected formats in parallel using allSettled
+      // GEN-19-W2 fix: allSettled waits for ALL to finish, preventing orphaned files
+      setGeneratingStatus(t('editor_generating_formats'));
+
+      type FormatResult = { file: GeneratedFile };
+      const formatLabels: Record<string, string> = { pdf: 'PDF', docx: 'Word', pptx: 'PPT', xlsx: 'Excel' };
+      const filePromises: { type: string; promise: Promise<FormatResult> }[] = [];
 
       if (outputFormats.includes('pdf')) {
-        filePromises.push((async () => {
+        filePromises.push({ type: 'pdf', promise: (async () => {
+          setGeneratingStatus(`📕 ${t('editor_generating_format', { format: 'PDF' })}`);
           const pdfBytes = await generatePDF(editedOutput.pdf_word, imageMap);
           const pdfFileName = generateFileName(topic, 'pdf');
           const pdfBase64 = bufferToBase64(pdfBytes);
           const pdfPath = await saveFile(pdfFileName, pdfBase64);
-          files.push({ name: pdfFileName, path: pdfPath, type: 'pdf' });
-        })());
+          return { file: { name: pdfFileName, path: pdfPath, type: 'pdf' as const } };
+        })() });
       }
 
       if (outputFormats.includes('docx')) {
-        filePromises.push((async () => {
+        filePromises.push({ type: 'docx', promise: (async () => {
+          setGeneratingStatus(`📘 ${t('editor_generating_format', { format: 'Word' })}`);
           const wordBase64 = await generateWord(editedOutput.pdf_word, imageMap);
           const wordFileName = generateFileName(topic, 'docx');
           const wordPath = await saveFile(wordFileName, wordBase64);
-          files.push({ name: wordFileName, path: wordPath, type: 'docx' });
-        })());
+          return { file: { name: wordFileName, path: wordPath, type: 'docx' as const } };
+        })() });
       }
 
       if (outputFormats.includes('pptx')) {
-        filePromises.push((async () => {
+        filePromises.push({ type: 'pptx', promise: (async () => {
+          setGeneratingStatus(`📙 ${t('editor_generating_format', { format: 'PPT' })}`);
           const pptBase64 = await generatePPT(editedOutput.ppt, editedOutput.pdf_word, imageMap);
           const pptFileName = generateFileName(topic, 'pptx');
           const pptPath = await saveFile(pptFileName, pptBase64);
-          files.push({ name: pptFileName, path: pptPath, type: 'pptx' });
-        })());
+          return { file: { name: pptFileName, path: pptPath, type: 'pptx' as const } };
+        })() });
       }
 
       if (outputFormats.includes('xlsx')) {
-        filePromises.push((async () => {
+        filePromises.push({ type: 'xlsx', promise: (async () => {
+          setGeneratingStatus(`📗 ${t('editor_generating_format', { format: 'Excel' })}`);
           const excelBase64 = await generateExcel(editedOutput.excel, editedOutput.pdf_word, imageMap);
           const excelFileName = generateFileName(topic, 'xlsx');
           const excelPath = await saveFile(excelFileName, excelBase64);
-          files.push({ name: excelFileName, path: excelPath, type: 'xlsx' });
-        })());
+          return { file: { name: excelFileName, path: excelPath, type: 'xlsx' as const } };
+        })() });
       }
 
-      await Promise.all(filePromises);
+      const results = await Promise.allSettled(filePromises.map(fp => fp.promise));
+
+      // Collect successes and failures
+      const errors: string[] = [];
+      for (let i = 0; i < results.length; i++) {
+        const result = results[i];
+        if (result.status === 'fulfilled') {
+          files.push(result.value.file);
+        } else {
+          const label = formatLabels[filePromises[i].type] || filePromises[i].type;
+          errors.push(`${label}: ${result.reason?.message || 'Unknown error'}`);
+        }
+      }
+
+      // If ALL failed, treat as full failure
+      if (files.length === 0) {
+        throw new Error(errors.join('\n'));
+      }
+
+      // If some failed but others succeeded, warn + continue with partial
+      if (errors.length > 0) {
+        console.warn('Partial generation failures:', errors);
+      }
+
+      // GEN-18-W1 fix: Sort files in consistent order (PDF → Word → PPT → Excel)
+      const FORMAT_ORDER: Record<string, number> = { pdf: 0, docx: 1, pptx: 2, xlsx: 3 };
+      files.sort((a, b) => (FORMAT_ORDER[a.type] ?? 9) - (FORMAT_ORDER[b.type] ?? 9));
+
+      setGeneratingStatus(t('editor_generating_saving'));
 
       await addHistoryEntry({
         id: generateId(),
@@ -417,7 +491,7 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
 
       navigation.replace('Result', { topic, language, files });
     } catch (error) {
-      // Clean up any partial files that were saved before the error
+      // Clean up ALL partial files that were saved (allSettled ensures none are still running)
       for (const f of files) {
         try { await FileSystem.deleteAsync(f.path, { idempotent: true }); } catch { /* ignore */ }
       }
@@ -425,6 +499,7 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
       Alert.alert(t('alert_generation_failed_title'), message);
     } finally {
       setIsGenerating(false);
+      setGeneratingStatus('');
     }
   };
 
@@ -489,7 +564,7 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
         {viewMode === 'preview' ? (
           <View>
             <View style={[styles.previewCard, { backgroundColor: colors.surface }]}>
-              <Text style={[styles.previewTitle, { color: colors.textPrimary }]}>{title}</Text>
+              <Text style={[styles.previewTitle, { color: colors.textPrimary }, rtlStyle]}>{title}</Text>
               <Text style={[styles.previewMeta, { color: colors.textMuted }]}>
                 {t('editor_preview_meta', { language })}
               </Text>
@@ -497,16 +572,16 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
 
             {sections.map((section, sIndex) => (
               <View key={sIndex} style={[styles.previewSection, { backgroundColor: colors.surface }]}>
-                <Text style={[styles.previewHeading, { color: colors.primary }]}>
+                <Text style={[styles.previewHeading, { color: colors.primary }, rtlStyle]}>
                   {sIndex + 1}. {section.heading}
                 </Text>
-                <Text style={[styles.previewParagraph, { color: colors.textPrimary }]}>
+                <Text style={[styles.previewParagraph, { color: colors.textPrimary }, rtlStyle]}>
                   {section.paragraph}
                 </Text>
                 {section.bullets.map((bullet, bIndex) => (
                   <View key={bIndex} style={styles.previewBulletRow}>
                     <Text style={[styles.previewBulletDot, { color: colors.primary }]}>•</Text>
-                    <Text style={[styles.previewBulletText, { color: colors.textSecondary }]}>
+                    <Text style={[styles.previewBulletText, { color: colors.textSecondary }, rtlStyle]}>
                       {bullet}
                     </Text>
                   </View>
@@ -528,11 +603,13 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
                   backgroundColor: colors.inputBackground,
                   borderColor: colors.inputBorder,
                   color: colors.inputText,
+                  ...rtlStyle,
                 }]}
                 value={title}
                 onChangeText={setTitle}
                 placeholder={t('editor_document_title_placeholder')}
                 placeholderTextColor={colors.placeholder}
+                maxFontSizeMultiplier={1.3}
               />
             </View>
 
@@ -589,32 +666,32 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
                   {isExpanded && !isAiLoading && (
                     <View style={styles.sectionBody}>
                       {/* AI Tools Bar */}
-                      <View style={styles.aiToolsBar}>
+                      <View style={[styles.aiToolsBar, { borderBottomColor: colors.borderLight }]}>
                         <Text style={[styles.aiToolsLabel, { color: colors.textMuted }]}>{t('editor_ai_tools_label')}</Text>
                         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                           <TouchableOpacity
-                            style={[styles.aiBtn, { backgroundColor: '#E8F5E9' }]}
+                            style={[styles.aiBtn, { backgroundColor: colors.successLight }]}
                             onPress={() => handleAIAction(sIndex, 'improve')}
                           >
-                            <Text style={[styles.aiBtnText, { color: '#2E7D32' }]}>{t('editor_ai_improve')}</Text>
+                            <Text style={[styles.aiBtnText, { color: colors.success }]}>{t('editor_ai_improve')}</Text>
                           </TouchableOpacity>
                           <TouchableOpacity
-                            style={[styles.aiBtn, { backgroundColor: '#E3F2FD' }]}
+                            style={[styles.aiBtn, { backgroundColor: colors.primaryLight }]}
                             onPress={() => handleAIAction(sIndex, 'expand')}
                           >
-                            <Text style={[styles.aiBtnText, { color: '#1565C0' }]}>{t('editor_ai_expand')}</Text>
+                            <Text style={[styles.aiBtnText, { color: colors.primary }]}>{t('editor_ai_expand')}</Text>
                           </TouchableOpacity>
                           <TouchableOpacity
-                            style={[styles.aiBtn, { backgroundColor: '#FFF3E0' }]}
+                            style={[styles.aiBtn, { backgroundColor: colors.warningLight }]}
                             onPress={() => handleAIAction(sIndex, 'shorten')}
                           >
-                            <Text style={[styles.aiBtnText, { color: '#E65100' }]}>{t('editor_ai_shorten')}</Text>
+                            <Text style={[styles.aiBtnText, { color: colors.warning }]}>{t('editor_ai_shorten')}</Text>
                           </TouchableOpacity>
                           <TouchableOpacity
-                            style={[styles.aiBtn, { backgroundColor: '#FCE4EC' }]}
+                            style={[styles.aiBtn, { backgroundColor: colors.dangerLight }]}
                             onPress={() => handleAIAction(sIndex, 'regenerate')}
                           >
-                            <Text style={[styles.aiBtnText, { color: '#C62828' }]}>{t('editor_ai_regenerate')}</Text>
+                            <Text style={[styles.aiBtnText, { color: colors.danger }]}>{t('editor_ai_regenerate')}</Text>
                           </TouchableOpacity>
                         </ScrollView>
                       </View>
@@ -622,30 +699,30 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
                       {/* Section Management */}
                       <View style={styles.managementBar}>
                         <TouchableOpacity
-                          style={[styles.mgmtBtn, { backgroundColor: colors.surface }]}
+                          style={[styles.mgmtBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
                           onPress={() => moveSection(sIndex, 'up')}
                           disabled={sIndex === 0}
                         >
                           <Text style={[styles.mgmtBtnText, { color: sIndex === 0 ? colors.textMuted : colors.textPrimary }]}>↑</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                          style={[styles.mgmtBtn, { backgroundColor: colors.surface }]}
+                          style={[styles.mgmtBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
                           onPress={() => moveSection(sIndex, 'down')}
                           disabled={sIndex === sections.length - 1}
                         >
                           <Text style={[styles.mgmtBtnText, { color: sIndex === sections.length - 1 ? colors.textMuted : colors.textPrimary }]}>↓</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                          style={[styles.mgmtBtn, { backgroundColor: colors.surface }]}
+                          style={[styles.mgmtBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
                           onPress={() => duplicateSection(sIndex)}
                         >
                           <Text style={[styles.mgmtBtnText, { color: colors.textPrimary }]}>{t('editor_copy_section')}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                          style={[styles.mgmtBtn, { backgroundColor: '#FFEBEE' }]}
+                          style={[styles.mgmtBtn, { backgroundColor: colors.dangerLight }]}
                           onPress={() => removeSection(sIndex)}
                         >
-                          <Text style={[styles.mgmtBtnText, { color: '#D32F2F' }]}>{t('editor_delete_section')}</Text>
+                          <Text style={[styles.mgmtBtnText, { color: colors.danger }]}>{t('editor_delete_section')}</Text>
                         </TouchableOpacity>
                       </View>
 
@@ -656,11 +733,13 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
                           backgroundColor: colors.inputBackground,
                           borderColor: colors.inputBorder,
                           color: colors.inputText,
+                          ...rtlStyle,
                         }]}
                         value={section.heading}
                         onChangeText={(v) => updateSection(sIndex, 'heading', v)}
                         placeholder={t('editor_heading_placeholder')}
                         placeholderTextColor={colors.placeholder}
+                        maxFontSizeMultiplier={1.3}
                       />
 
                       {/* Paragraph */}
@@ -670,6 +749,7 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
                           backgroundColor: colors.inputBackground,
                           borderColor: colors.inputBorder,
                           color: colors.inputText,
+                          ...rtlStyle,
                         }]}
                         value={section.paragraph}
                         onChangeText={(v) => updateSection(sIndex, 'paragraph', v)}
@@ -678,6 +758,7 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
                         multiline
                         numberOfLines={6}
                         textAlignVertical="top"
+                        maxFontSizeMultiplier={1.3}
                       />
 
                       {/* Bullets */}
@@ -701,11 +782,13 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
                               backgroundColor: colors.inputBackground,
                               borderColor: colors.inputBorder,
                               color: colors.inputText,
+                              ...rtlStyle,
                             }]}
                             value={bullet}
                             onChangeText={(v) => updateBullet(sIndex, bIndex, v)}
                             placeholder={t('editor_bullet_placeholder')}
                             placeholderTextColor={colors.placeholder}
+                            maxFontSizeMultiplier={1.3}
                           />
                           {section.bullets.length > 1 && (
                             <TouchableOpacity
@@ -727,11 +810,13 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
                           backgroundColor: colors.inputBackground,
                           borderColor: colors.inputBorder,
                           color: colors.inputText,
+                          ...rtlStyle,
                         }]}
                         value={section.image_keyword || ''}
                         onChangeText={(v) => updateSection(sIndex, 'image_keyword', v)}
                         placeholder={t('editor_image_keyword_placeholder')}
                         placeholderTextColor={colors.placeholder}
+                        maxFontSizeMultiplier={1.3}
                       />
                     </View>
                   )}
@@ -762,7 +847,7 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
           {isGenerating ? (
             <View style={styles.generatingRow}>
               <ActivityIndicator color="#FFF" size="small" />
-              <Text style={styles.generateText}>{t('editor_generating')}</Text>
+              <Text style={styles.generateText}>{generatingStatus || t('editor_generating')}</Text>
             </View>
           ) : (
             <Text style={styles.generateText}>{t('editor_generate_final')}</Text>
@@ -870,7 +955,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     paddingBottom: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
   },
   aiToolsLabel: { fontSize: 11, fontWeight: '600', marginBottom: 6 },
   aiBtn: {
@@ -893,7 +977,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
   },
   mgmtBtnText: { fontSize: 12, fontWeight: '600' },
 

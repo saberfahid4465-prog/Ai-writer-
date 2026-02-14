@@ -21,7 +21,7 @@ import { AIWriterOutput } from '../ai/responseParser';
 import { parseUploadedFile } from '../services/fileParserService';
 import { useTheme } from '../utils/themeContext';
 import { useTranslation } from '../i18n/i18nContext';
-import { canMakeRequest, getRemainingTokens } from '../utils/tokenUsage';
+import { canMakeRequest, getRemainingTokens, estimateRequestCost } from '../utils/tokenUsage';
 
 // ─── Types ──────────────────────────────────────────────────────
 
@@ -70,24 +70,52 @@ export default function ProcessingScreen({ route, navigation }: ProcessingScreen
       setProgress(10);
 
       let uploadedContent: string | undefined;
+      let shouldContinue = true;
       if (uploadedFileUri) {
         try {
           const uploadedFileName = route.params.uploadedFileName || 'uploaded_file.txt';
           const parsed = await parseUploadedFile(uploadedFileUri, uploadedFileName);
           uploadedContent = parsed.content;
+
+          // Warn user if content was truncated
+          if (parsed.wasTruncated) {
+            const kept = parsed.content.length;
+            const total = parsed.originalLength || kept;
+            const pct = Math.round((kept / total) * 100);
+            shouldContinue = await new Promise<boolean>((resolve) => {
+              Alert.alert(
+                t('alert_truncated_title'),
+                t('alert_truncated_msg', {
+                  kept: kept.toLocaleString(),
+                  total: total.toLocaleString(),
+                  pct: String(pct),
+                }),
+                [
+                  { text: t('alert_go_back'), onPress: () => resolve(false), style: 'cancel' },
+                  { text: t('alert_continue'), onPress: () => resolve(true) },
+                ]
+              );
+            });
+          }
         } catch (parseError) {
-          // Warn user that uploaded file couldn't be processed
+          // Warn user that uploaded file couldn't be processed — await their choice
           const fileMsg = parseError instanceof Error ? parseError.message : 'Could not read uploaded file.';
-          Alert.alert(
-            t('alert_file_warning_title'),
-            `${fileMsg}\n\n${t('alert_file_warning_continue')}`,
-            [
-              { text: t('alert_go_back'), onPress: () => navigation.goBack(), style: 'cancel' },
-              { text: t('alert_continue_without_file'), onPress: () => {} },
-            ]
-          );
-          // Wait for user choice — if they continue, uploadedContent stays undefined
+          shouldContinue = await new Promise<boolean>((resolve) => {
+            Alert.alert(
+              t('alert_file_warning_title'),
+              `${fileMsg}\n\n${t('alert_file_warning_continue')}`,
+              [
+                { text: t('alert_go_back'), onPress: () => resolve(false), style: 'cancel' },
+                { text: t('alert_continue_without_file'), onPress: () => resolve(true) },
+              ]
+            );
+          });
         }
+      }
+
+      if (!shouldContinue) {
+        navigation.goBack();
+        return;
       }
 
       if (cancelledRef.current) return;
@@ -107,6 +135,37 @@ export default function ProcessingScreen({ route, navigation }: ProcessingScreen
       }
       if (cancelledRef.current) return;
       setProgress(30);
+
+      // Token cost pre-warning for large content
+      if (uploadedContent && shouldContinue) {
+        const estCost = estimateRequestCost(uploadedContent.length);
+        const remaining = await getRemainingTokens();
+        if (estCost > remaining * 0.8) {
+          const verdict = estCost <= remaining
+            ? t('alert_token_sufficient')
+            : t('alert_token_insufficient');
+          shouldContinue = await new Promise<boolean>((resolve) => {
+            Alert.alert(
+              t('alert_token_warning_title'),
+              t('alert_token_warning_msg', {
+                chars: uploadedContent.length.toLocaleString(),
+                chunks: '1',
+                cost: estCost.toLocaleString(),
+                remaining: remaining.toLocaleString(),
+                verdict,
+              }),
+              [
+                { text: t('alert_go_back'), onPress: () => resolve(false), style: 'cancel' },
+                { text: t('alert_continue'), onPress: () => resolve(true) },
+              ]
+            );
+          });
+          if (!shouldContinue) {
+            navigation.goBack();
+            return;
+          }
+        }
+      }
 
       // Step 2: Call AI
       setCurrentStep(2);

@@ -97,6 +97,10 @@ const ja: Record<string, string> = {
   alert_downloaded_title: 'ダウンロード完了',
   alert_downloaded_msg: '{{name}}が正常に保存されました。',
   alert_download_failed: 'ダウンロードに失敗しました。もう一度お試しください。',
+  alert_empty_content_title: '空のコンテンツ',
+  alert_empty_content_msg: 'アップロードされたファイルは空か、空白のみのようです。',
+  alert_short_content_title: '非常に短いコンテンツ',
+  alert_short_content_msg: 'コンテンツが非常に短く、結果が乏しくなる可能性があります。続行しますか？',
   alert_sharing_not_available_title: '共有が利用できません',
   alert_sharing_not_available_msg: 'このデバイスでは共有がサポートされていません。',
   alert_share_failed: '共有に失敗しました。もう一度お試しください。',
@@ -136,6 +140,9 @@ const ja: Record<string, string> = {
   editor_new_section_bullet: 'ポイント1',
   editor_copy_suffix: '（コピー）',
   editor_generating: ' ファイル生成中...',
+  editor_generating_formats: 'ドキュメントを作成中...',
+  editor_generating_format: '{{format}}を生成中...',
+  editor_generating_saving: 'ファイルを保存中...',
   editor_generate_final: '✨ 最終ファイルを生成',
   alert_cannot_remove_title: '削除できません',
   alert_cannot_remove_msg: '少なくとも1つのセクションが必要です。',
@@ -244,6 +251,10 @@ const ja: Record<string, string> = {
   premium_footer: 'ご質問は support@aiwriter.app まで',
   alert_coming_soon_title: '近日公開',
   alert_coming_soon_msg: 'アプリ内購入は次のアップデートで利用可能になります。お楽しみに！',
+  alert_cancel_partial_title: '処理をキャンセルしますか？',
+  alert_cancel_partial_msg: '{{completed}}個のチャンクが処理済みです。部分的な結果を保持しますか？',
+  alert_discard: '破棄',
+  alert_keep_partial: '部分保持',
 };
 
 export default ja;
