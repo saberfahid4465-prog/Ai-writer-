@@ -106,29 +106,34 @@ export function parseAIResponse(rawContent: string): AIWriterOutput {
 
 function validatePdfWord(data: unknown): asserts data is PdfWordData {
   if (!data || typeof data !== 'object') {
+    // Should not happen as we provide defaults above, but just in case
     throw new Error('Missing or invalid "pdf_word" in AI response');
   }
 
   const d = data as Record<string, unknown>;
 
+  // Provide defaults for missing fields instead of throwing
   if (typeof d.title !== 'string' || d.title.length === 0) {
-    throw new Error('pdf_word.title is missing or empty');
+    d.title = 'Untitled Document';
+  }
+  if (typeof d.author !== 'string') {
+    d.author = 'AI Writer';
   }
   if (typeof d.language !== 'string' || d.language.length === 0) {
-    throw new Error('pdf_word.language is missing or empty');
+    d.language = 'English';
   }
   if (!Array.isArray(d.sections) || d.sections.length === 0) {
-    throw new Error('pdf_word.sections is missing or empty');
+    d.sections = [{ heading: 'Content', paragraph: 'No content generated.', bullets: [] }];
   }
 
-  for (let i = 0; i < d.sections.length; i++) {
-    const section = d.sections[i] as Record<string, unknown>;
+  const sections = d.sections as Array<Record<string, unknown>>;
+  for (let i = 0; i < sections.length; i++) {
+    const section = sections[i];
     if (typeof section.heading !== 'string' || section.heading.length === 0) {
-      throw new Error(`pdf_word.sections[${i}].heading is missing or empty`);
+      section.heading = `Section ${i + 1}`;
     }
     if (typeof section.paragraph !== 'string' || section.paragraph.length === 0) {
-      // W39 fix: lenient — default to single space instead of throwing
-      section.paragraph = section.paragraph || ' ';
+      section.paragraph = ' ';
     }
     if (!Array.isArray(section.bullets)) {
       section.bullets = [];
@@ -143,14 +148,16 @@ function validatePpt(data: unknown): asserts data is PptData {
 
   const d = data as Record<string, unknown>;
 
+  // Provide defaults for missing slides
   if (!Array.isArray(d.slides) || d.slides.length === 0) {
-    throw new Error('ppt.slides is missing or empty');
+    d.slides = [{ title: 'Slide 1', bullets: ['No content generated.'] }];
   }
 
-  for (let i = 0; i < d.slides.length; i++) {
-    const slide = d.slides[i] as Record<string, unknown>;
+  const slides = d.slides as Array<Record<string, unknown>>;
+  for (let i = 0; i < slides.length; i++) {
+    const slide = slides[i];
     if (typeof slide.title !== 'string' || slide.title.length === 0) {
-      throw new Error(`ppt.slides[${i}].title is missing or empty`);
+      slide.title = `Slide ${i + 1}`;
     }
     if (!Array.isArray(slide.bullets)) {
       slide.bullets = [];
@@ -165,8 +172,9 @@ function validateExcel(data: unknown): asserts data is ExcelData {
 
   const d = data as Record<string, unknown>;
 
+  // Provide defaults for missing headers
   if (!Array.isArray(d.headers) || d.headers.length === 0) {
-    throw new Error('excel.headers is missing or empty');
+    d.headers = ['Column 1'];
   }
   if (!Array.isArray(d.rows)) {
     d.rows = [];
