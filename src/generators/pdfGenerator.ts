@@ -50,17 +50,28 @@ export async function generatePDF(
   data: PdfWordData,
   images?: Map<string, DocumentImage>
 ): Promise<Uint8Array> {
+  // Defensive checks for required parameters
+  if (!data || typeof data !== 'object') {
+    throw new Error('PDF generation failed: Invalid data');
+  }
+
+  // Safe property access with fallbacks
+  const safeTitle = typeof data.title === 'string' ? data.title : 'Untitled';
+  const safeAuthor = typeof data.author === 'string' ? data.author : 'AI Writer';
+  const safeLanguage = typeof data.language === 'string' ? data.language : 'English';
+  const safeSections = Array.isArray(data.sections) ? data.sections : [];
+
   const pdfDoc = await PDFDocument.create();
 
   // Set document metadata
-  pdfDoc.setTitle(data.title);
-  pdfDoc.setAuthor(data.author || 'AI Writer');
+  pdfDoc.setTitle(safeTitle);
+  pdfDoc.setAuthor(safeAuthor);
   pdfDoc.setCreator('AI Writer');
   pdfDoc.setProducer('AI Writer - pdf-lib');
   pdfDoc.setCreationDate(new Date());
 
   // Determine if we need a custom Unicode font
-  const sampleText = data.title + ' ' + (data.sections[0]?.paragraph || '');
+  const sampleText = safeTitle + ' ' + (safeSections[0]?.paragraph || '');
   const isNonLatin = hasNonLatinText(sampleText);
   let useCustomFont = false;
   let fontRegular: PDFFont;
@@ -69,7 +80,7 @@ export async function generatePDF(
   if (isNonLatin) {
     // Try to load custom Unicode font for non-Latin languages
     try {
-      const langCode = data.language?.toLowerCase() || '';
+      const langCode = safeLanguage.toLowerCase();
       // Map common language names to codes
       const langNameToCode: Record<string, string> = {
         arabic: 'ar', chinese: 'zh', japanese: 'ja', korean: 'ko',
@@ -113,10 +124,10 @@ export async function generatePDF(
 
   // ─── Title Page ──────────────────────────────────────────
   const titlePage = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
-  const safeTitle = safeText(data.title);
+  const titleTextSafe = safeText(safeTitle);
 
   // Wrap title text to fit within content width
-  const titleLines = wrapText(safeTitle, fontBold, FONT_SIZE_TITLE, CONTENT_WIDTH, (t) => t);
+  const titleLines = wrapText(titleTextSafe, fontBold, FONT_SIZE_TITLE, CONTENT_WIDTH, (t) => t);
   const titleLineHeight = FONT_SIZE_TITLE * LINE_HEIGHT;
   const totalTitleHeight = titleLines.length * titleLineHeight;
   // Clamp start Y so title stays within page bounds
@@ -138,7 +149,7 @@ export async function generatePDF(
     titleY -= titleLineHeight;
   }
 
-  const authorText = safeText(`By ${data.author || 'AI Writer'}`);
+  const authorText = safeText(`By ${safeAuthor}`);
   const authorWidth = fontRegular.widthOfTextAtSize(authorText, FONT_SIZE_AUTHOR);
   titlePage.drawText(authorText, {
     x: (PAGE_WIDTH - authorWidth) / 2,
@@ -148,7 +159,7 @@ export async function generatePDF(
     color: COLOR_AUTHOR,
   });
 
-  const langText = safeText(`Language: ${data.language}`);
+  const langText = safeText(`Language: ${safeLanguage}`);
   const langWidth = fontRegular.widthOfTextAtSize(langText, FONT_SIZE_BODY);
   titlePage.drawText(langText, {
     x: (PAGE_WIDTH - langWidth) / 2,
@@ -165,7 +176,16 @@ export async function generatePDF(
   // GEN-27-W4 fix: Cache embedded image XObjects to deduplicate same-keyword images
   const embeddedImageCache = new Map<string, any>();
 
-  for (const section of data.sections) {
+  for (const section of safeSections) {
+    // Skip invalid sections
+    if (!section || typeof section !== 'object') continue;
+
+    // Safe section property access
+    const sectionHeading = typeof section.heading === 'string' ? section.heading : 'Section';
+    const sectionParagraph = typeof section.paragraph === 'string' ? section.paragraph : '';
+    const sectionBullets = Array.isArray(section.bullets) ? section.bullets : [];
+    const sectionImageKeyword = typeof section.image_keyword === 'string' ? section.image_keyword : '';
+
     // Check if we need a new page (at least 150pt needed for heading + content)
     if (yPos < MARGIN + 150) {
       currentPage = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
@@ -173,7 +193,7 @@ export async function generatePDF(
     }
 
     // Section heading — wrap text for long headings
-    const headingLines = wrapText(section.heading, fontBold, FONT_SIZE_HEADING, CONTENT_WIDTH, safeText);
+    const headingLines = wrapText(sectionHeading, fontBold, FONT_SIZE_HEADING, CONTENT_WIDTH, safeText);
     for (const hLine of headingLines) {
       if (yPos < MARGIN + 20) {
         currentPage = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
@@ -200,7 +220,7 @@ export async function generatePDF(
     yPos -= 16;
 
     // Paragraph — wrap text manually
-    const lines = wrapText(section.paragraph, fontRegular, FONT_SIZE_BODY, CONTENT_WIDTH, safeText);
+    const lines = wrapText(sectionParagraph, fontRegular, FONT_SIZE_BODY, CONTENT_WIDTH, safeText);
     for (const line of lines) {
       if (yPos < MARGIN + 20) {
         currentPage = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
@@ -219,7 +239,9 @@ export async function generatePDF(
     yPos -= 10; // Space before bullets
 
     // Bullet points
-    for (const bullet of section.bullets) {
+    for (const bullet of sectionBullets) {
+      if (typeof bullet !== 'string' || !bullet.trim()) continue;
+
       if (yPos < MARGIN + 20) {
         currentPage = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
         yPos = PAGE_HEIGHT - MARGIN;
@@ -244,11 +266,11 @@ export async function generatePDF(
 
     // ─── Section Image ───────────────────────────────────
     // GEN-27-W4 fix: Cache embedded image XObjects to avoid duplicating same image
-    if (images && section.image_keyword) {
-      const img = images.get(section.image_keyword);
+    if (images && typeof images.get === 'function' && sectionImageKeyword) {
+      const img = images.get(sectionImageKeyword);
       if (img) {
         try {
-          const cacheKey = section.image_keyword;
+          const cacheKey = sectionImageKeyword;
           let embeddedImg = embeddedImageCache.get(cacheKey);
           if (!embeddedImg) {
             embeddedImg = await pdfDoc.embedJpg(img.imageBytes);

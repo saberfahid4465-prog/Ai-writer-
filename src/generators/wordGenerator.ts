@@ -45,11 +45,22 @@ export async function generateWord(
   data: PdfWordData,
   images?: Map<string, DocumentImage>
 ): Promise<string> {
+  // Defensive checks for required parameters
+  if (!data || typeof data !== 'object') {
+    throw new Error('Word generation failed: Invalid data');
+  }
+
   const children: Paragraph[] = [];
+
+  // Safe property access with fallbacks
+  const safeTitle = typeof data.title === 'string' ? data.title : 'Untitled';
+  const safeAuthor = typeof data.author === 'string' ? data.author : 'AI Writer';
+  const safeLanguage = typeof data.language === 'string' ? data.language : 'English';
+  const safeSections = Array.isArray(data.sections) ? data.sections : [];
 
   // Detect RTL languages
   const rtlLanguages = ['arabic', 'hebrew', 'persian', 'farsi', 'urdu'];
-  const isRTL = rtlLanguages.some(lang => data.language.toLowerCase().includes(lang));
+  const isRTL = rtlLanguages.some(lang => safeLanguage.toLowerCase().includes(lang));
 
   // ─── Title ───────────────────────────────────────────────
   children.push(
@@ -59,7 +70,7 @@ export async function generateWord(
       bidirectional: isRTL,
       children: [
         new TextRun({
-          text: data.title,
+          text: safeTitle,
           bold: true,
           size: 56, // 28pt
           color: THEME_COLOR_PRIMARY,
@@ -77,7 +88,7 @@ export async function generateWord(
       spacing: { after: 200 },
       children: [
         new TextRun({
-          text: `By ${data.author || 'AI Writer'}`,
+          text: `By ${safeAuthor}`,
           size: 28, // 14pt
           color: '666666',
           font: FONT_FAMILY,
@@ -93,7 +104,7 @@ export async function generateWord(
       spacing: { after: 600 },
       children: [
         new TextRun({
-          text: `Language: ${data.language}`,
+          text: `Language: ${safeLanguage}`,
           size: 24, // 12pt
           color: '999999',
           font: FONT_FAMILY,
@@ -119,7 +130,14 @@ export async function generateWord(
   );
 
   // ─── Sections ────────────────────────────────────────────
-  for (const section of data.sections) {
+  for (const section of safeSections) {
+    if (!section || typeof section !== 'object') continue;
+
+    // Safe property access for section
+    const sectionHeading = typeof section.heading === 'string' ? section.heading : 'Section';
+    const sectionParagraph = typeof section.paragraph === 'string' ? section.paragraph : '';
+    const sectionBullets = Array.isArray(section.bullets) ? section.bullets : [];
+
     // Section heading
     children.push(
       new Paragraph({
@@ -128,7 +146,7 @@ export async function generateWord(
         bidirectional: isRTL,
         children: [
           new TextRun({
-            text: section.heading,
+            text: sectionHeading,
             bold: true,
             size: 36, // 18pt
             color: THEME_COLOR_PRIMARY,
@@ -140,7 +158,7 @@ export async function generateWord(
     );
 
     // Paragraph content — W38 fix: split on newlines for proper line breaks
-    const paraLines = section.paragraph.split('\n').filter(l => l.length > 0);
+    const paraLines = sectionParagraph.split('\n').filter(l => l.length > 0);
     const paraChildren: TextRun[] = [];
     paraLines.forEach((line, idx) => {
       if (idx > 0) {
@@ -162,7 +180,7 @@ export async function generateWord(
         bidirectional: isRTL,
         children: paraChildren.length > 0 ? paraChildren : [
           new TextRun({
-            text: section.paragraph,
+            text: sectionParagraph,
             size: 24,
             color: THEME_COLOR_BODY,
             font: FONT_FAMILY,
@@ -173,7 +191,8 @@ export async function generateWord(
     );
 
     // Bullet points
-    for (const bullet of section.bullets) {
+    for (const bullet of sectionBullets) {
+      if (typeof bullet !== 'string' || !bullet.trim()) continue;
       children.push(
         new Paragraph({
           bullet: { level: 0 },
