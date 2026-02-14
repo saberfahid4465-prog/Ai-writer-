@@ -9,12 +9,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const TOKEN_USAGE_KEY = '@ai_writer_token_usage';
-const DAILY_TOKEN_LIMIT = 15000;
+const DAILY_TOKEN_LIMIT = 5000;
 
 /**
  * Background bonus: extra buffer so in-progress chunks can finish.
  */
-const BACKGROUND_BONUS = 2000;
+const BACKGROUND_BONUS = 500;
 
 interface TokenUsageData {
   date: string; // YYYY-MM-DD

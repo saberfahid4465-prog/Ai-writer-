@@ -451,7 +451,18 @@ export default function EditorScreen({ route, navigation }: EditorScreenProps) {
         })() });
       }
 
-      const results = await Promise.allSettled(filePromises.map(fp => fp.promise));
+      // Helper function to mimic Promise.allSettled for Hermes compatibility
+      const allSettled = <T,>(promises: Promise<T>[]): Promise<Array<{status: 'fulfilled'; value: T} | {status: 'rejected'; reason: any}>> => {
+        return Promise.all(
+          promises.map(p =>
+            p
+              .then(value => ({ status: 'fulfilled' as const, value }))
+              .catch(reason => ({ status: 'rejected' as const, reason }))
+          )
+        );
+      };
+
+      const results = await allSettled(filePromises.map(fp => fp.promise));
 
       // Collect successes and failures
       const errors: string[] = [];
