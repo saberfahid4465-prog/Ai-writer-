@@ -26,6 +26,20 @@ const BORDER_COLOR = 'D5D5DA'; // Light gray
 const ALT_ROW_COLOR = 'F0F0F2'; // Alternating row highlight
 const FONT_NAME = 'Calibri';
 
+// ─── Utilities ───────────────────────────────────────────────────
+
+/**
+ * Sanitize a string for use as an Excel worksheet name.
+ * Excel forbids: * ? : \ / [ ]  and limits to 31 characters.
+ */
+function sanitizeSheetName(name: string): string {
+  return name
+    .replace(/[*?:\\/\[\]]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .substring(0, 31) || 'Sheet';
+}
+
 // ─── Generator ──────────────────────────────────────────────────
 
 /**
@@ -49,7 +63,7 @@ export async function generateExcel(
   workbook.lastModifiedBy = 'AI Writer';
 
   // ─── Main Data Sheet ─────────────────────────────────────
-  const sheet = workbook.addWorksheet(metaData.title || 'AI Writer Output', {
+  const sheet = workbook.addWorksheet(sanitizeSheetName(metaData.title || 'AI Writer Output'), {
     properties: {
       defaultColWidth: 25,
     },

@@ -36,6 +36,8 @@ Thumbs.db
 # Build
 build-output/
 *.tgz
+*.aab
+*.apk
 
 # Temp
 *.log
