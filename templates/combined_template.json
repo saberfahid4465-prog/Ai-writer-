@@ -1,0 +1,122 @@
+{
+  "pdf_word": {
+    "title": "Document Title",
+    "author": "AI Writer",
+    "language": "English",
+    "sections": [
+      {
+        "heading": "Introduction",
+        "paragraph": "Summarized content for this section. This provides an overview of the topic. The reader will gain a foundational understanding.",
+        "bullets": [
+          "Key Point 1",
+          "Key Point 2",
+          "Key Point 3"
+        ],
+        "image_keyword": "illustration keyword"
+      },
+      {
+        "heading": "Background",
+        "paragraph": "Historical context and background information. This section covers the origins and development. Important milestones are highlighted.",
+        "bullets": [
+          "Background Detail 1",
+          "Background Detail 2",
+          "Background Detail 3"
+        ],
+        "image_keyword": "history illustration"
+      },
+      {
+        "heading": "Key Findings",
+        "paragraph": "Core findings and analysis of the topic. Data-driven insights are presented here. Critical observations are documented.",
+        "bullets": [
+          "Finding 1",
+          "Finding 2",
+          "Finding 3"
+        ],
+        "image_keyword": "data analysis"
+      },
+      {
+        "heading": "Discussion",
+        "paragraph": "Expanded content with examples and discussion. Multiple perspectives are considered. Practical applications are explored.",
+        "bullets": [
+          "Discussion Point 1",
+          "Discussion Point 2",
+          "Discussion Point 3"
+        ],
+        "image_keyword": "discussion illustration"
+      },
+      {
+        "heading": "Conclusion",
+        "paragraph": "Summary and concluding remarks on the topic. Key takeaways are reinforced. Future directions are suggested.",
+        "bullets": [
+          "Conclusion Point 1",
+          "Conclusion Point 2",
+          "Conclusion Point 3"
+        ],
+        "image_keyword": "conclusion illustration"
+      }
+    ]
+  },
+  "ppt": {
+    "slides": [
+      {
+        "title": "Introduction",
+        "bullets": [
+          "Key Point 1",
+          "Key Point 2",
+          "Key Point 3"
+        ],
+        "image_keyword": "illustration keyword"
+      },
+      {
+        "title": "Background",
+        "bullets": [
+          "Background Detail 1",
+          "Background Detail 2",
+          "Background Detail 3"
+        ],
+        "image_keyword": "history illustration"
+      },
+      {
+        "title": "Key Findings",
+        "bullets": [
+          "Finding 1",
+          "Finding 2",
+          "Finding 3"
+        ],
+        "image_keyword": "data analysis"
+      },
+      {
+        "title": "Discussion",
+        "bullets": [
+          "Discussion Point 1",
+          "Discussion Point 2",
+          "Discussion Point 3"
+        ],
+        "image_keyword": "discussion illustration"
+      },
+      {
+        "title": "Conclusion",
+        "bullets": [
+          "Conclusion Point 1",
+          "Conclusion Point 2",
+          "Conclusion Point 3"
+        ],
+        "image_keyword": "conclusion illustration"
+      }
+    ]
+  },
+  "excel": {
+    "headers": [
+      "Section",
+      "Key Points",
+      "Image Keyword"
+    ],
+    "rows": [
+      ["Introduction", "Summarized key points for introduction", "illustration keyword"],
+      ["Background", "Historical context and background details", "history illustration"],
+      ["Key Findings", "Core findings and data-driven insights", "data analysis"],
+      ["Discussion", "Discussion points and practical applications", "discussion illustration"],
+      ["Conclusion", "Summary and concluding remarks", "conclusion illustration"]
+    ]
+  }
+}

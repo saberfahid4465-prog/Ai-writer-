@@ -1,0 +1,253 @@
+/**
+ * AI Writer — Word (.docx) Generator
+ *
+ * Generates a professional Word document from the AI-structured
+ * pdf_word data using the `docx` npm package.
+ *
+ * Features:
+ * - Title and author metadata
+ * - Heading1 for section headings
+ * - Normal paragraphs
+ * - Bullet lists
+ * - UTF-8 support
+ * - Compatible with Office 2007+, WPS, Google Docs, LibreOffice
+ */
+
+import {
+  Document,
+  Packer,
+  Paragraph,
+  TextRun,
+  HeadingLevel,
+  AlignmentType,
+  BorderStyle,
+  convertInchesToTwip,
+  ImageRun,
+} from 'docx';
+import { PdfWordData } from '../ai/responseParser';
+import { DocumentImage } from '../services/pexelsService';
+
+// ─── Constants ──────────────────────────────────────────────────
+
+const THEME_COLOR_PRIMARY = '2C2E33'; // Charcoal heading color
+const THEME_COLOR_BODY = '1E1F23'; // Near-black body text
+const FONT_FAMILY = 'Calibri';
+
+// ─── Generator ──────────────────────────────────────────────────
+
+/**
+ * Generate a Word (.docx) document from structured AI data.
+ *
+ * @param data - The pdf_word section of the AI response.
+ * @returns Buffer of the .docx file bytes.
+ */
+export async function generateWord(
+  data: PdfWordData,
+  images?: Map<string, DocumentImage>
+): Promise<Buffer> {
+  const children: Paragraph[] = [];
+
+  // ─── Title ───────────────────────────────────────────────
+  children.push(
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 400 },
+      children: [
+        new TextRun({
+          text: data.title,
+          bold: true,
+          size: 56, // 28pt
+          color: THEME_COLOR_PRIMARY,
+          font: FONT_FAMILY,
+        }),
+      ],
+    })
+  );
+
+  // Author line
+  children.push(
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 200 },
+      children: [
+        new TextRun({
+          text: `By ${data.author || 'AI Writer'}`,
+          size: 28, // 14pt
+          color: '666666',
+          font: FONT_FAMILY,
+        }),
+      ],
+    })
+  );
+
+  // Language line
+  children.push(
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 600 },
+      children: [
+        new TextRun({
+          text: `Language: ${data.language}`,
+          size: 24, // 12pt
+          color: '999999',
+          font: FONT_FAMILY,
+          italics: true,
+        }),
+      ],
+    })
+  );
+
+  // Separator
+  children.push(
+    new Paragraph({
+      spacing: { after: 400 },
+      border: {
+        bottom: {
+          style: BorderStyle.SINGLE,
+          size: 1,
+          color: 'CCCCCC',
+        },
+      },
+      children: [],
+    })
+  );
+
+  // ─── Sections ────────────────────────────────────────────
+  for (const section of data.sections) {
+    // Section heading
+    children.push(
+      new Paragraph({
+        heading: HeadingLevel.HEADING_1,
+        spacing: { before: 400, after: 200 },
+        children: [
+          new TextRun({
+            text: section.heading,
+            bold: true,
+            size: 36, // 18pt
+            color: THEME_COLOR_PRIMARY,
+            font: FONT_FAMILY,
+          }),
+        ],
+      })
+    );
+
+    // Paragraph content
+    children.push(
+      new Paragraph({
+        spacing: { after: 200 },
+        children: [
+          new TextRun({
+            text: section.paragraph,
+            size: 24, // 12pt
+            color: THEME_COLOR_BODY,
+            font: FONT_FAMILY,
+          }),
+        ],
+      })
+    );
+
+    // Bullet points
+    for (const bullet of section.bullets) {
+      children.push(
+        new Paragraph({
+          bullet: { level: 0 },
+          spacing: { after: 80 },
+          indent: {
+            left: convertInchesToTwip(0.5),
+          },
+          children: [
+            new TextRun({
+              text: bullet,
+              size: 22, // 11pt
+              color: THEME_COLOR_BODY,
+              font: FONT_FAMILY,
+            }),
+          ],
+        })
+      );
+    }
+
+    // Space after section
+    children.push(new Paragraph({ spacing: { after: 200 }, children: [] }));
+
+    // ─── Section Image ───────────────────────────────────
+    if (images && section.image_keyword) {
+      const img = images.get(section.image_keyword);
+      if (img) {
+        try {
+          // Calculate dimensions to fit within page width (~6 inches)
+          const maxWidth = 460;
+          const maxHeight = 280;
+          const scale = Math.min(
+            maxWidth / img.width,
+            maxHeight / img.height,
+            1
+          );
+          const displayWidth = Math.round(img.width * scale);
+          const displayHeight = Math.round(img.height * scale);
+
+          children.push(
+            new Paragraph({
+              alignment: AlignmentType.CENTER,
+              spacing: { before: 100, after: 60 },
+              children: [
+                new ImageRun({
+                  data: img.imageBytes,
+                  transformation: {
+                    width: displayWidth,
+                    height: displayHeight,
+                  },
+                }),
+              ],
+            })
+          );
+
+          // Photo credit
+          children.push(
+            new Paragraph({
+              alignment: AlignmentType.CENTER,
+              spacing: { after: 200 },
+              children: [
+                new TextRun({
+                  text: `Photo: ${img.photographer} / Pexels`,
+                  size: 16,
+                  color: '999999',
+                  font: FONT_FAMILY,
+                  italics: true,
+                }),
+              ],
+            })
+          );
+        } catch (e) {
+          console.warn('Failed to embed image in Word:', e);
+        }
+      }
+    }
+  }
+
+  // ─── Create Document ─────────────────────────────────────
+  const doc = new Document({
+    creator: 'AI Writer',
+    title: data.title,
+    description: `Generated by AI Writer in ${data.language}`,
+    sections: [
+      {
+        properties: {
+          page: {
+            margin: {
+              top: convertInchesToTwip(1),
+              right: convertInchesToTwip(1),
+              bottom: convertInchesToTwip(1),
+              left: convertInchesToTwip(1),
+            },
+          },
+        },
+        children,
+      },
+    ],
+  });
+
+  // Pack and return
+  const buffer = await Packer.toBuffer(doc);
+  return buffer;
+}

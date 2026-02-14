@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+
+# Native build outputs
+android/
+ios/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Environment & secrets
+.env
+.env.local
+*.jks
+*.keystore
+keystore-base64.txt
+google-service-account.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+build-output/
+*.tgz
+
+# Temp
+*.log
+npm-debug.log*

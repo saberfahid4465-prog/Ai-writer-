@@ -1,0 +1,150 @@
+============================================================
+     AI WRITER - STORE LISTING TEXT (English + Arabic)
+============================================================
+
+============================================================
+SHORT DESCRIPTION (80 chars max)
+============================================================
+[EN] AI-powered document generator. Create PDF, Word, PPT & Excel instantly.
+[AR] منشئ مستندات بالذكاء الاصطناعي. أنشئ PDF وWord وPPT وExcel فوراً.
+
+============================================================
+FULL DESCRIPTION (4000 chars max)
+============================================================
+[EN]
+AI Writer — Your Professional Document Generator
+
+Create stunning, professional documents in seconds with AI Writer. Simply enter a topic, choose your language, and let AI generate complete, structured documents ready for business, academic, or personal use.
+
+🎯 What AI Writer Does:
+
+📝 Generate From Topic
+Enter any topic and AI Writer creates a complete, professional document with structured sections, clear headings, informative paragraphs, and concise bullet points. Perfect for reports, proposals, essays, and presentations.
+
+🌐 Translate Documents
+Upload any document and translate it into 30+ languages while preserving the original structure. Headings, bullets, tables — everything stays formatted and professional.
+
+📋 Summarize Documents
+Upload long documents and get clear, concise summaries. AI Writer extracts key points, removes fluff, and delivers structured summaries with executive overview, key findings, and conclusions.
+
+📄 Four Output Formats
+Every document is generated in ALL four formats simultaneously:
+• PDF — Professional layout with images
+• Word (DOCX) — Editable in Microsoft Word, WPS, Google Docs
+• PowerPoint (PPTX) — Presentation-ready slides
+• Excel (XLSX) — Structured data tables
+
+✏️ Built-in Editor
+Review and customize AI-generated content before creating files. Edit headings, paragraphs, bullet points, add or remove sections — make it truly yours.
+
+🖼️ Automatic Images
+AI Writer automatically finds and embeds relevant professional images from Pexels into your documents. No more searching for stock photos.
+
+🌍 30+ Languages
+Full support for English, Arabic, Spanish, French, German, Chinese, Japanese, Korean, Hindi, Portuguese, Russian, Turkish, Italian, Dutch, Polish, Swedish, Thai, Vietnamese, Indonesian, Malay, Bengali, Urdu, Persian, Ukrainian, Romanian, Czech, Greek, Hungarian, Finnish, Danish, and Norwegian.
+
+🔒 Privacy First
+No accounts required. No personal data collected. All files stay on your device. AI requests contain only your topic text — never personal information.
+
+⚡ 5,000 Daily Tokens
+Generous free daily usage limit. Token counter resets every 24 hours.
+
+🎨 Dark & Light Mode
+Beautiful charcoal and gold design with full dark mode support. Automatically matches your device theme.
+
+AI Writer is perfect for:
+• Business professionals creating reports and proposals
+• Students writing essays and presentations
+• Researchers summarizing academic papers
+• Translators needing quick document translation
+• Anyone who needs professional documents fast
+
+Download AI Writer today and transform any idea into a professional document in seconds.
+
+---
+
+[AR]
+AI Writer — منشئ المستندات الاحترافي
+
+أنشئ مستندات احترافية مذهلة في ثوانٍ مع AI Writer. فقط أدخل الموضوع، اختر اللغة، ودع الذكاء الاصطناعي يُنشئ مستندات كاملة ومنظمة جاهزة للعمل أو الدراسة أو الاستخدام الشخصي.
+
+🎯 ماذا يفعل AI Writer:
+
+📝 إنشاء من موضوع
+أدخل أي موضوع وسيُنشئ AI Writer مستنداً كاملاً بأقسام منظمة وعناوين واضحة وفقرات معلوماتية ونقاط موجزة.
+
+🌐 ترجمة المستندات
+ارفع أي مستند وترجمه إلى أكثر من 30 لغة مع الحفاظ على البنية الأصلية.
+
+📋 تلخيص المستندات
+ارفع مستندات طويلة واحصل على ملخصات واضحة ومنظمة.
+
+📄 أربعة صيغ إخراج
+كل مستند يُنشأ بجميع الصيغ الأربع: PDF، Word، PowerPoint، Excel.
+
+✏️ محرر مدمج
+راجع وخصص المحتوى قبل إنشاء الملفات.
+
+🔒 خصوصية أولاً
+بدون حسابات. بدون بيانات شخصية. كل الملفات تبقى على جهازك.
+
+حمّل AI Writer اليوم وحوّل أي فكرة إلى مستند احترافي في ثوانٍ.
+
+============================================================
+RELEASE NOTES (What's New)
+============================================================
+[EN]
+🎉 Welcome to AI Writer v1.0.0!
+• Generate professional documents from any topic
+• Translate documents in 30+ languages
+• Summarize long documents into key points
+• Four output formats: PDF, Word, PPT, Excel
+• Built-in content editor for customization
+• Automatic relevant images from Pexels
+• Auto-detect device language
+• Dark & light mode support
+• 5,000 daily token limit with usage tracking
+• 100% private — no accounts, no data collection
+
+[AR]
+🎉 مرحباً في AI Writer الإصدار 1.0.0!
+• إنشاء مستندات احترافية من أي موضوع
+• ترجمة المستندات بأكثر من 30 لغة
+• تلخيص المستندات الطويلة
+• أربع صيغ: PDF، Word، PPT، Excel
+• محرر مدمج لتخصيص المحتوى
+• صور تلقائية من Pexels
+• كشف تلقائي للغة الجهاز
+• وضع داكن وفاتح
+• 5000 رمز يومي مجاني
+• خصوصية 100%
+
+============================================================
+APP DETAILS FOR PLAY CONSOLE
+============================================================
+App Name:               AI Writer
+Developer Name:         AI Writer
+Category:               Productivity
+Tags:                   AI, document, generator, PDF, Word, PowerPoint, Excel, translate, summarize
+Contact Email:          (your developer email)
+Privacy Policy URL:     (your hosted privacy.html URL)
+Website:                (your website URL)
+
+============================================================
+STORE GRAPHICS SPECIFICATIONS
+============================================================
+Required graphics:
+
+1. App Icon:           512 x 512 px (PNG, 32-bit, no alpha)
+2. Feature Graphic:    1024 x 500 px (PNG or JPG)
+3. Phone Screenshots:  1080 x 1920 px (min 2, max 8)
+   - Screenshot 1: "Generate Professional Documents" (hero)
+   - Screenshot 2: "Translate in 30+ Languages"
+   - Screenshot 3: "Summarize Any Document"
+   - Screenshot 4: "Four Output Formats"
+   - Screenshot 5: "Built-in Editor"
+   - Screenshot 6: "Dark & Light Mode"
+4. 7-inch Tablet:      1200 x 1920 px (optional)
+5. 10-inch Tablet:     1920 x 1200 px (optional)
+
+============================================================

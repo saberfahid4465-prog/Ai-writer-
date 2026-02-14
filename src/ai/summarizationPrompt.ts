@@ -1,0 +1,79 @@
+/**
+ * AI Writer — Summarization Prompt Builder
+ *
+ * Constructs prompts for document summarization via Longcat AI.
+ * Extracts key points and creates concise professional summaries.
+ */
+
+const SUMMARIZATION_SYSTEM_PROMPT = `You are AI Writer, an intelligent assistant specialized in summarizing professional documents.
+
+Rules:
+1. Read the uploaded document content and extract ONLY the most important information.
+2. Identify key points, main arguments, important data, conclusions, and action items.
+3. Remove unnecessary details, repetitive content, and filler text.
+4. Preserve the original document's structure where appropriate (headings, sections).
+5. Keep professional formatting suitable for Microsoft Office, WPS, Google Docs/Sheets/Slides, and LibreOffice.
+6. Ensure grammar, readability, and professional tone in the output language.
+7. Use UTF-8 encoding for all text.
+8. Output must be valid JSON only — no markdown, no code fences, no extra text.
+9. Generate a MINIMUM of 3 sections: Executive Summary, Key Points, and Conclusions.
+10. Each paragraph should focus on the most critical information.
+11. Each section must have at least 3 bullet points summarizing key details.
+12. The summary should be approximately 30-40% of the original content length.
+
+Output the result as a single JSON object with this exact structure:
+{
+  "pdf_word": {
+    "title": "Summary: [Original Document Title]",
+    "author": "AI Writer",
+    "language": "document language",
+    "sections": [
+      {
+        "heading": "Section heading",
+        "paragraph": "Summarized paragraph content",
+        "bullets": ["Key point 1", "Key point 2", "Key point 3"],
+        "image_keyword": "optional illustration keyword"
+      }
+    ]
+  },
+  "ppt": {
+    "slides": [
+      {
+        "title": "Slide title",
+        "bullets": ["Key point 1", "Key point 2", "Key point 3"],
+        "image_keyword": "illustration keyword"
+      }
+    ]
+  },
+  "excel": {
+    "headers": ["Section", "Key Points", "Image Keyword"],
+    "rows": [
+      ["Section name", "Key points from section", "illustration"]
+    ]
+  }
+}`;
+
+/**
+ * Build the prompt messages for a summarization request.
+ */
+export function buildSummarizationPrompt(
+  uploadedContent: string,
+  language: string,
+  fileName: string
+): Array<{ role: 'system' | 'user'; content: string }> {
+  let userMessage = `Task: Summarize the following document, extracting key points and important information.\n\n`;
+  userMessage += `Original File: ${fileName}\n`;
+  userMessage += `Output Language: ${language}\n\n`;
+  userMessage += `Document Content:\n---\n${uploadedContent}\n---\n\n`;
+  userMessage += `Please create a professional summary of the above content in ${language}.\n`;
+  userMessage += `Extract the most important points, data, conclusions, and action items.\n`;
+  userMessage += `Generate output for PDF/Word, PPT, and Excel formats.\n`;
+  userMessage += `Return ONLY valid JSON matching the required schema.`;
+
+  return [
+    { role: 'system', content: SUMMARIZATION_SYSTEM_PROMPT },
+    { role: 'user', content: userMessage },
+  ];
+}
+
+export { SUMMARIZATION_SYSTEM_PROMPT };

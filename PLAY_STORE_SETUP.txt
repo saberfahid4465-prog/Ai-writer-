@@ -1,0 +1,153 @@
+============================================================
+       AI WRITER - GOOGLE PLAY STORE SETUP REFERENCE
+============================================================
+Last Updated: February 14, 2026
+
+============================================================
+1. APP IDENTITY
+============================================================
+App Name:           AI Writer
+Package Name:       com.aiwriter.app
+Default Language:   English (en-US)
+Category:           Productivity
+Current Version:    1.0.0 (versionCode=1)
+
+============================================================
+2. SIGNING KEY INFORMATION
+============================================================
+Key Alias:          ai-writer-release
+Store Password:     (set during keystore generation — stored in GitHub Secrets)
+Key Password:       (set during keystore generation — stored in GitHub Secrets)
+Keystore File:      Generated via GitHub Actions (generate-keystore.yml)
+PEM Certificate:    Download from workflow artifact
+Base64 Keystore:    Stored as GitHub Secret: KEYSTORE_BASE64
+
+GitHub Secrets Required:
+  KEYSTORE_BASE64   — Base64-encoded .jks keystore
+  KEYSTORE_PASSWORD — Keystore store password
+  KEY_ALIAS         — Key alias (ai-writer-release)
+  KEY_PASSWORD      — Key password
+
+============================================================
+3. GITHUB REPOSITORY
+============================================================
+Repository:         saberfahid4465-prog/Ai-writer-.git
+Branch:             main
+CI/CD Workflow:     .github/workflows/build.yml
+Keystore Workflow:  .github/workflows/generate-keystore.yml
+Access Token:       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
+
+============================================================
+4. BUILD OUTPUT LOCATIONS
+============================================================
+AAB File:           GitHub Actions artifact → app-release-aab
+APK File:           GitHub Actions artifact → app-release-apk
+
+============================================================
+5. WEBSITE & PRIVACY POLICY
+============================================================
+Privacy Policy:     website/privacy.html (host on your domain)
+Terms of Service:   website/terms.html (host on your domain)
+
+============================================================
+6. ANDROID PERMISSIONS DECLARED
+============================================================
+- INTERNET
+- ACCESS_NETWORK_STATE
+
+(Minimal permissions — no camera, location, storage, or contacts)
+
+============================================================
+7. PLAY CONSOLE DECLARATIONS
+============================================================
+
+--- App Access ---
+All functionality available without special access
+
+--- Content Rating ---
+Questionnaire Type: All Other App Types
+- Violence: No
+- Sexual Content: No
+- Language: No
+- Controlled Substance: No
+- Miscellaneous: No
+Result: Rated for Everyone / PEGI 3
+
+--- Ads Declaration ---
+App does NOT contain ads
+
+--- Data Safety ---
+App collects/shares: No personal user data collected
+  - AI requests sent to Longcat API (topic text only, no PII)
+  - Pexels API for images (keyword searches only)
+Data encrypted in transit: Yes (HTTPS)
+Data stored on device: Yes (generated files, preferences via AsyncStorage)
+Data deletion: Users can delete all data by clearing app data or uninstalling
+
+--- Financial Features ---
+App does not provide financial features
+
+--- Health Features ---
+Not a health app
+
+--- Government Apps ---
+Not a government app
+
+--- News Apps ---
+Not a news app
+
+--- Target Audience ---
+General (18+, NOT designed for children under 13)
+
+--- Advertising ID ---
+App does NOT use advertising ID
+
+============================================================
+8. TECH STACK SUMMARY
+============================================================
+Framework:          React Native 0.73.0 / Expo SDK 50
+TypeScript:         5.1.0
+Android targetSdk:  34 (set by Expo SDK 50)
+Android minSdk:     21 (set by Expo)
+Node.js (CI):       18
+Java (CI):          Temurin 17
+
+Key Libraries:
+  - pdf-lib (PDF generation)
+  - docx (Word DOCX generation)
+  - pptxgenjs (PPTX generation)
+  - exceljs (XLSX generation)
+  - expo-document-picker (file upload)
+  - expo-file-system (file storage)
+  - expo-sharing (file sharing)
+  - expo-localization (language detection)
+  - @react-navigation/native-stack (navigation)
+  - @react-native-async-storage/async-storage (local storage)
+
+AI Service:
+  - Longcat AI API (document generation, translation, summarization)
+  - Pexels API (stock images for documents)
+
+============================================================
+9. KEY FILE LOCATIONS
+============================================================
+Source code:         src/
+  AI prompts:       src/ai/
+  Generators:       src/generators/
+  Screens:          src/screens/
+  Navigation:       src/navigation/
+  Services:         src/services/
+  Utilities:        src/utils/
+  Components:       src/components/
+
+Build files:
+  CI/CD:            .github/workflows/
+  EAS config:       eas.json
+  App config:       app.json
+  TS config:        tsconfig.json
+
+Assets:             assets/
+Store listing:      PLAY_STORE_SETUP.txt, STORE_LISTING_TEXT.txt
+Website:            website/
+
+============================================================
