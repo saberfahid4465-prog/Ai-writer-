@@ -28,6 +28,8 @@ import { useTheme } from '../utils/themeContext';
 import { useTranslation } from '../i18n/i18nContext';
 import { canMakeRequest, getRemainingTokens, estimateRequestCost, calculateTokenAnalysis } from '../utils/tokenUsage';
 
+type OutputFormat = 'pdf' | 'docx' | 'pptx' | 'xlsx';
+
 interface TranslateProcessingScreenProps {
   route: {
     params: {
@@ -37,6 +39,7 @@ interface TranslateProcessingScreenProps {
       sourceLanguageCode: string;
       targetLanguage: string;
       targetLanguageCode: string;
+      outputFormats: OutputFormat[];
     };
   };
   navigation: any;
@@ -55,6 +58,7 @@ export default function TranslateProcessingScreen({ route, navigation }: Transla
     uploadedFileName,
     sourceLanguage,
     targetLanguage,
+    outputFormats,
   } = route.params;
   const { colors } = useTheme();
   const { t } = useTranslation();
@@ -244,7 +248,7 @@ export default function TranslateProcessingScreen({ route, navigation }: Transla
         aiOutput,
         topic: `${uploadedFileName} → ${targetLanguage}`,
         language: targetLanguage,
-        outputFormats: ['pdf', 'docx', 'pptx', 'xlsx'],
+        outputFormats,
       });
     } catch (error) {
       if (cancelledRef.current) return;
@@ -290,7 +294,7 @@ export default function TranslateProcessingScreen({ route, navigation }: Transla
                   aiOutput: partialOutput,
                   topic: `${uploadedFileName} → ${targetLanguage} (partial)`,
                   language: targetLanguage,
-                  outputFormats: ['pdf', 'docx', 'pptx', 'xlsx'],
+                  outputFormats,
                 });
               } catch {
                 navigation.goBack();

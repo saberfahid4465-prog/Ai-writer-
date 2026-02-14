@@ -27,6 +27,8 @@ import { useTheme } from '../utils/themeContext';
 import { useTranslation } from '../i18n/i18nContext';
 import { canMakeRequest, getRemainingTokens, estimateRequestCost, calculateTokenAnalysis } from '../utils/tokenUsage';
 
+type OutputFormat = 'pdf' | 'docx' | 'pptx' | 'xlsx';
+
 interface SummarizeProcessingScreenProps {
   route: {
     params: {
@@ -34,6 +36,7 @@ interface SummarizeProcessingScreenProps {
       uploadedFileName: string;
       language: string;
       languageCode: string;
+      outputFormats: OutputFormat[];
     };
   };
   navigation: any;
@@ -51,6 +54,7 @@ export default function SummarizeProcessingScreen({ route, navigation }: Summari
     uploadedFileUri,
     uploadedFileName,
     language,
+    outputFormats,
   } = route.params;
   const { colors } = useTheme();
   const { t } = useTranslation();
@@ -229,7 +233,7 @@ export default function SummarizeProcessingScreen({ route, navigation }: Summari
         aiOutput,
         topic: `Summary: ${uploadedFileName}`,
         language,
-        outputFormats: ['pdf', 'docx', 'pptx', 'xlsx'],
+        outputFormats,
       });
     } catch (error) {
       if (cancelledRef.current) return;
@@ -274,7 +278,7 @@ export default function SummarizeProcessingScreen({ route, navigation }: Summari
                   aiOutput: partialOutput,
                   topic: `Summary: ${uploadedFileName} (partial)`,
                   language,
-                  outputFormats: ['pdf', 'docx', 'pptx', 'xlsx'],
+                  outputFormats,
                 });
               } catch {
                 navigation.goBack();

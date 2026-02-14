@@ -55,12 +55,14 @@ export type RootStackParamList = {
     sourceLanguageCode: string;
     targetLanguage: string;
     targetLanguageCode: string;
+    outputFormats: OutputFormat[];
   };
   SummarizeProcessing: {
     uploadedFileUri: string;
     uploadedFileName: string;
     language: string;
     languageCode: string;
+    outputFormats: OutputFormat[];
   };
   Editor: {
     aiOutput: AIWriterOutput;

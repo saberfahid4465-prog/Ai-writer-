@@ -3,7 +3,7 @@
  *
  * Users upload a document and select source/target languages.
  * AI translates while preserving formatting.
- * Output in all formats (PDF, Word, PPT, Excel).
+ * User can select output formats (PDF, Word, PPT, Excel).
  */
 
 import React, { useState } from 'react';
@@ -22,6 +22,21 @@ import { SUPPORTED_LANGUAGES, detectDeviceLanguage, LanguageOption } from '../ut
 import { useTheme } from '../utils/themeContext';
 import { useTranslation } from '../i18n/i18nContext';
 
+type OutputFormat = 'pdf' | 'docx' | 'pptx' | 'xlsx';
+
+interface FormatOption {
+  key: OutputFormat;
+  icon: string;
+  label: string;
+}
+
+const FORMAT_OPTIONS: FormatOption[] = [
+  { key: 'pdf',  icon: '📕', label: 'PDF' },
+  { key: 'docx', icon: '📘', label: 'Word' },
+  { key: 'pptx', icon: '📙', label: 'PPT' },
+  { key: 'xlsx', icon: '📗', label: 'Excel' },
+];
+
 interface TranslateScreenProps {
   navigation: any;
 }
@@ -38,6 +53,19 @@ export default function TranslateScreen({ navigation }: TranslateScreenProps) {
   );
   const [showSourcePicker, setShowSourcePicker] = useState(false);
   const [showTargetPicker, setShowTargetPicker] = useState(false);
+  const [selectedFormats, setSelectedFormats] = useState<Set<OutputFormat>>(new Set(['pdf']));
+
+  const toggleFormat = (fmt: OutputFormat) => {
+    setSelectedFormats((prev) => {
+      const next = new Set(prev);
+      if (next.has(fmt)) {
+        if (next.size > 1) next.delete(fmt);
+      } else {
+        next.add(fmt);
+      }
+      return next;
+    });
+  };
 
   const handleFileUpload = async () => {
     try {
@@ -83,6 +111,7 @@ export default function TranslateScreen({ navigation }: TranslateScreenProps) {
       sourceLanguageCode: sourceLanguage.code,
       targetLanguage: targetLanguage.name,
       targetLanguageCode: targetLanguage.code,
+      outputFormats: Array.from(selectedFormats),
     });
   };
 
@@ -205,6 +234,35 @@ export default function TranslateScreen({ navigation }: TranslateScreenProps) {
           )}
         </View>
 
+        {/* Output Format Selection */}
+        <View style={styles.section}>
+          <Text style={[styles.label, { color: colors.textPrimary }]}>Output Formats</Text>
+          <View style={styles.formatGrid}>
+            {FORMAT_OPTIONS.map((opt) => {
+              const isSelected = selectedFormats.has(opt.key);
+              return (
+                <TouchableOpacity
+                  key={opt.key}
+                  style={[
+                    styles.formatCard,
+                    {
+                      backgroundColor: isSelected ? colors.primaryLight : colors.surface,
+                      borderColor: isSelected ? colors.primary : colors.border,
+                    },
+                  ]}
+                  onPress={() => toggleFormat(opt.key)}
+                >
+                  <Text style={styles.formatIcon}>{opt.icon}</Text>
+                  <Text style={[styles.formatLabel, { color: isSelected ? colors.primary : colors.textPrimary }]}>
+                    {opt.label}
+                  </Text>
+                  {isSelected && <Text style={[styles.checkMark, { color: colors.primary }]}>✓</Text>}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
         {/* Translate Button */}
         <TouchableOpacity
           style={[styles.translateButton, { backgroundColor: colors.headerBg, shadowColor: colors.shadowColor }]}
@@ -281,4 +339,26 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   noteText: { fontSize: 12, lineHeight: 18 },
+  formatGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  formatCard: {
+    width: '47%',
+    borderRadius: 12,
+    borderWidth: 1.5,
+    padding: 14,
+    alignItems: 'center',
+    position: 'relative',
+  },
+  formatIcon: { fontSize: 24, marginBottom: 6 },
+  formatLabel: { fontSize: 13, fontWeight: '600' },
+  checkMark: {
+    position: 'absolute',
+    top: 8,
+    right: 10,
+    fontSize: 16,
+    fontWeight: '700',
+  },
 });
