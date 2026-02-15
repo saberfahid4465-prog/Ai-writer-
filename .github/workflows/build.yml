@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   build:
-    name: Build Kotlin Release
+    name: Build Signed Release
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -36,11 +36,26 @@ jobs:
       - name: Accept Android SDK licences
         run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
 
-      # ─── Build AAB ─────────────────────────────────────
+      # ─── Generate signing keystore ─────────────────────
+      - name: Generate signing keystore
+        run: |
+          mkdir -p keystore
+          keytool -genkeypair \
+            -v \
+            -keystore keystore/ai-writer.keystore \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -alias ai-writer \
+            -storepass ai-writer-2024 \
+            -keypass ai-writer-2024 \
+            -dname "CN=AI Writer, O=AI Writer, L=Internet, ST=Cloud, C=US"
+
+      # ─── Build signed AAB ──────────────────────────────
       - name: Build Release AAB
         run: gradle bundleRelease --no-daemon --stacktrace
 
-      # ─── Build APK ─────────────────────────────────────
+      # ─── Build signed APK ──────────────────────────────
       - name: Build Release APK
         run: gradle assembleRelease --no-daemon
 
@@ -48,26 +63,26 @@ jobs:
       - name: Collect build outputs
         run: |
           mkdir -p build-output
-          cp app/build/outputs/bundle/release/*.aab build-output/app-release.aab
-          cp app/build/outputs/apk/release/*.apk build-output/app-release.apk
+          cp app/build/outputs/bundle/release/*.aab build-output/ai-writer-release.aab
+          cp app/build/outputs/apk/release/*.apk    build-output/ai-writer-release.apk
           echo "=== Build Outputs ==="
           ls -lh build-output/
 
-      # ─── Upload AAB ───────────────────────────────────
-      - name: Upload AAB
+      # ─── Upload AAB (Play Store) ──────────────────────
+      - name: Upload AAB (Play Store)
         uses: actions/upload-artifact@v4
         with:
-          name: app-release-aab
-          path: build-output/app-release.aab
+          name: ai-writer-play-store-aab
+          path: build-output/ai-writer-release.aab
           retention-days: 90
           if-no-files-found: error
 
-      # ─── Upload APK ───────────────────────────────────
-      - name: Upload APK
+      # ─── Upload APK (direct install) ──────────────────
+      - name: Upload APK (direct install)
         uses: actions/upload-artifact@v4
         with:
-          name: app-release-apk
-          path: build-output/app-release.apk
+          name: ai-writer-release-apk
+          path: build-output/ai-writer-release.apk
           retention-days: 90
           if-no-files-found: error
 
@@ -75,11 +90,11 @@ jobs:
       - name: Build Summary
         if: always()
         run: |
-          echo "## AI Writer — Native Kotlin Build" >> $GITHUB_STEP_SUMMARY
+          echo "## AI Writer — Signed Release Build" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          if [ -f build-output/app-release.aab ]; then
-            AAB_SIZE=$(stat -c%s build-output/app-release.aab)
-            APK_SIZE=$(stat -c%s build-output/app-release.apk 2>/dev/null || echo "0")
+          if [ -f build-output/ai-writer-release.aab ]; then
+            AAB_SIZE=$(stat -c%s build-output/ai-writer-release.aab)
+            APK_SIZE=$(stat -c%s build-output/ai-writer-release.apk 2>/dev/null || echo "0")
             echo "| Output | Size |" >> $GITHUB_STEP_SUMMARY
             echo "|--------|------|" >> $GITHUB_STEP_SUMMARY
             echo "| AAB | $(numfmt --to=iec $AAB_SIZE) |" >> $GITHUB_STEP_SUMMARY
