@@ -23,7 +23,9 @@ import com.aiwriter.app.service.FileParserService
 import com.aiwriter.app.ui.components.FormatPicker
 import com.aiwriter.app.ui.components.LanguagePicker
 import com.aiwriter.app.ui.theme.LocalAppColors
+import com.aiwriter.app.ui.theme.AccentTeal
 import com.aiwriter.app.util.LanguageConfig
+import com.aiwriter.app.util.LocalStrings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -35,6 +37,7 @@ fun SummarizeScreen(
     val colors = LocalAppColors.current
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val s = LocalStrings.current
 
     var inputText by remember { mutableStateOf("") }
     var selectedLanguage by remember { mutableStateOf(LanguageConfig.contentLanguages[0]) }
@@ -71,13 +74,13 @@ fun SummarizeScreen(
             .padding(16.dp)
     ) {
         Text(
-            "AI Summarizer",
+            s.aiSummarizer,
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             color = colors.textPrimary
         )
         Text(
-            "Summarize documents or text with AI",
+            s.summarizeSubtitle,
             fontSize = 14.sp,
             color = colors.textMuted,
             modifier = Modifier.padding(bottom = 20.dp)
@@ -87,8 +90,8 @@ fun SummarizeScreen(
         OutlinedTextField(
             value = inputText,
             onValueChange = { inputText = it },
-            label = { Text("Text to summarize") },
-            placeholder = { Text("Enter text to summarize…", color = colors.placeholder) },
+            label = { Text(s.enterTextToSummarize) },
+            placeholder = { Text(s.enterTextToSummarize, color = colors.placeholder) },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(160.dp),
@@ -130,13 +133,13 @@ fun SummarizeScreen(
                 modifier = Modifier.padding(14.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(Icons.Default.UploadFile, "Upload", tint = colors.primary)
+                Icon(Icons.Default.UploadFile, s.uploadFile, tint = colors.primary)
                 Spacer(Modifier.width(12.dp))
                 if (isParsingFile) {
-                    Text("Parsing file…", color = colors.textPrimary, fontSize = 14.sp)
+                    Text(s.parsingFile, color = colors.textPrimary, fontSize = 14.sp)
                 } else {
                     Text(
-                        uploadedFileName ?: "Upload file (DOCX, PPTX, XLSX, TXT)",
+                        uploadedFileName ?: s.uploadFile,
                         color = colors.textPrimary,
                         fontSize = 14.sp
                     )
@@ -162,13 +165,13 @@ fun SummarizeScreen(
                 Spacer(Modifier.width(10.dp))
                 Column {
                     Text(
-                        "How it works",
+                        s.howItWorks,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 14.sp,
                         color = colors.textPrimary
                     )
                     Text(
-                        "AI extracts key points from your text, targeting 30-40% of original length.",
+                        s.howItWorksDesc,
                         fontSize = 13.sp,
                         color = colors.textSecondary
                     )
@@ -179,7 +182,7 @@ fun SummarizeScreen(
         Spacer(Modifier.height(20.dp))
 
         Text(
-            "Output Language",
+            s.outputLanguage,
             fontSize = 16.sp,
             fontWeight = FontWeight.SemiBold,
             color = colors.textPrimary,
@@ -194,7 +197,7 @@ fun SummarizeScreen(
         Spacer(Modifier.height(20.dp))
 
         Text(
-            "Output Format",
+            s.outputFormat,
             fontSize = 16.sp,
             fontWeight = FontWeight.SemiBold,
             color = colors.textPrimary,
@@ -219,13 +222,13 @@ fun SummarizeScreen(
                 .height(52.dp),
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = colors.primary,
+                containerColor = AccentTeal,
                 disabledContainerColor = colors.border
             )
         ) {
-            Icon(Icons.Default.Summarize, "Summarize", modifier = Modifier.size(20.dp))
+            Icon(Icons.Default.Summarize, s.summarize, modifier = Modifier.size(20.dp))
             Spacer(Modifier.width(8.dp))
-            Text("Summarize", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+            Text(s.summarize, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
         }
 
         Spacer(Modifier.height(24.dp))

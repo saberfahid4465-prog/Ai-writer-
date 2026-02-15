@@ -23,7 +23,9 @@ import com.aiwriter.app.service.FileParserService
 import com.aiwriter.app.ui.components.FormatPicker
 import com.aiwriter.app.ui.components.LanguagePicker
 import com.aiwriter.app.ui.theme.LocalAppColors
+import com.aiwriter.app.ui.theme.AccentTeal
 import com.aiwriter.app.util.LanguageConfig
+import com.aiwriter.app.util.LocalStrings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -35,6 +37,7 @@ fun TranslateScreen(
     val colors = LocalAppColors.current
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val s = LocalStrings.current
 
     var inputText by remember { mutableStateOf("") }
     var sourceLang by remember { mutableStateOf(LanguageConfig.contentLanguages[0]) }
@@ -72,13 +75,13 @@ fun TranslateScreen(
             .padding(16.dp)
     ) {
         Text(
-            "AI Translator",
+            s.aiTranslator,
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             color = colors.textPrimary
         )
         Text(
-            "Translate documents or text with AI",
+            s.translateSubtitle,
             fontSize = 14.sp,
             color = colors.textMuted,
             modifier = Modifier.padding(bottom = 20.dp)
@@ -90,7 +93,7 @@ fun TranslateScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text("From", fontSize = 13.sp, color = colors.textMuted)
+                Text(s.from, fontSize = 13.sp, color = colors.textMuted)
                 Spacer(Modifier.height(4.dp))
                 LanguagePicker(
                     languages = LanguageConfig.contentLanguages,
@@ -111,7 +114,7 @@ fun TranslateScreen(
             }
 
             Column(modifier = Modifier.weight(1f)) {
-                Text("To", fontSize = 13.sp, color = colors.textMuted)
+                Text(s.to, fontSize = 13.sp, color = colors.textMuted)
                 Spacer(Modifier.height(4.dp))
                 LanguagePicker(
                     languages = LanguageConfig.contentLanguages,
@@ -127,8 +130,8 @@ fun TranslateScreen(
         OutlinedTextField(
             value = inputText,
             onValueChange = { inputText = it },
-            label = { Text("Text to translate") },
-            placeholder = { Text("Enter text to translate…", color = colors.placeholder) },
+            label = { Text(s.enterText) },
+            placeholder = { Text(s.enterText, color = colors.placeholder) },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(160.dp),
@@ -170,13 +173,13 @@ fun TranslateScreen(
                 modifier = Modifier.padding(14.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(Icons.Default.UploadFile, "Upload", tint = colors.primary)
+                Icon(Icons.Default.UploadFile, s.uploadFile, tint = colors.primary)
                 Spacer(Modifier.width(12.dp))
                 if (isParsingFile) {
-                    Text("Parsing file…", color = colors.textPrimary, fontSize = 14.sp)
+                    Text(s.parsingFile, color = colors.textPrimary, fontSize = 14.sp)
                 } else {
                     Text(
-                        uploadedFileName ?: "Upload file (DOCX, PPTX, XLSX, TXT)",
+                        uploadedFileName ?: s.uploadFile,
                         color = colors.textPrimary,
                         fontSize = 14.sp
                     )
@@ -187,7 +190,7 @@ fun TranslateScreen(
         Spacer(Modifier.height(20.dp))
 
         Text(
-            "Output Format",
+            s.outputFormat,
             fontSize = 16.sp,
             fontWeight = FontWeight.SemiBold,
             color = colors.textPrimary,
@@ -210,13 +213,13 @@ fun TranslateScreen(
                 .height(52.dp),
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = colors.primary,
+                containerColor = AccentTeal,
                 disabledContainerColor = colors.border
             )
         ) {
-            Icon(Icons.Default.Translate, "Translate", modifier = Modifier.size(20.dp))
+            Icon(Icons.Default.Translate, s.translate, modifier = Modifier.size(20.dp))
             Spacer(Modifier.width(8.dp))
-            Text("Translate", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+            Text(s.translate, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
         }
 
         Spacer(Modifier.height(24.dp))

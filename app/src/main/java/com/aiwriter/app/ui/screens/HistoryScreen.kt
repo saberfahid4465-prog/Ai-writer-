@@ -19,6 +19,7 @@ import com.aiwriter.app.data.remote.GeneratedFile
 import com.aiwriter.app.data.remote.HistoryEntry
 import com.aiwriter.app.ui.theme.*
 import com.aiwriter.app.util.FileUtils
+import com.aiwriter.app.util.LocalStrings
 import com.aiwriter.app.util.PreferencesManager
 import com.google.gson.Gson
 import java.text.SimpleDateFormat
@@ -30,6 +31,7 @@ fun HistoryScreen() {
     val context = LocalContext.current
     val prefs = PreferencesManager.getInstance(context)
     val gson = Gson()
+    val s = LocalStrings.current
 
     var history by remember {
         mutableStateOf(
@@ -45,20 +47,20 @@ fun HistoryScreen() {
     if (showClearDialog) {
         AlertDialog(
             onDismissRequest = { showClearDialog = false },
-            title = { Text("Clear History") },
-            text = { Text("Delete all history entries? This cannot be undone.") },
+            title = { Text(s.clearHistory) },
+            text = { Text(s.clearHistoryConfirm) },
             confirmButton = {
                 TextButton(onClick = {
                     history = emptyList()
                     prefs.setHistoryJson("[]")
                     showClearDialog = false
                 }) {
-                    Text("Clear", color = Danger)
+                    Text(s.clear, color = Danger)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showClearDialog = false }) {
-                    Text("Cancel")
+                    Text(s.cancel)
                 }
             }
         )
@@ -75,14 +77,14 @@ fun HistoryScreen() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                "History",
+                s.history,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = colors.textPrimary
             )
             if (history.isNotEmpty()) {
                 TextButton(onClick = { showClearDialog = true }) {
-                    Text("Clear All", color = Danger, fontSize = 14.sp)
+                    Text(s.clearAll, color = Danger, fontSize = 14.sp)
                 }
             }
         }
@@ -104,8 +106,8 @@ fun HistoryScreen() {
                     modifier = Modifier.size(64.dp)
                 )
                 Spacer(Modifier.height(16.dp))
-                Text("No documents yet", fontSize = 18.sp, color = colors.textPrimary, fontWeight = FontWeight.SemiBold)
-                Text("Generated documents will appear here", fontSize = 14.sp, color = colors.textMuted)
+                Text(s.noHistory, fontSize = 18.sp, color = colors.textPrimary, fontWeight = FontWeight.SemiBold)
+                Text(s.historyEmpty, fontSize = 14.sp, color = colors.textMuted)
             }
         } else {
             LazyColumn(
@@ -125,7 +127,7 @@ fun HistoryScreen() {
                         },
                         onDownload = { file ->
                             val saved = FileUtils.saveToDownloads(context, file.filePath, file.fileName)
-                            val msg = if (saved) "Saved to Downloads" else "Save failed"
+                            val msg = if (saved) s.savedToDownloads else s.saveFailed
                             Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                         }
                     )

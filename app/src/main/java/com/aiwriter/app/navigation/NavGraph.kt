@@ -22,6 +22,7 @@ import com.aiwriter.app.data.remote.AiWriterOutput
 import com.aiwriter.app.data.remote.GeneratedFile
 import com.aiwriter.app.ui.screens.*
 import com.aiwriter.app.ui.theme.LocalAppColors
+import com.aiwriter.app.util.LocalStrings
 import com.aiwriter.app.util.PreferencesManager
 
 data class BottomNavItem(
@@ -54,16 +55,17 @@ fun AppNavHost() {
     val prefs = PreferencesManager.getInstance(context)
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+    val s = LocalStrings.current
 
     // Check if first launch for splash
     val hasSeenSplash = prefs.hasSeenOnboarding
 
     val bottomNavItems = listOf(
-        BottomNavItem(Screen.Home, Icons.Filled.EditNote, Icons.Outlined.EditNote, "Create"),
-        BottomNavItem(Screen.Summarize, Icons.Filled.Summarize, Icons.Outlined.Summarize, "Summary"),
-        BottomNavItem(Screen.Translate, Icons.Filled.Translate, Icons.Outlined.Translate, "Translate"),
-        BottomNavItem(Screen.History, Icons.Filled.FolderOpen, Icons.Outlined.FolderOpen, "History"),
-        BottomNavItem(Screen.Settings, Icons.Filled.Tune, Icons.Outlined.Tune, "Settings")
+        BottomNavItem(Screen.Home, Icons.Filled.EditNote, Icons.Outlined.EditNote, s.navCreate),
+        BottomNavItem(Screen.Summarize, Icons.Filled.Summarize, Icons.Outlined.Summarize, s.navSummary),
+        BottomNavItem(Screen.Translate, Icons.Filled.Translate, Icons.Outlined.Translate, s.navTranslate),
+        BottomNavItem(Screen.History, Icons.Filled.FolderOpen, Icons.Outlined.FolderOpen, s.navHistory),
+        BottomNavItem(Screen.Settings, Icons.Filled.Tune, Icons.Outlined.Tune, s.navSettings)
     )
 
     val showBottomBar = currentRoute in bottomNavItems.map { it.screen.route }
@@ -185,7 +187,10 @@ fun AppNavHost() {
             }
 
             composable(Screen.Settings.route) {
-                SettingsScreen()
+                SettingsScreen(
+                    onNavigateToPrivacy = { navController.navigate(Screen.Privacy.route) },
+                    onNavigateToTerms = { navController.navigate(Screen.Terms.route) }
+                )
             }
 
             composable(Screen.Processing.route) {
@@ -226,6 +231,14 @@ fun AppNavHost() {
                         navController.navigate(Screen.Editor.route)
                     }
                 )
+            }
+
+            composable(Screen.Privacy.route) {
+                PrivacyScreen(onBack = { navController.popBackStack() })
+            }
+
+            composable(Screen.Terms.route) {
+                TermsScreen(onBack = { navController.popBackStack() })
             }
         }
     }

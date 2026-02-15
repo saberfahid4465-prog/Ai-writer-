@@ -6,6 +6,9 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
+import com.aiwriter.app.util.AppLanguageState
+import com.aiwriter.app.util.LocalStrings
+import com.aiwriter.app.util.getStringsForLanguage
 
 private val LightColorScheme = lightColorScheme(
     primary = BrandCharcoal,
@@ -49,10 +52,12 @@ fun AiWriterTheme(
 
     val colorScheme = if (isDark) DarkColorScheme else LightColorScheme
     val appColors = if (isDark) DarkColors else LightColors
+    val strings = getStringsForLanguage(AppLanguageState.languageCode)
 
     CompositionLocalProvider(
         LocalAppColors provides appColors,
-        LocalIsDarkTheme provides isDark
+        LocalIsDarkTheme provides isDark,
+        LocalStrings provides strings
     ) {
         MaterialTheme(
             colorScheme = colorScheme,

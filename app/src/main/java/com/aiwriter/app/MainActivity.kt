@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import com.aiwriter.app.navigation.AppNavHost
 import com.aiwriter.app.ui.theme.AiWriterTheme
 import com.aiwriter.app.ui.theme.ThemeState
+import com.aiwriter.app.util.AppLanguageState
 import com.aiwriter.app.util.PreferencesManager
 
 class MainActivity : ComponentActivity() {
@@ -20,6 +21,7 @@ class MainActivity : ComponentActivity() {
         // Initialize theme from saved preference
         val prefs = PreferencesManager.getInstance(this)
         ThemeState.themeMode = prefs.themeMode
+        AppLanguageState.languageCode = prefs.appLanguage
 
         setContent {
             AiWriterTheme {

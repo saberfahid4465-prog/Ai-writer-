@@ -1,7 +1,5 @@
 package com.aiwriter.app.ui.screens
 
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -24,17 +22,22 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.aiwriter.app.ui.theme.*
+import com.aiwriter.app.util.AppLanguageState
 import com.aiwriter.app.util.LanguageConfig
+import com.aiwriter.app.util.LocalStrings
 import com.aiwriter.app.util.PreferencesManager
 
 @Composable
-fun SettingsScreen() {
+fun SettingsScreen(
+    onNavigateToPrivacy: () -> Unit = {},
+    onNavigateToTerms: () -> Unit = {}
+) {
     val colors = LocalAppColors.current
     val context = LocalContext.current
     val prefs = PreferencesManager.getInstance(context)
+    val s = LocalStrings.current
 
     var themeMode by remember { mutableStateOf(ThemeState.themeMode) }
-    var showLanguagePicker by remember { mutableStateOf(false) }
     var appLanguage by remember {
         mutableStateOf(
             LanguageConfig.appLanguages.find { it.code == prefs.appLanguage }
@@ -54,20 +57,20 @@ fun SettingsScreen() {
     ) {
         // Header
         Text(
-            "Settings",
+            s.settings,
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
             color = colors.textPrimary
         )
         Text(
-            "Customize your experience",
+            s.customizeExperience,
             fontSize = 14.sp,
             color = colors.textMuted,
             modifier = Modifier.padding(top = 4.dp, bottom = 24.dp)
         )
 
         // ── Appearance ──
-        SettingsSectionHeader(icon = Icons.Outlined.Palette, title = "Appearance", colors = colors)
+        SettingsSectionHeader(icon = Icons.Outlined.Palette, title = s.appearance, colors = colors)
         Spacer(Modifier.height(8.dp))
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -75,7 +78,7 @@ fun SettingsScreen() {
             shape = RoundedCornerShape(16.dp)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text("Theme", fontWeight = FontWeight.Medium, color = colors.textPrimary, fontSize = 15.sp)
+                Text(s.theme, fontWeight = FontWeight.Medium, color = colors.textPrimary, fontSize = 15.sp)
                 Spacer(Modifier.height(12.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -83,9 +86,9 @@ fun SettingsScreen() {
                 ) {
                     data class ThemeOption(val mode: String, val label: String, val icon: ImageVector)
                     listOf(
-                        ThemeOption("light", "Light", Icons.Outlined.LightMode),
-                        ThemeOption("dark", "Dark", Icons.Outlined.DarkMode),
-                        ThemeOption("system", "Auto", Icons.Outlined.SettingsBrightness)
+                        ThemeOption("light", s.light, Icons.Outlined.LightMode),
+                        ThemeOption("dark", s.dark, Icons.Outlined.DarkMode),
+                        ThemeOption("system", s.auto, Icons.Outlined.SettingsBrightness)
                     ).forEach { option ->
                         val isSelected = themeMode == option.mode
                         val bgColor = if (isSelected) colors.primary.copy(alpha = 0.12f) else colors.surfaceAlt
@@ -128,7 +131,7 @@ fun SettingsScreen() {
         Spacer(Modifier.height(20.dp))
 
         // ── Language ──
-        SettingsSectionHeader(icon = Icons.Outlined.Language, title = "Language", colors = colors)
+        SettingsSectionHeader(icon = Icons.Outlined.Language, title = s.language, colors = colors)
         Spacer(Modifier.height(8.dp))
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -136,9 +139,9 @@ fun SettingsScreen() {
             shape = RoundedCornerShape(16.dp)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text("App Language", fontWeight = FontWeight.Medium, color = colors.textPrimary, fontSize = 15.sp)
+                Text(s.appLanguage, fontWeight = FontWeight.Medium, color = colors.textPrimary, fontSize = 15.sp)
                 Text(
-                    "Changes content generation language preference",
+                    s.languageHint,
                     color = colors.textMuted,
                     fontSize = 12.sp,
                     modifier = Modifier.padding(top = 2.dp, bottom = 12.dp)
@@ -168,6 +171,7 @@ fun SettingsScreen() {
                                     .clickable {
                                         appLanguage = lang
                                         prefs.appLanguage = lang.code
+                                        AppLanguageState.languageCode = lang.code
                                     }
                                     .padding(vertical = 10.dp, horizontal = 6.dp),
                                 contentAlignment = Alignment.Center
@@ -201,7 +205,7 @@ fun SettingsScreen() {
         Spacer(Modifier.height(20.dp))
 
         // ── Usage ──
-        SettingsSectionHeader(icon = Icons.Outlined.DataUsage, title = "Usage", colors = colors)
+        SettingsSectionHeader(icon = Icons.Outlined.DataUsage, title = s.usage, colors = colors)
         Spacer(Modifier.height(8.dp))
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -214,7 +218,7 @@ fun SettingsScreen() {
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Daily Token Usage", fontWeight = FontWeight.Medium, color = colors.textPrimary, fontSize = 15.sp)
+                    Text(s.dailyTokenUsage, fontWeight = FontWeight.Medium, color = colors.textPrimary, fontSize = 15.sp)
                     Surface(
                         shape = RoundedCornerShape(8.dp),
                         color = if (progress > 0.9f) Danger.copy(alpha = 0.15f) else colors.primary.copy(alpha = 0.1f)
@@ -244,7 +248,7 @@ fun SettingsScreen() {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text("$tokensUsed / $tokenLimit", color = colors.textMuted, fontSize = 12.sp)
-                    Text("Resets at midnight", color = colors.textMuted, fontSize = 12.sp)
+                    Text(s.resetsAtMidnight, color = colors.textMuted, fontSize = 12.sp)
                 }
             }
         }
@@ -268,19 +272,19 @@ fun SettingsScreen() {
                         .background(colors.primary.copy(alpha = 0.15f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.Star, "Premium", tint = colors.primary, modifier = Modifier.size(24.dp))
+                    Icon(Icons.Default.Star, s.premium, tint = colors.primary, modifier = Modifier.size(24.dp))
                 }
                 Spacer(Modifier.width(14.dp))
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Premium", fontWeight = FontWeight.SemiBold, color = colors.textPrimary, fontSize = 16.sp)
-                    Text("Unlimited tokens & more features", color = colors.textMuted, fontSize = 13.sp)
+                    Text(s.premium, fontWeight = FontWeight.SemiBold, color = colors.textPrimary, fontSize = 16.sp)
+                    Text(s.premiumDesc, color = colors.textMuted, fontSize = 13.sp)
                 }
                 Surface(
                     shape = RoundedCornerShape(8.dp),
                     color = colors.primary.copy(alpha = 0.15f)
                 ) {
                     Text(
-                        "Soon",
+                        s.soon,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = colors.primary,
@@ -293,7 +297,7 @@ fun SettingsScreen() {
         Spacer(Modifier.height(20.dp))
 
         // ── Legal ──
-        SettingsSectionHeader(icon = Icons.Outlined.Policy, title = "Legal", colors = colors)
+        SettingsSectionHeader(icon = Icons.Outlined.Policy, title = s.legal, colors = colors)
         Spacer(Modifier.height(8.dp))
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -302,8 +306,8 @@ fun SettingsScreen() {
         ) {
             Column {
                 ListItem(
-                    headlineContent = { Text("Privacy Policy", color = colors.textPrimary, fontSize = 15.sp) },
-                    supportingContent = { Text("How we handle your data", color = colors.textMuted, fontSize = 12.sp) },
+                    headlineContent = { Text(s.privacyPolicy, color = colors.textPrimary, fontSize = 15.sp) },
+                    supportingContent = { Text(s.privacyDesc, color = colors.textMuted, fontSize = 12.sp) },
                     leadingContent = {
                         Box(
                             modifier = Modifier
@@ -312,19 +316,16 @@ fun SettingsScreen() {
                                 .background(colors.surfaceAlt),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(Icons.Outlined.PrivacyTip, "Privacy", tint = colors.textMuted, modifier = Modifier.size(18.dp))
+                            Icon(Icons.Outlined.PrivacyTip, s.privacyPolicy, tint = colors.textMuted, modifier = Modifier.size(18.dp))
                         }
                     },
                     trailingContent = { Icon(Icons.Default.ChevronRight, "Go", tint = colors.textMuted) },
-                    modifier = Modifier.clickable {
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://saberfahid4465-prog.github.io/Ai-writer-/privacy"))
-                        context.startActivity(intent)
-                    }
+                    modifier = Modifier.clickable { onNavigateToPrivacy() }
                 )
                 HorizontalDivider(color = colors.borderLight, modifier = Modifier.padding(horizontal = 16.dp))
                 ListItem(
-                    headlineContent = { Text("Terms of Service", color = colors.textPrimary, fontSize = 15.sp) },
-                    supportingContent = { Text("Rules for using AI Writer", color = colors.textMuted, fontSize = 12.sp) },
+                    headlineContent = { Text(s.termsOfService, color = colors.textPrimary, fontSize = 15.sp) },
+                    supportingContent = { Text(s.termsDesc, color = colors.textMuted, fontSize = 12.sp) },
                     leadingContent = {
                         Box(
                             modifier = Modifier
@@ -333,14 +334,11 @@ fun SettingsScreen() {
                                 .background(colors.surfaceAlt),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(Icons.Outlined.Gavel, "Terms", tint = colors.textMuted, modifier = Modifier.size(18.dp))
+                            Icon(Icons.Outlined.Gavel, s.termsOfService, tint = colors.textMuted, modifier = Modifier.size(18.dp))
                         }
                     },
                     trailingContent = { Icon(Icons.Default.ChevronRight, "Go", tint = colors.textMuted) },
-                    modifier = Modifier.clickable {
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://saberfahid4465-prog.github.io/Ai-writer-/terms"))
-                        context.startActivity(intent)
-                    }
+                    modifier = Modifier.clickable { onNavigateToTerms() }
                 )
             }
         }
@@ -349,13 +347,13 @@ fun SettingsScreen() {
 
         // Footer
         Text(
-            "AI Writer v2.0.0",
+            s.appVersion,
             color = colors.textMuted,
             fontSize = 12.sp,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
         Text(
-            "Powered by Longcat AI",
+            s.poweredBy,
             color = colors.textMuted.copy(alpha = 0.6f),
             fontSize = 11.sp,
             modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 2.dp)

@@ -10,4 +10,6 @@ sealed class Screen(val route: String) {
     data object Processing : Screen("processing")
     data object Editor : Screen("editor")
     data object Result : Screen("result")
+    data object Privacy : Screen("privacy")
+    data object Terms : Screen("terms")
 }

@@ -19,6 +19,7 @@ import com.aiwriter.app.data.remote.AiWriterOutput
 import com.aiwriter.app.navigation.NavState
 import com.aiwriter.app.service.AiService
 import com.aiwriter.app.ui.theme.*
+import com.aiwriter.app.util.LocalStrings
 import com.aiwriter.app.util.PreferencesManager
 import kotlinx.coroutines.launch
 
@@ -39,15 +40,16 @@ fun ProcessingScreen(
     val context = LocalContext.current
     val prefs = PreferencesManager.getInstance(context)
     val scope = rememberCoroutineScope()
+    val s = LocalStrings.current
 
     var progress by remember { mutableFloatStateOf(0f) }
     var steps by remember {
         mutableStateOf(
             listOf(
-                ProcessingStep(Icons.Default.Search, "Analyzing input"),
-                ProcessingStep(Icons.Default.Token, "Checking usage limits"),
-                ProcessingStep(Icons.Default.AutoAwesome, "Generating with AI"),
-                ProcessingStep(Icons.Default.Edit, "Preparing editor")
+                ProcessingStep(Icons.Default.Search, s.analyzingInput),
+                ProcessingStep(Icons.Default.Token, s.checkingLimits),
+                ProcessingStep(Icons.Default.AutoAwesome, s.generatingWithAi),
+                ProcessingStep(Icons.Default.Edit, s.preparingEditor)
             )
         )
     }
@@ -89,7 +91,7 @@ fun ProcessingScreen(
                 val estimatedCost = AiService.estimateTokenCost(contentLength)
 
                 if (!prefs.hasTokenBudget(estimatedCost)) {
-                    throw Exception("Daily token limit reached. Try again tomorrow.")
+                    throw Exception(s.dailyLimitReached)
                 }
 
                 updateStep(1, StepStatus.DONE)
@@ -133,12 +135,12 @@ fun ProcessingScreen(
                     },
                     onFailure = { error ->
                         updateStep(2, StepStatus.ERROR)
-                        errorMessage = error.message ?: "Generation failed"
+                        errorMessage = error.message ?: s.generationFailed
                         isProcessing = false
                     }
                 )
             } catch (e: Exception) {
-                errorMessage = e.message ?: "An error occurred"
+                errorMessage = e.message ?: s.errorOccurred
                 isProcessing = false
             }
         }
@@ -152,7 +154,7 @@ fun ProcessingScreen(
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            "Generating…",
+            s.generating,
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             color = colors.textPrimary
@@ -249,7 +251,7 @@ fun ProcessingScreen(
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("Go Back")
+                    Text(s.goBack)
                 }
             }
         } else if (isProcessing) {
@@ -257,7 +259,7 @@ fun ProcessingScreen(
                 onClick = onCancel,
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("Cancel", color = colors.textSecondary)
+                Text(s.cancel, color = colors.textSecondary)
             }
         }
     }

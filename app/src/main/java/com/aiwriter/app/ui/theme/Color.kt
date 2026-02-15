@@ -41,6 +41,14 @@ val WarningLight = Color(0xFFFFF3E0)
 val Danger = Color(0xFFE53E3E)
 val DangerLight = Color(0xFFFFF0F0)
 
+// ── Happy Accent Colors ──
+val AccentCoral = Color(0xFFFF6B6B)
+val AccentTeal = Color(0xFF4ECDC4)
+val AccentSunny = Color(0xFFFFD93D)
+val AccentSkyBlue = Color(0xFF45B7D1)
+val AccentLavender = Color(0xFF9B87F5)
+val AccentPeach = Color(0xFFFFB088)
+
 // ── App color scheme holder ──
 data class AiWriterColors(
     val background: Color,
@@ -59,7 +67,9 @@ data class AiWriterColors(
     val headerBg: Color,
     val headerText: Color,
     val inputBg: Color,
-    val inputBorder: Color
+    val inputBorder: Color,
+    val accent: Color,
+    val accentLight: Color
 )
 
 val LightColors = AiWriterColors(
@@ -79,7 +89,9 @@ val LightColors = AiWriterColors(
     headerBg = LightHeaderBg,
     headerText = Color.White,
     inputBg = LightSurface,
-    inputBorder = LightBorder
+    inputBorder = LightBorder,
+    accent = AccentTeal,
+    accentLight = AccentTeal.copy(alpha = 0.12f)
 )
 
 val DarkColors = AiWriterColors(
@@ -99,5 +111,7 @@ val DarkColors = AiWriterColors(
     headerBg = DarkHeaderBg,
     headerText = Color.White,
     inputBg = DarkSurface,
-    inputBorder = DarkBorder
+    inputBorder = DarkBorder,
+    accent = AccentTeal,
+    accentLight = AccentTeal.copy(alpha = 0.15f)
 )

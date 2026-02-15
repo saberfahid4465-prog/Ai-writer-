@@ -24,6 +24,8 @@ import androidx.compose.ui.unit.sp
 import com.aiwriter.app.R
 import com.aiwriter.app.ui.theme.LocalAppColors
 import com.aiwriter.app.ui.theme.LocalIsDarkTheme
+import com.aiwriter.app.ui.theme.AccentTeal
+import com.aiwriter.app.util.LocalStrings
 import kotlinx.coroutines.delay
 
 @Composable
@@ -32,6 +34,7 @@ fun SplashScreen(
 ) {
     val colors = LocalAppColors.current
     val isDark = LocalIsDarkTheme.current
+    val s = LocalStrings.current
     val logoRes = if (isDark) R.drawable.app_logo_white else R.drawable.app_logo
 
     // Animations
@@ -109,7 +112,7 @@ fun SplashScreen(
                 // Logo
                 Image(
                     painter = painterResource(id = logoRes),
-                    contentDescription = "AI Writer",
+                    contentDescription = s.aiWriter,
                     modifier = Modifier
                         .size(90.dp)
                         .scale(logoScale.value)
@@ -120,7 +123,7 @@ fun SplashScreen(
 
             // Title
             Text(
-                "AI Writer",
+                s.aiWriter,
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
                 color = colors.textPrimary,
@@ -130,7 +133,7 @@ fun SplashScreen(
             Spacer(Modifier.height(8.dp))
 
             Text(
-                "Create beautiful documents\nwith the power of AI",
+                s.splashSubtitle,
                 fontSize = 16.sp,
                 color = colors.textSecondary,
                 textAlign = TextAlign.Center,
@@ -146,9 +149,9 @@ fun SplashScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 listOf(
-                    "Generate PDF, Word, PPT & Excel",
-                    "Translate documents in 32 languages",
-                    "AI-powered summaries & editing"
+                    s.splashFeature1,
+                    s.splashFeature2,
+                    s.splashFeature3
                 ).forEach { feature ->
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -186,12 +189,12 @@ fun SplashScreen(
                     .height(56.dp)
                     .alpha(buttonAlpha.value),
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = colors.primary)
+                colors = ButtonDefaults.buttonColors(containerColor = AccentTeal)
             ) {
-                Icon(Icons.Default.AutoAwesome, "Start", modifier = Modifier.size(20.dp))
+                Icon(Icons.Default.AutoAwesome, s.getStarted, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    "Get Started",
+                    s.getStarted,
                     fontSize = 17.sp,
                     fontWeight = FontWeight.SemiBold
                 )

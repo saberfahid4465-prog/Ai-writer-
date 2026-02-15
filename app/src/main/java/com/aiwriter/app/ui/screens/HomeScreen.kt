@@ -38,7 +38,9 @@ import com.aiwriter.app.ui.components.FormatPicker
 import com.aiwriter.app.ui.components.LanguagePicker
 import com.aiwriter.app.ui.theme.LocalAppColors
 import com.aiwriter.app.ui.theme.LocalIsDarkTheme
+import com.aiwriter.app.ui.theme.AccentTeal
 import com.aiwriter.app.util.LanguageConfig
+import com.aiwriter.app.util.LocalStrings
 import com.aiwriter.app.util.PreferencesManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -53,6 +55,7 @@ fun HomeScreen(
     val context = LocalContext.current
     val prefs = PreferencesManager.getInstance(context)
     val scope = rememberCoroutineScope()
+    val s = LocalStrings.current
 
     var topic by remember { mutableStateOf("") }
     var selectedLanguage by remember { mutableStateOf(LanguageConfig.contentLanguages[0]) }
@@ -123,13 +126,13 @@ fun HomeScreen(
             Spacer(Modifier.width(12.dp))
             Column {
                 Text(
-                    "AI Writer",
+                    s.homeTitle,
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
                     color = colors.textPrimary
                 )
                 Text(
-                    "Create something amazing",
+                    s.homeSubtitle,
                     fontSize = 13.sp,
                     color = colors.textMuted,
                     lineHeight = 16.sp
@@ -181,13 +184,13 @@ fun HomeScreen(
                 Spacer(Modifier.width(14.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        "Daily Credits",
+                        s.dailyCredits,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = colors.textPrimary
                     )
                     Text(
-                        "$remaining tokens remaining",
+                        "$remaining ${s.tokensRemaining}",
                         fontSize = 12.sp,
                         color = colors.textMuted
                     )
@@ -209,7 +212,7 @@ fun HomeScreen(
         Spacer(Modifier.height(20.dp))
 
         // ── Section: What to write ──
-        SectionHeader(icon = Icons.Outlined.EditNote, title = "What to write", colors = colors)
+        SectionHeader(icon = Icons.Outlined.EditNote, title = s.whatToWrite, colors = colors)
 
         Spacer(Modifier.height(8.dp))
 
@@ -218,7 +221,7 @@ fun HomeScreen(
             onValueChange = { topic = it },
             placeholder = {
                 Text(
-                    "Describe your document topic, e.g.\n\"A business plan for an eco-friendly café\"",
+                    s.topicPlaceholder,
                     color = colors.placeholder,
                     fontSize = 14.sp,
                     lineHeight = 20.sp
@@ -311,13 +314,13 @@ fun HomeScreen(
                         )
                     } else {
                         Text(
-                            "Upload a file (optional)",
+                            s.uploadFile,
                             color = colors.textPrimary,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium
                         )
                         Text(
-                            "DOCX, PPTX, XLSX, TXT, CSV",
+                            s.uploadSupported,
                             color = colors.textMuted,
                             fontSize = 12.sp
                         )
@@ -337,7 +340,7 @@ fun HomeScreen(
         Spacer(Modifier.height(22.dp))
 
         // ── Section: Output Format ──
-        SectionHeader(icon = Icons.Outlined.FileCopy, title = "Output format", colors = colors)
+        SectionHeader(icon = Icons.Outlined.FileCopy, title = s.outputFormat, colors = colors)
         Spacer(Modifier.height(8.dp))
         FormatPicker(
             selectedFormats = selectedFormats,
@@ -347,7 +350,7 @@ fun HomeScreen(
         Spacer(Modifier.height(22.dp))
 
         // ── Section: Language ──
-        SectionHeader(icon = Icons.Outlined.Language, title = "Language", colors = colors)
+        SectionHeader(icon = Icons.Outlined.Language, title = s.language, colors = colors)
         Spacer(Modifier.height(8.dp))
         LanguagePicker(
             languages = LanguageConfig.contentLanguages,
@@ -378,7 +381,7 @@ fun HomeScreen(
                 .then(if (canSubmit) Modifier.scale(btnScale) else Modifier),
             shape = RoundedCornerShape(14.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = colors.primary,
+                containerColor = AccentTeal,
                 disabledContainerColor = if (isDark) Color(0xFF2A2A2A) else Color(0xFFE0E0E0)
             ),
             elevation = ButtonDefaults.buttonElevation(
@@ -386,10 +389,10 @@ fun HomeScreen(
                 pressedElevation = 1.dp
             )
         ) {
-            Icon(Icons.Default.AutoAwesome, "Generate", modifier = Modifier.size(20.dp))
+            Icon(Icons.Default.AutoAwesome, s.generateDocuments, modifier = Modifier.size(20.dp))
             Spacer(Modifier.width(8.dp))
             Text(
-                "Generate Documents",
+                s.generateDocuments,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold
             )
@@ -397,7 +400,7 @@ fun HomeScreen(
 
         if (!canSubmit && topic.isNotEmpty()) {
             Text(
-                "Enter at least 3 characters or upload a file",
+                s.minCharsHint,
                 color = colors.textMuted,
                 fontSize = 12.sp,
                 modifier = Modifier.padding(top = 8.dp),
