@@ -197,8 +197,8 @@ fun AppNavHost() {
                 ProcessingScreen(
                     onComplete = { output ->
                         NavState.aiOutput = output
-                        // Go to Result/Preview page directly
-                        navController.navigate(Screen.Result.route) {
+                        // Go to Editor so user can review & generate files
+                        navController.navigate(Screen.Editor.route) {
                             popUpTo(Screen.Processing.route) { inclusive = true }
                         }
                     },

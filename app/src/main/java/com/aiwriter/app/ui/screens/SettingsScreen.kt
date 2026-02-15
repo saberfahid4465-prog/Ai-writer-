@@ -147,55 +147,93 @@ fun SettingsScreen(
                     modifier = Modifier.padding(top = 2.dp, bottom = 12.dp)
                 )
 
-                // Language grid
+                // Language dropdown
+                var expanded by remember { mutableStateOf(false) }
                 val languages = LanguageConfig.appLanguages
-                val chunked = languages.chunked(3)
-                chunked.forEach { row ->
-                    Row(
+
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Surface(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .border(1.dp, colors.borderLight, RoundedCornerShape(12.dp))
+                            .clickable { expanded = true },
+                        color = colors.surfaceAlt
                     ) {
-                        row.forEach { lang ->
-                            val isSelected = lang.code == appLanguage.code
-                            val bgColor = if (isSelected) colors.primary.copy(alpha = 0.12f) else colors.surfaceAlt
-                            val borderColor = if (isSelected) colors.primary else colors.borderLight
-
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .border(1.dp, borderColor, RoundedCornerShape(10.dp))
-                                    .background(bgColor)
-                                    .clickable {
-                                        appLanguage = lang
-                                        prefs.appLanguage = lang.code
-                                        AppLanguageState.languageCode = lang.code
-                                    }
-                                    .padding(vertical = 10.dp, horizontal = 6.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text(
-                                        lang.nativeName,
-                                        fontSize = 13.sp,
-                                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                                        color = if (isSelected) colors.primary else colors.textPrimary,
-                                        maxLines = 1
-                                    )
-                                    Text(
-                                        lang.name,
-                                        fontSize = 10.sp,
-                                        color = colors.textMuted,
-                                        maxLines = 1
-                                    )
-                                }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(
+                                    appLanguage.nativeName,
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = colors.textPrimary
+                                )
+                                Text(
+                                    appLanguage.name,
+                                    fontSize = 12.sp,
+                                    color = colors.textMuted
+                                )
                             }
+                            Icon(
+                                if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                "Select",
+                                tint = colors.textMuted
+                            )
                         }
-                        // Fill remaining space if row is not full
-                        repeat(3 - row.size) {
-                            Spacer(Modifier.weight(1f))
+                    }
+
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                        modifier = Modifier
+                            .fillMaxWidth(0.85f)
+                            .heightIn(max = 350.dp)
+                    ) {
+                        languages.forEach { lang ->
+                            val isSelected = lang.code == appLanguage.code
+                            DropdownMenuItem(
+                                text = {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Column {
+                                            Text(
+                                                lang.nativeName,
+                                                fontSize = 14.sp,
+                                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                                color = if (isSelected) colors.primary else colors.textPrimary
+                                            )
+                                            Text(
+                                                lang.name,
+                                                fontSize = 11.sp,
+                                                color = colors.textMuted
+                                            )
+                                        }
+                                        if (isSelected) {
+                                            Icon(
+                                                Icons.Default.Check,
+                                                "Selected",
+                                                tint = AccentTeal,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                        }
+                                    }
+                                },
+                                onClick = {
+                                    appLanguage = lang
+                                    prefs.appLanguage = lang.code
+                                    AppLanguageState.languageCode = lang.code
+                                    expanded = false
+                                }
+                            )
                         }
                     }
                 }
