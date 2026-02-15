@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AI Writer</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_generate">Generate</string>
+    <string name="nav_summarize">Summarize</string>
+    <string name="nav_translate">Translate</string>
+    <string name="nav_history">History</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Home Screen -->
+    <string name="home_title">AI Document Generator</string>
+    <string name="home_subtitle">Create professional documents with AI</string>
+    <string name="topic_hint">Enter your topic or instructions…</string>
+    <string name="upload_file">Upload File</string>
+    <string name="upload_supported">Supported: DOCX, PPTX, XLSX, TXT</string>
+    <string name="file_selected">File: %1$s</string>
+    <string name="output_format">Output Format</string>
+    <string name="language">Language</string>
+    <string name="generate">Generate Documents</string>
+    <string name="daily_usage">Daily Usage</string>
+    <string name="tokens_used">%1$d / %2$d tokens</string>
+    <string name="min_chars">Enter at least 3 characters or upload a file</string>
+
+    <!-- Translate Screen -->
+    <string name="translate_title">AI Translator</string>
+    <string name="translate_subtitle">Translate documents or text with AI</string>
+    <string name="source_language">Source Language</string>
+    <string name="target_language">Target Language</string>
+    <string name="swap_languages">Swap Languages</string>
+    <string name="text_to_translate">Enter text to translate…</string>
+    <string name="translate">Translate</string>
+
+    <!-- Summarize Screen -->
+    <string name="summarize_title">AI Summarizer</string>
+    <string name="summarize_subtitle">Summarize documents or text with AI</string>
+    <string name="text_to_summarize">Enter text to summarize…</string>
+    <string name="summarize">Summarize</string>
+    <string name="how_it_works">How it works</string>
+    <string name="how_it_works_desc">AI extracts key points from your text, targeting 30–40%% of original length.</string>
+
+    <!-- Processing Screen -->
+    <string name="processing_title">Generating…</string>
+    <string name="step_analyze">Analyzing input</string>
+    <string name="step_check_usage">Checking usage limits</string>
+    <string name="step_generate">Generating with AI</string>
+    <string name="step_prepare">Preparing editor</string>
+    <string name="cancel">Cancel</string>
+
+    <!-- Editor Screen -->
+    <string name="editor_title">Edit Document</string>
+    <string name="edit_mode">Edit</string>
+    <string name="preview_mode">Preview</string>
+    <string name="section">Section %1$d</string>
+    <string name="heading">Heading</string>
+    <string name="paragraph">Paragraph</string>
+    <string name="bullets">Bullets</string>
+    <string name="add_section">Add Section</string>
+    <string name="delete_section">Delete</string>
+    <string name="duplicate_section">Duplicate</string>
+    <string name="move_up">Move Up</string>
+    <string name="move_down">Move Down</string>
+    <string name="ai_improve">Improve</string>
+    <string name="ai_expand">Expand</string>
+    <string name="ai_shorten">Shorten</string>
+    <string name="ai_regenerate">Regenerate</string>
+    <string name="generate_files">Generate Final Files</string>
+    <string name="word_count">%1$d words</string>
+    <string name="document_title">Document Title</string>
+
+    <!-- Result Screen -->
+    <string name="result_title">Your Documents</string>
+    <string name="result_subtitle">Your files are ready!</string>
+    <string name="download">Download</string>
+    <string name="share">Share</string>
+    <string name="open_file">Open</string>
+    <string name="create_new">Create New</string>
+    <string name="saved_to">Saved to Downloads</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Settings</string>
+    <string name="theme">Theme</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_system">System</string>
+    <string name="app_language">App Language</string>
+    <string name="token_usage">Token Usage</string>
+    <string name="reset_at_midnight">Resets at midnight</string>
+    <string name="premium">Premium</string>
+    <string name="coming_soon">Coming Soon</string>
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="terms_of_service">Terms of Service</string>
+    <string name="app_footer">AI Writer v2.0.0 • Powered by Longcat AI</string>
+
+    <!-- History Screen -->
+    <string name="history_title">History</string>
+    <string name="history_empty">No documents yet</string>
+    <string name="history_empty_desc">Generated documents will appear here</string>
+    <string name="delete">Delete</string>
+    <string name="clear_history">Clear History</string>
+
+    <!-- General -->
+    <string name="error">Error</string>
+    <string name="ok">OK</string>
+    <string name="retry">Retry</string>
+    <string name="loading">Loading…</string>
+    <string name="success">Success!</string>
+    <string name="generation_failed">Generation failed. Please try again.</string>
+    <string name="no_internet">No internet connection</string>
+    <string name="token_limit_reached">Daily token limit reached. Try again tomorrow.</string>
+
+    <!-- Formats -->
+    <string name="format_pdf">PDF</string>
+    <string name="format_docx">Word</string>
+    <string name="format_pptx">PPT</string>
+    <string name="format_xlsx">Excel</string>
+</resources>

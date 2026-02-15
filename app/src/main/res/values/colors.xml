@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand — derived from logo #353636 monochrome -->
+    <color name="primary">#353636</color>
+    <color name="primary_dark">#FFFFFF</color>
+    <color name="primary_light">#E8E8EA</color>
+    <color name="accent">#353636</color>
+
+    <!-- Light Theme -->
+    <color name="light_background">#F7F7F8</color>
+    <color name="light_surface">#FFFFFF</color>
+    <color name="light_surface_alt">#F0F0F2</color>
+    <color name="light_card">#FFFFFF</color>
+    <color name="light_text_primary">#1A1A1B</color>
+    <color name="light_text_secondary">#3D3E40</color>
+    <color name="light_text_muted">#808185</color>
+    <color name="light_text_inverse">#FFFFFF</color>
+    <color name="light_border">#D8D8DC</color>
+    <color name="light_border_light">#EDEDF0</color>
+    <color name="light_input_bg">#FFFFFF</color>
+    <color name="light_placeholder">#A0A1A5</color>
+    <color name="light_header_bg">#353636</color>
+    <color name="light_header_text">#FFFFFF</color>
+
+    <!-- Dark Theme -->
+    <color name="dark_background">#141415</color>
+    <color name="dark_surface">#1E1F20</color>
+    <color name="dark_surface_alt">#272829</color>
+    <color name="dark_card">#1E1F20</color>
+    <color name="dark_text_primary">#F0F0F2</color>
+    <color name="dark_text_secondary">#CACBCE</color>
+    <color name="dark_text_muted">#808185</color>
+    <color name="dark_text_inverse">#1A1A1B</color>
+    <color name="dark_border">#3D3E40</color>
+    <color name="dark_border_light">#303132</color>
+    <color name="dark_input_bg">#1E1F20</color>
+    <color name="dark_placeholder">#6B6D70</color>
+    <color name="dark_header_bg">#1E1F20</color>
+    <color name="dark_header_text">#FFFFFF</color>
+
+    <!-- Status -->
+    <color name="success">#22C55E</color>
+    <color name="success_light">#E8FAF0</color>
+    <color name="warning">#DD6B20</color>
+    <color name="warning_light">#FFF3E0</color>
+    <color name="danger">#E53E3E</color>
+    <color name="danger_light">#FFF0F0</color>
+
+    <!-- Document Colors -->
+    <color name="doc_title">#1A1A1B</color>
+    <color name="doc_body">#1A1A1B</color>
+    <color name="doc_bullet">#353636</color>
+    <color name="doc_author">#808185</color>
+
+    <!-- PPT Colors -->
+    <color name="ppt_primary_bg">#353636</color>
+    <color name="ppt_accent">#353636</color>
+    <color name="ppt_slide_bg">#F7F7F8</color>
+    <color name="ppt_subtitle">#808185</color>
+
+    <!-- Excel Colors -->
+    <color name="excel_header_bg">#353636</color>
+    <color name="excel_header_text">#FFFFFF</color>
+    <color name="excel_border">#D8D8DC</color>
+    <color name="excel_alt_row">#F0F0F2</color>
+</resources>

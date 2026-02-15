@@ -1,44 +1,37 @@
-# Dependencies
-node_modules/
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
 
-# Expo
-.expo/
-dist/
-web-build/
-
-# Native build outputs
-android/
-ios/
-
-# Python
-.venv/
-__pycache__/
-*.pyc
-
-# Environment & secrets
-.env
-.env.local
-*.jks
-*.keystore
-keystore-base64.txt
-google-service-account.json
+# Android
+*.apk
+*.aab
+*.ap_
+*.dex
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
 
 # IDE
-.vscode/
 .idea/
-*.swp
-*.swo
+*.iml
+*.iws
+*.ipr
+.vscode/
 
 # OS
 .DS_Store
 Thumbs.db
+*.swp
+*.swo
 
-# Build
+# Build output (keep folder but ignore contents)
 build-output/
-*.tgz
-*.aab
-*.apk
 
-# Temp
+# Secrets (keystore is intentionally tracked)
+google-service-account.json
+keystore-base64.txt
+
+# Logs
 *.log
-npm-debug.log*

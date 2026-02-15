@@ -1,126 +1,59 @@
-name: Build Android AAB & APK
+name: Build Android App
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
-env:
-  JAVA_VERSION: '17'
-  NODE_VERSION: '20'
+permissions:
+  contents: read
 
 jobs:
   build:
-    name: Build Android Release
+    name: Build Kotlin Release
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 30
 
     steps:
       # ─── Checkout ──────────────────────────────────────
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # ─── Setup Java ────────────────────────────────────
+      # ─── JDK 17 ────────────────────────────────────────
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: ${{ env.JAVA_VERSION }}
+          java-version: 17
 
-      # ─── Setup Node.js ─────────────────────────────────
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      # ─── Gradle ────────────────────────────────────────
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
+          gradle-version: "8.11.1"
 
-      # ─── Install dependencies ──────────────────────────
-      - name: Install npm dependencies
-        run: npm ci --legacy-peer-deps
-
-      # ─── Setup Android SDK ─────────────────────────────
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      # ─── Expo prebuild (generate android project) ──────
-      - name: Expo prebuild
-        run: npx expo prebuild --platform android --clean
-
-      # ─── Generate signing keystore ─────────────────────
-      - name: Generate signing keystore
-        run: |
-          STORE_PASS="AiWriter2026Secure"
-          KEY_ALIAS="ai-writer-release"
-
-          # Generate keystore
-          keytool -genkeypair \
-            -v \
-            -keystore android/app/upload-keystore.jks \
-            -keyalg RSA \
-            -keysize 2048 \
-            -validity 10000 \
-            -alias "$KEY_ALIAS" \
-            -storepass "$STORE_PASS" \
-            -keypass "$STORE_PASS" \
-            -dname "CN=AI Writer, O=AI Writer, L=Internet, ST=Cloud, C=US"
-
-          echo "STORE_PASS=$STORE_PASS" >> $GITHUB_ENV
-          echo "KEY_ALIAS=$KEY_ALIAS" >> $GITHUB_ENV
-
-          # Export PEM for future Play Console upload key reset
-          keytool -exportcert -alias "$KEY_ALIAS" \
-            -keystore android/app/upload-keystore.jks \
-            -storepass "$STORE_PASS" -rfc -file upload-key.pem
-
-          # Save base64 for future GitHub secret
-          base64 -w 0 android/app/upload-keystore.jks > keystore-base64.txt
-
-      # ─── Configure Gradle signing ──────────────────────
-      - name: Configure release signing
-        run: |
-          # Patch android/app/build.gradle to add signing config
-          # Insert signing config before the LAST closing brace of the android block
-          cat > /tmp/signing_patch.gradle << 'EOF'
-
-          android.signingConfigs {
-              release {
-                  storeFile file("upload-keystore.jks")
-                  storePassword System.getenv("STORE_PASS") ?: ""
-                  keyAlias System.getenv("KEY_ALIAS") ?: ""
-                  keyPassword System.getenv("STORE_PASS") ?: ""
-              }
-          }
-          android.buildTypes.release.signingConfig = android.signingConfigs.release
-          EOF
-
-          cat /tmp/signing_patch.gradle >> android/app/build.gradle
-          echo "--- build.gradle tail ---"
-          tail -20 android/app/build.gradle
+      # ─── Android SDK licences ──────────────────────────
+      - name: Accept Android SDK licences
+        run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
 
       # ─── Build AAB ─────────────────────────────────────
       - name: Build Release AAB
-        working-directory: android
-        run: |
-          chmod +x gradlew
-          ./gradlew bundleRelease --no-daemon
+        run: gradle bundleRelease --no-daemon --stacktrace
 
       # ─── Build APK ─────────────────────────────────────
       - name: Build Release APK
-        working-directory: android
-        run: ./gradlew assembleRelease --no-daemon
+        run: gradle assembleRelease --no-daemon
 
-      # ─── Copy & verify outputs ─────────────────────────
+      # ─── Collect outputs ───────────────────────────────
       - name: Collect build outputs
         run: |
           mkdir -p build-output
-          cp android/app/build/outputs/bundle/release/*.aab build-output/app-release.aab 2>/dev/null || true
-          cp android/app/build/outputs/apk/release/*.apk build-output/app-release.apk 2>/dev/null || true
-          cp upload-key.pem build-output/ 2>/dev/null || true
-          cp keystore-base64.txt build-output/ 2>/dev/null || true
+          cp app/build/outputs/bundle/release/*.aab build-output/app-release.aab
+          cp app/build/outputs/apk/release/*.apk build-output/app-release.apk
           echo "=== Build Outputs ==="
           ls -lh build-output/
 
-      # ─── Upload AAB artifact ───────────────────────────
+      # ─── Upload AAB ───────────────────────────────────
       - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
@@ -129,7 +62,7 @@ jobs:
           retention-days: 90
           if-no-files-found: error
 
-      # ─── Upload APK artifact ───────────────────────────
+      # ─── Upload APK ───────────────────────────────────
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
@@ -138,21 +71,11 @@ jobs:
           retention-days: 90
           if-no-files-found: error
 
-      # ─── Upload keystore files ─────────────────────────
-      - name: Upload signing files
-        uses: actions/upload-artifact@v4
-        with:
-          name: signing-keystore
-          path: |
-            build-output/upload-key.pem
-            build-output/keystore-base64.txt
-          retention-days: 90
-
       # ─── Summary ───────────────────────────────────────
       - name: Build Summary
         if: always()
         run: |
-          echo "## AI Writer — Android Build" >> $GITHUB_STEP_SUMMARY
+          echo "## AI Writer — Native Kotlin Build" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           if [ -f build-output/app-release.aab ]; then
             AAB_SIZE=$(stat -c%s build-output/app-release.aab)
@@ -162,7 +85,7 @@ jobs:
             echo "| AAB | $(numfmt --to=iec $AAB_SIZE) |" >> $GITHUB_STEP_SUMMARY
             echo "| APK | $(numfmt --to=iec $APK_SIZE) |" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "Download AAB, APK, and signing keystore from **Artifacts** above." >> $GITHUB_STEP_SUMMARY
+            echo "Download AAB and APK from **Artifacts** above." >> $GITHUB_STEP_SUMMARY
           else
             echo "Build failed. Check logs above." >> $GITHUB_STEP_SUMMARY
           fi
