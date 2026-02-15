@@ -46,7 +46,7 @@ object FileGeneratorService {
         if ("docx" in formats) {
             onProgress("Generating Word document…")
             try {
-                val bytes = DocxGenerator.generate(output, languageCode)
+                val bytes = DocxGenerator.generate(output, languageCode, images)
                 val fileName = FileUtils.generateFileName(topic, "docx")
                 val path = FileUtils.saveToInternalStorage(context, bytes, fileName)
                 files.add(GeneratedFile("docx", fileName, path, bytes.size.toLong()))
@@ -58,7 +58,7 @@ object FileGeneratorService {
         if ("pptx" in formats) {
             onProgress("Generating PowerPoint…")
             try {
-                val bytes = PptxGenerator.generate(output, languageCode)
+                val bytes = PptxGenerator.generate(output, languageCode, images)
                 val fileName = FileUtils.generateFileName(topic, "pptx")
                 val path = FileUtils.saveToInternalStorage(context, bytes, fileName)
                 files.add(GeneratedFile("pptx", fileName, path, bytes.size.toLong()))
@@ -84,8 +84,9 @@ object FileGeneratorService {
 
     private suspend fun fetchImages(output: AiWriterOutput): Map<String, ByteArray> =
         coroutineScope {
-            val keywords = output.pdfWord.sections
-                .mapNotNull { it.imageKeyword }
+            val pdfKeywords = output.pdfWord.sections.mapNotNull { it.imageKeyword }
+            val pptKeywords = output.ppt.slides.mapNotNull { it.imageKeyword }
+            val keywords = (pdfKeywords + pptKeywords)
                 .distinct()
                 .take(10) // limit to avoid too many requests
 

@@ -11,23 +11,48 @@ object PptxGenerator {
     private const val SLIDE_W = 12192000L  // 13.333 inches in EMU (16:9)
     private const val SLIDE_H = 6858000L   // 7.5 inches in EMU
 
-    fun generate(output: AiWriterOutput, languageCode: String = "en"): ByteArray {
-        val isRtl = LanguageConfig.isRtlLanguage(languageCode)
-        val slides = mutableListOf<String>()
+    private data class SlideData(
+        val xml: String,
+        val imageBytes: ByteArray? = null,
+        val imageExt: String = "png"
+    )
 
-        // Title slide
-        slides.add(buildTitleSlide(output.pdfWord.title, output.pdfWord.author, isRtl))
+    fun generate(
+        output: AiWriterOutput,
+        languageCode: String = "en",
+        images: Map<String, ByteArray> = emptyMap()
+    ): ByteArray {
+        val isRtl = LanguageConfig.isRtlLanguage(languageCode)
+        val slideDataList = mutableListOf<SlideData>()
+        val hasAnyImage = images.isNotEmpty()
+
+        // Title slide (no image)
+        slideDataList.add(SlideData(buildTitleSlide(output.pdfWord.title, output.pdfWord.author, isRtl)))
 
         // Content slides
         for (slide in output.ppt.slides) {
-            slides.add(buildContentSlide(slide.title, slide.bullets, isRtl))
+            val keyword = slide.imageKeyword
+            val imgBytes = if (keyword != null) images[keyword] else null
+            if (imgBytes != null) {
+                val ext = if (isJpeg(imgBytes)) "jpeg" else "png"
+                slideDataList.add(SlideData(
+                    buildContentSlide(slide.title, slide.bullets, isRtl, hasImage = true),
+                    imgBytes,
+                    ext
+                ))
+            } else {
+                slideDataList.add(SlideData(buildContentSlide(slide.title, slide.bullets, isRtl, hasImage = false)))
+            }
         }
 
-        // Thank You slide
-        slides.add(buildThankYouSlide(isRtl))
+        // Thank You slide (no image)
+        slideDataList.add(SlideData(buildThankYouSlide(isRtl)))
 
-        return buildPptxZip(slides)
+        return buildPptxZip(slideDataList, hasAnyImage)
     }
+
+    private fun isJpeg(bytes: ByteArray): Boolean =
+        bytes.size >= 2 && bytes[0] == 0xFF.toByte() && bytes[1] == 0xD8.toByte()
 
     private fun esc(text: String): String = text
         .replace("&", "&amp;")
@@ -35,12 +60,12 @@ object PptxGenerator {
         .replace(">", "&gt;")
         .replace("\"", "&quot;")
 
-    private fun buildPptxZip(slides: List<String>): ByteArray {
+    private fun buildPptxZip(slideDataList: List<SlideData>, hasAnyImage: Boolean): ByteArray {
         val baos = ByteArrayOutputStream()
         ZipOutputStream(baos).use { zip ->
             // [Content_Types].xml
             zip.putNextEntry(ZipEntry("[Content_Types].xml"))
-            zip.write(contentTypes(slides.size).toByteArray())
+            zip.write(contentTypes(slideDataList.size, hasAnyImage).toByteArray())
             zip.closeEntry()
 
             // _rels/.rels
@@ -50,12 +75,12 @@ object PptxGenerator {
 
             // ppt/presentation.xml
             zip.putNextEntry(ZipEntry("ppt/presentation.xml"))
-            zip.write(presentationXml(slides.size).toByteArray())
+            zip.write(presentationXml(slideDataList.size).toByteArray())
             zip.closeEntry()
 
             // ppt/_rels/presentation.xml.rels
             zip.putNextEntry(ZipEntry("ppt/_rels/presentation.xml.rels"))
-            zip.write(presentationRels(slides.size).toByteArray())
+            zip.write(presentationRels(slideDataList.size).toByteArray())
             zip.closeEntry()
 
             // Slide layout & master (minimal)
@@ -76,15 +101,29 @@ object PptxGenerator {
             zip.closeEntry()
 
             // Slides
-            slides.forEachIndexed { idx, slideXml ->
+            slideDataList.forEachIndexed { idx, slideData ->
                 val num = idx + 1
+
+                // Slide XML
                 zip.putNextEntry(ZipEntry("ppt/slides/slide$num.xml"))
-                zip.write(slideXml.toByteArray())
+                zip.write(slideData.xml.toByteArray())
                 zip.closeEntry()
 
+                // Slide rels (with or without image)
                 zip.putNextEntry(ZipEntry("ppt/slides/_rels/slide$num.xml.rels"))
-                zip.write(slideRels().toByteArray())
+                if (slideData.imageBytes != null) {
+                    zip.write(slideRelsWithImage(num, slideData.imageExt).toByteArray())
+                } else {
+                    zip.write(slideRels().toByteArray())
+                }
                 zip.closeEntry()
+
+                // Image media file
+                if (slideData.imageBytes != null) {
+                    zip.putNextEntry(ZipEntry("ppt/media/slide${num}.${slideData.imageExt}"))
+                    zip.write(slideData.imageBytes)
+                    zip.closeEntry()
+                }
             }
         }
         return baos.toByteArray()
@@ -131,7 +170,12 @@ object PptxGenerator {
 </p:sld>"""
     }
 
-    private fun buildContentSlide(title: String, bullets: List<String>, isRtl: Boolean): String {
+    private fun buildContentSlide(
+        title: String,
+        bullets: List<String>,
+        isRtl: Boolean,
+        hasImage: Boolean = false
+    ): String {
         val algn = if (isRtl) "r" else "l"
         val rtlAttr = if (isRtl) " rtl=\"1\"" else ""
         val fontSize = when {
@@ -143,6 +187,36 @@ object PptxGenerator {
         val bulletParas = bullets.joinToString("") { b ->
             """<a:p><a:pPr marL="457200" indent="-228600" algn="$algn"$rtlAttr><a:buChar char="•"/></a:pPr><a:r><a:rPr lang="en-US" sz="$fontSize" dirty="0"><a:solidFill><a:srgbClr val="35373D"/></a:solidFill><a:latin typeface="Calibri"/></a:rPr><a:t>${esc(b)}</a:t></a:r></a:p>"""
         }
+
+        // Text body dimensions change when image is present
+        val textOffX = 609600L
+        val textOffY = 1371600L
+        val textCx = if (hasImage) 5486400L else 10972800L  // ~6" or ~12"
+        val textCy = 5029200L
+
+        val imageElement = if (hasImage) {
+            // Image on the right side of the slide
+            val imgOffX = 6400800L   // starts at ~7"
+            val imgOffY = 1600200L
+            val imgCx = 5334000L     // ~5.83" wide
+            val imgCy = 4572000L     // ~5" tall
+            """
+    <p:pic>
+      <p:nvPicPr>
+        <p:cNvPr id="4" name="SlideImage"/>
+        <p:cNvPicPr><a:picLocks noChangeAspect="1"/></p:cNvPicPr>
+        <p:nvPr/>
+      </p:nvPicPr>
+      <p:blipFill>
+        <a:blip r:embed="rId2"/>
+        <a:stretch><a:fillRect/></a:stretch>
+      </p:blipFill>
+      <p:spPr>
+        <a:xfrm><a:off x="$imgOffX" y="$imgOffY"/><a:ext cx="$imgCx" cy="$imgCy"/></a:xfrm>
+        <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
+      </p:spPr>
+    </p:pic>"""
+        } else ""
 
         return """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
@@ -167,12 +241,12 @@ object PptxGenerator {
     </p:sp>
     <p:sp>
       <p:nvSpPr><p:cNvPr id="3" name="Body"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>
-      <p:spPr><a:xfrm><a:off x="609600" y="1371600"/><a:ext cx="10972800" cy="5029200"/></a:xfrm></p:spPr>
+      <p:spPr><a:xfrm><a:off x="$textOffX" y="$textOffY"/><a:ext cx="$textCx" cy="$textCy"/></a:xfrm></p:spPr>
       <p:txBody>
         <a:bodyPr/>
         $bulletParas
       </p:txBody>
-    </p:sp>
+    </p:sp>$imageElement
   </p:spTree>
 </p:cSld>
 </p:sld>"""
@@ -204,14 +278,20 @@ object PptxGenerator {
 
     // ── OOXML scaffolding ──
 
-    private fun contentTypes(slideCount: Int): String {
+    private fun contentTypes(slideCount: Int, hasImages: Boolean): String {
         val overrides = (1..slideCount).joinToString("") {
             """<Override PartName="/ppt/slides/slide$it.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>"""
         }
+        val imgDefaults = if (hasImages) {
+            """
+  <Default Extension="jpeg" ContentType="image/jpeg"/>
+  <Default Extension="png" ContentType="image/png"/>"""
+        } else ""
+
         return """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
   <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
-  <Default Extension="xml" ContentType="application/xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>${imgDefaults}
   <Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>
   <Override PartName="/ppt/slideMasters/slideMaster1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml"/>
   <Override PartName="/ppt/slideLayouts/slideLayout1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"/>
@@ -280,5 +360,11 @@ object PptxGenerator {
     private fun slideRels(): String = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
   <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout" Target="../slideLayouts/slideLayout1.xml"/>
+</Relationships>"""
+
+    private fun slideRelsWithImage(slideNum: Int, ext: String): String = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout" Target="../slideLayouts/slideLayout1.xml"/>
+  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/slide${slideNum}.${ext}"/>
 </Relationships>"""
 }
