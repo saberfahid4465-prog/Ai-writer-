@@ -36,20 +36,12 @@ jobs:
       - name: Accept Android SDK licences
         run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
 
-      # ─── Generate signing keystore ─────────────────────
-      - name: Generate signing keystore
+      # ─── Verify signing keystore ────────────────────────
+      - name: Verify signing keystore
         run: |
-          mkdir -p keystore
-          keytool -genkeypair \
-            -v \
-            -keystore keystore/ai-writer.keystore \
-            -keyalg RSA \
-            -keysize 2048 \
-            -validity 10000 \
-            -alias ai-writer \
-            -storepass ai-writer-2024 \
-            -keypass ai-writer-2024 \
-            -dname "CN=AI Writer, O=AI Writer, L=Internet, ST=Cloud, C=US"
+          echo "Checking keystore..."
+          ls -la keystore/ai-writer.keystore
+          keytool -list -keystore keystore/ai-writer.keystore -storepass SmartAiWriter2026! -alias ai-writer 2>&1 | head -5
 
       # ─── Build signed AAB ──────────────────────────────
       - name: Build Release AAB

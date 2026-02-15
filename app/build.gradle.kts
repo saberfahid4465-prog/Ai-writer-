@@ -23,9 +23,9 @@ android {
             val ksFile = rootProject.file("keystore/ai-writer.keystore")
             if (ksFile.exists()) {
                 storeFile = ksFile
-                storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "ai-writer-2024"
+                storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "SmartAiWriter2026!"
                 keyAlias = System.getenv("KEY_ALIAS") ?: "ai-writer"
-                keyPassword = System.getenv("KEY_PASSWORD") ?: "ai-writer-2024"
+                keyPassword = System.getenv("KEY_PASSWORD") ?: "SmartAiWriter2026!"
             }
         }
     }
