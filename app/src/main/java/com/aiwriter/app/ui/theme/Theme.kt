@@ -6,7 +6,6 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
-import com.aiwriter.app.util.PreferencesManager
 
 private val LightColorScheme = lightColorScheme(
     primary = BrandCharcoal,
@@ -31,14 +30,18 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 val LocalAppColors = staticCompositionLocalOf { LightColors }
+val LocalIsDarkTheme = compositionLocalOf { false }
+
+/** Mutable global so Settings toggles trigger instant recomposition */
+object ThemeState {
+    var themeMode by mutableStateOf("system")
+}
 
 @Composable
 fun AiWriterTheme(
-    preferencesManager: PreferencesManager,
     content: @Composable () -> Unit
 ) {
-    val themeMode = preferencesManager.themeMode
-    val isDark = when (themeMode) {
+    val isDark = when (ThemeState.themeMode) {
         "dark" -> true
         "light" -> false
         else -> isSystemInDarkTheme()
@@ -47,7 +50,10 @@ fun AiWriterTheme(
     val colorScheme = if (isDark) DarkColorScheme else LightColorScheme
     val appColors = if (isDark) DarkColors else LightColors
 
-    CompositionLocalProvider(LocalAppColors provides appColors) {
+    CompositionLocalProvider(
+        LocalAppColors provides appColors,
+        LocalIsDarkTheme provides isDark
+    ) {
         MaterialTheme(
             colorScheme = colorScheme,
             content = content

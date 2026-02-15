@@ -1,23 +1,33 @@
 package com.aiwriter.app.navigation
 
+import androidx.compose.animation.*
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.*
 import com.aiwriter.app.data.remote.AiWriterOutput
 import com.aiwriter.app.data.remote.GeneratedFile
 import com.aiwriter.app.ui.screens.*
 import com.aiwriter.app.ui.theme.LocalAppColors
+import com.aiwriter.app.util.PreferencesManager
 
 data class BottomNavItem(
     val screen: Screen,
-    val icon: ImageVector,
+    val selectedIcon: ImageVector,
+    val unselectedIcon: ImageVector,
     val label: String
 )
 
@@ -25,7 +35,7 @@ data class BottomNavItem(
 object NavState {
     var aiOutput: AiWriterOutput? = null
     var generatedFiles: List<GeneratedFile> = emptyList()
-    var processingMode: String = "generate"  // "generate", "translate", "summarize"
+    var processingMode: String = "generate"
     var topic: String = ""
     var language: String = "English"
     var languageCode: String = "en"
@@ -40,15 +50,20 @@ object NavState {
 fun AppNavHost() {
     val navController = rememberNavController()
     val colors = LocalAppColors.current
+    val context = LocalContext.current
+    val prefs = PreferencesManager.getInstance(context)
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
+    // Check if first launch for splash
+    val hasSeenSplash = prefs.hasSeenOnboarding
+
     val bottomNavItems = listOf(
-        BottomNavItem(Screen.Home, Icons.Default.Edit, "Generate"),
-        BottomNavItem(Screen.Summarize, Icons.Default.Description, "Summarize"),
-        BottomNavItem(Screen.Translate, Icons.Default.Translate, "Translate"),
-        BottomNavItem(Screen.History, Icons.Default.History, "History"),
-        BottomNavItem(Screen.Settings, Icons.Default.Settings, "Settings")
+        BottomNavItem(Screen.Home, Icons.Filled.EditNote, Icons.Outlined.EditNote, "Create"),
+        BottomNavItem(Screen.Summarize, Icons.Filled.Summarize, Icons.Outlined.Summarize, "Summary"),
+        BottomNavItem(Screen.Translate, Icons.Filled.Translate, Icons.Outlined.Translate, "Translate"),
+        BottomNavItem(Screen.History, Icons.Filled.FolderOpen, Icons.Outlined.FolderOpen, "History"),
+        BottomNavItem(Screen.Settings, Icons.Filled.Tune, Icons.Outlined.Tune, "Settings")
     )
 
     val showBottomBar = currentRoute in bottomNavItems.map { it.screen.route }
@@ -59,11 +74,14 @@ fun AppNavHost() {
             if (showBottomBar) {
                 NavigationBar(
                     containerColor = colors.surface,
-                    contentColor = colors.textPrimary
+                    contentColor = colors.textPrimary,
+                    tonalElevation = 0.dp,
+                    modifier = Modifier.clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
                 ) {
                     bottomNavItems.forEach { item ->
+                        val isSelected = currentRoute == item.screen.route
                         NavigationBarItem(
-                            selected = currentRoute == item.screen.route,
+                            selected = isSelected,
                             onClick = {
                                 navController.navigate(item.screen.route) {
                                     popUpTo(navController.graph.findStartDestination().id) {
@@ -74,15 +92,26 @@ fun AppNavHost() {
                                 }
                             },
                             icon = {
-                                Icon(item.icon, contentDescription = item.label)
+                                Icon(
+                                    if (isSelected) item.selectedIcon else item.unselectedIcon,
+                                    contentDescription = item.label,
+                                    modifier = Modifier.size(22.dp)
+                                )
                             },
-                            label = { Text(item.label) },
+                            label = {
+                                Text(
+                                    item.label,
+                                    fontSize = 11.sp,
+                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                    maxLines = 1
+                                )
+                            },
                             colors = NavigationBarItemDefaults.colors(
                                 selectedIconColor = colors.primary,
                                 selectedTextColor = colors.primary,
                                 unselectedIconColor = colors.textMuted,
                                 unselectedTextColor = colors.textMuted,
-                                indicatorColor = colors.primaryLight
+                                indicatorColor = colors.primary.copy(alpha = 0.1f)
                             )
                         )
                     }
@@ -92,9 +121,21 @@ fun AppNavHost() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Screen.Home.route,
+            startDestination = if (hasSeenSplash) Screen.Home.route else Screen.Splash.route,
             modifier = Modifier.padding(innerPadding)
         ) {
+            // Splash / Onboarding
+            composable(Screen.Splash.route) {
+                SplashScreen(
+                    onFinished = {
+                        prefs.hasSeenOnboarding = true
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(Screen.Splash.route) { inclusive = true }
+                        }
+                    }
+                )
+            }
+
             composable(Screen.Home.route) {
                 HomeScreen(
                     onGenerate = { topic, lang, langCode, formats, content, fileName ->
@@ -151,7 +192,8 @@ fun AppNavHost() {
                 ProcessingScreen(
                     onComplete = { output ->
                         NavState.aiOutput = output
-                        navController.navigate(Screen.Editor.route) {
+                        // Go to Result/Preview page directly
+                        navController.navigate(Screen.Result.route) {
                             popUpTo(Screen.Processing.route) { inclusive = true }
                         }
                     },
@@ -179,9 +221,13 @@ fun AppNavHost() {
                         navController.navigate(Screen.Home.route) {
                             popUpTo(Screen.Home.route) { inclusive = true }
                         }
+                    },
+                    onEditDocument = {
+                        navController.navigate(Screen.Editor.route)
                     }
                 )
             }
         }
     }
 }
+

@@ -22,7 +22,8 @@ import com.aiwriter.app.util.FileUtils
 
 @Composable
 fun ResultScreen(
-    onCreateNew: () -> Unit
+    onCreateNew: () -> Unit,
+    onEditDocument: () -> Unit = {}
 ) {
     val colors = LocalAppColors.current
     val context = LocalContext.current
@@ -147,6 +148,21 @@ fun ResultScreen(
         }
 
         Spacer(Modifier.height(24.dp))
+
+        // Edit Document button
+        OutlinedButton(
+            onClick = onEditDocument,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Icon(Icons.Default.Edit, "Edit", modifier = Modifier.size(20.dp))
+            Spacer(Modifier.width(8.dp))
+            Text("Edit Document", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+        }
+
+        Spacer(Modifier.height(12.dp))
 
         Button(
             onClick = onCreateNew,

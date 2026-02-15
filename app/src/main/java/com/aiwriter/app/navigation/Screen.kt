@@ -1,6 +1,7 @@
 package com.aiwriter.app.navigation
 
 sealed class Screen(val route: String) {
+    data object Splash : Screen("splash")
     data object Home : Screen("home")
     data object Translate : Screen("translate")
     data object Summarize : Screen("summarize")

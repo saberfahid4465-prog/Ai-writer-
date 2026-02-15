@@ -15,6 +15,11 @@ class PreferencesManager private constructor(context: Context) {
         get() = prefs.getString("theme_mode", "system") ?: "system"
         set(value) = prefs.edit().putString("theme_mode", value).apply()
 
+    // ── Onboarding ──
+    var hasSeenOnboarding: Boolean
+        get() = prefs.getBoolean("has_seen_onboarding", false)
+        set(value) = prefs.edit().putBoolean("has_seen_onboarding", value).apply()
+
     // ── Language ──
     var appLanguage: String
         get() = prefs.getString("app_language", "en") ?: "en"

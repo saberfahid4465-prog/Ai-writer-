@@ -4,24 +4,32 @@ import android.app.Activity
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.aiwriter.app.R
@@ -29,6 +37,7 @@ import com.aiwriter.app.service.FileParserService
 import com.aiwriter.app.ui.components.FormatPicker
 import com.aiwriter.app.ui.components.LanguagePicker
 import com.aiwriter.app.ui.theme.LocalAppColors
+import com.aiwriter.app.ui.theme.LocalIsDarkTheme
 import com.aiwriter.app.util.LanguageConfig
 import com.aiwriter.app.util.PreferencesManager
 import kotlinx.coroutines.Dispatchers
@@ -40,6 +49,7 @@ fun HomeScreen(
     onGenerate: (topic: String, language: String, languageCode: String, formats: Set<String>, content: String?, fileName: String?) -> Unit
 ) {
     val colors = LocalAppColors.current
+    val isDark = LocalIsDarkTheme.current
     val context = LocalContext.current
     val prefs = PreferencesManager.getInstance(context)
     val scope = rememberCoroutineScope()
@@ -50,6 +60,18 @@ fun HomeScreen(
     var uploadedContent by remember { mutableStateOf<String?>(null) }
     var uploadedFileName by remember { mutableStateOf<String?>(null) }
     var isParsingFile by remember { mutableStateOf(false) }
+
+    // Subtle pulse animation for generate button
+    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+    val btnScale by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.02f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = EaseInOutCubic),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "btnPulse"
+    )
 
     val filePicker = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -77,89 +99,148 @@ fun HomeScreen(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp)
+            .padding(horizontal = 20.dp, vertical = 16.dp)
     ) {
-        // Header with logo
+        // ── Header ──
+        val logoRes = if (isDark) R.drawable.app_logo_white else R.drawable.app_logo
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(bottom = 4.dp)
+            modifier = Modifier.padding(bottom = 2.dp)
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.app_logo),
-                contentDescription = "AI Writer",
-                modifier = Modifier.size(40.dp)
-            )
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(CircleShape)
+                    .background(if (isDark) Color(0xFF2A2A2A) else Color(0xFFF5F5F5)),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(id = logoRes),
+                    contentDescription = "AI Writer",
+                    modifier = Modifier.size(28.dp)
+                )
+            }
             Spacer(Modifier.width(12.dp))
-            Text(
-                "AI Writer",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = colors.textPrimary
-            )
+            Column {
+                Text(
+                    "AI Writer",
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = colors.textPrimary
+                )
+                Text(
+                    "Create something amazing",
+                    fontSize = 13.sp,
+                    color = colors.textMuted,
+                    lineHeight = 16.sp
+                )
+            }
         }
-        Text(
-            "Create professional documents with AI",
-            fontSize = 14.sp,
-            color = colors.textMuted,
-            modifier = Modifier.padding(bottom = 20.dp)
-        )
 
-        // Token Usage
+        Spacer(Modifier.height(16.dp))
+
+        // ── Token Usage Card ──
         val tokensUsed = prefs.tokensUsedToday
         val tokenLimit = prefs.dailyTokenLimit
         val progress = (tokensUsed.toFloat() / tokenLimit).coerceIn(0f, 1f)
+        val remaining = tokenLimit - tokensUsed
 
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = colors.card),
-            shape = RoundedCornerShape(12.dp)
+            colors = CardDefaults.cardColors(
+                containerColor = if (isDark) Color(0xFF1E1E1E) else Color(0xFFF8F9FA)
+            ),
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Circular progress
+                Box(
+                    modifier = Modifier.size(42.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text("Daily Usage", fontSize = 13.sp, color = colors.textMuted)
-                    Text("$tokensUsed / $tokenLimit tokens", fontSize = 13.sp, color = colors.textMuted)
+                    CircularProgressIndicator(
+                        progress = { progress },
+                        modifier = Modifier.fillMaxSize(),
+                        color = if (progress < 0.8f) colors.primary else Color(0xFFE57373),
+                        trackColor = colors.borderLight,
+                        strokeWidth = 4.dp
+                    )
+                    Text(
+                        "${(progress * 100).toInt()}%",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = colors.textPrimary
+                    )
                 }
-                Spacer(Modifier.height(8.dp))
-                LinearProgressIndicator(
-                    progress = { progress },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(6.dp)
-                        .clip(RoundedCornerShape(3.dp)),
-                    color = colors.primary,
-                    trackColor = colors.borderLight
-                )
+                Spacer(Modifier.width(14.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        "Daily Credits",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = colors.textPrimary
+                    )
+                    Text(
+                        "$remaining tokens remaining",
+                        fontSize = 12.sp,
+                        color = colors.textMuted
+                    )
+                }
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = if (isDark) Color(0xFF2A2A2A) else Color(0xFFEEEEEE)
+                ) {
+                    Text(
+                        "$tokensUsed / $tokenLimit",
+                        fontSize = 11.sp,
+                        color = colors.textMuted,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                    )
+                }
             }
         }
 
         Spacer(Modifier.height(20.dp))
 
-        // Topic Input
+        // ── Section: What to write ──
+        SectionHeader(icon = Icons.Outlined.EditNote, title = "What to write", colors = colors)
+
+        Spacer(Modifier.height(8.dp))
+
         OutlinedTextField(
             value = topic,
             onValueChange = { topic = it },
-            label = { Text("Topic or Instructions") },
-            placeholder = { Text("Enter your topic or instructions…", color = colors.placeholder) },
+            placeholder = {
+                Text(
+                    "Describe your document topic, e.g.\n\"A business plan for an eco-friendly café\"",
+                    color = colors.placeholder,
+                    fontSize = 14.sp,
+                    lineHeight = 20.sp
+                )
+            },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(120.dp),
-            shape = RoundedCornerShape(12.dp),
+                .heightIn(min = 110.dp),
+            shape = RoundedCornerShape(14.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = colors.primary,
-                unfocusedBorderColor = colors.inputBorder,
+                unfocusedBorderColor = if (isDark) Color(0xFF3A3A3A) else Color(0xFFE0E0E0),
                 focusedContainerColor = colors.inputBg,
                 unfocusedContainerColor = colors.inputBg,
                 cursorColor = colors.primary
             )
         )
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(14.dp))
 
-        // File Upload
-        Card(
+        // ── File Upload ──
+        Surface(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable {
@@ -179,36 +260,64 @@ fun HomeScreen(
                     }
                     filePicker.launch(intent)
                 },
-            colors = CardDefaults.cardColors(containerColor = colors.surfaceAlt),
-            shape = RoundedCornerShape(12.dp)
+            shape = RoundedCornerShape(14.dp),
+            color = Color.Transparent,
+            border = ButtonDefaults.outlinedButtonBorder(true)
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(14.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    Icons.Default.UploadFile,
-                    contentDescription = "Upload",
-                    tint = colors.primary,
-                    modifier = Modifier.size(24.dp)
-                )
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(if (isDark) Color(0xFF2A2A2A) else Color(0xFFF0F0F0)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        if (uploadedFileName != null) Icons.Default.InsertDriveFile else Icons.Outlined.CloudUpload,
+                        contentDescription = "Upload",
+                        tint = colors.primary,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
                 Spacer(Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     if (isParsingFile) {
                         Text("Parsing file…", color = colors.textPrimary, fontSize = 14.sp)
+                        LinearProgressIndicator(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 4.dp)
+                                .height(2.dp)
+                                .clip(RoundedCornerShape(1.dp)),
+                            color = colors.primary
+                        )
                     } else if (uploadedFileName != null) {
-                        Text(uploadedFileName!!, color = colors.textPrimary, fontSize = 14.sp)
                         Text(
-                            "${uploadedContent?.length ?: 0} characters",
+                            uploadedFileName!!,
+                            color = colors.textPrimary,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            maxLines = 1
+                        )
+                        Text(
+                            "${uploadedContent?.length ?: 0} characters extracted",
                             color = colors.textMuted,
                             fontSize = 12.sp
                         )
                     } else {
-                        Text("Upload File", color = colors.textPrimary, fontSize = 14.sp)
                         Text(
-                            "Supported: DOCX, PPTX, XLSX, TXT",
+                            "Upload a file (optional)",
+                            color = colors.textPrimary,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            "DOCX, PPTX, XLSX, TXT, CSV",
                             color = colors.textMuted,
                             fontSize = 12.sp
                         )
@@ -218,47 +327,37 @@ fun HomeScreen(
                     IconButton(onClick = {
                         uploadedContent = null
                         uploadedFileName = null
-                    }) {
-                        Icon(Icons.Default.Close, "Remove file", tint = colors.textMuted)
+                    }, modifier = Modifier.size(32.dp)) {
+                        Icon(Icons.Default.Close, "Remove", tint = colors.textMuted, modifier = Modifier.size(18.dp))
                     }
                 }
             }
         }
 
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(22.dp))
 
-        // Output Format
-        Text(
-            "Output Format",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = colors.textPrimary,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
+        // ── Section: Output Format ──
+        SectionHeader(icon = Icons.Outlined.FileCopy, title = "Output format", colors = colors)
+        Spacer(Modifier.height(8.dp))
         FormatPicker(
             selectedFormats = selectedFormats,
             onFormatsChanged = { selectedFormats = it }
         )
 
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(22.dp))
 
-        // Language
-        Text(
-            "Language",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = colors.textPrimary,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
+        // ── Section: Language ──
+        SectionHeader(icon = Icons.Outlined.Language, title = "Language", colors = colors)
+        Spacer(Modifier.height(8.dp))
         LanguagePicker(
             languages = LanguageConfig.contentLanguages,
             selected = selectedLanguage,
             onSelected = { selectedLanguage = it }
         )
 
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(28.dp))
 
-        // Generate Button
+        // ── Generate Button ──
         Button(
             onClick = {
                 if (canSubmit) {
@@ -275,11 +374,16 @@ fun HomeScreen(
             enabled = canSubmit,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(52.dp),
-            shape = RoundedCornerShape(12.dp),
+                .height(54.dp)
+                .then(if (canSubmit) Modifier.scale(btnScale) else Modifier),
+            shape = RoundedCornerShape(14.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = colors.primary,
-                disabledContainerColor = colors.border
+                disabledContainerColor = if (isDark) Color(0xFF2A2A2A) else Color(0xFFE0E0E0)
+            ),
+            elevation = ButtonDefaults.buttonElevation(
+                defaultElevation = if (canSubmit) 4.dp else 0.dp,
+                pressedElevation = 1.dp
             )
         ) {
             Icon(Icons.Default.AutoAwesome, "Generate", modifier = Modifier.size(20.dp))
@@ -296,10 +400,35 @@ fun HomeScreen(
                 "Enter at least 3 characters or upload a file",
                 color = colors.textMuted,
                 fontSize = 12.sp,
-                modifier = Modifier.padding(top = 8.dp)
+                modifier = Modifier.padding(top = 8.dp),
+                textAlign = TextAlign.Center
             )
         }
 
         Spacer(Modifier.height(24.dp))
+    }
+}
+
+@Composable
+private fun SectionHeader(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    colors: com.aiwriter.app.ui.theme.AiWriterColors
+) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            icon,
+            contentDescription = null,
+            tint = colors.textMuted,
+            modifier = Modifier.size(18.dp)
+        )
+        Spacer(Modifier.width(6.dp))
+        Text(
+            title,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = colors.textSecondary,
+            letterSpacing = 0.3.sp
+        )
     }
 }
