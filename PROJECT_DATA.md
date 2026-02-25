@@ -1,6 +1,6 @@
 ﻿# AI Writer — Project Data & Signing Reference
 
-> **Last Updated:** February 15, 2026  
+> **Last Updated:** February 25, 2026  
 > **Platform:** Android (Native Kotlin + Jetpack Compose)
 
 ---
@@ -11,8 +11,8 @@
 |-------------------|------------------------------------|
 | App Name          | AI Writer                          |
 | Package / App ID  | `com.smartaiwriter.app`                 |
-| Version Name      | `2.0.0`                            |
-| Version Code      | `3`                                |
+| Version Name      | `3.0.0`                            |
+| Version Code      | `4`                                |
 | Min SDK           | 26 (Android 8.0 Oreo)             |
 | Target SDK        | 35 (Android 15)                    |
 | Compile SDK       | 35                                 |

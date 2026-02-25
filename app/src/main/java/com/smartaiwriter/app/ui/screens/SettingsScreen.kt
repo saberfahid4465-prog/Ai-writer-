@@ -1,5 +1,7 @@
 ﻿package com.smartaiwriter.app.ui.screens
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -377,6 +379,30 @@ fun SettingsScreen(
                     },
                     trailingContent = { Icon(Icons.Default.ChevronRight, "Go", tint = colors.textMuted) },
                     modifier = Modifier.clickable { onNavigateToTerms() }
+                )
+                HorizontalDivider(color = colors.borderLight, modifier = Modifier.padding(horizontal = 16.dp))
+                ListItem(
+                    headlineContent = { Text(s.sendFeedback, color = colors.textPrimary, fontSize = 15.sp) },
+                    supportingContent = { Text(s.feedbackDesc, color = colors.textMuted, fontSize = 12.sp) },
+                    leadingContent = {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(colors.surfaceAlt),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Outlined.Email, s.sendFeedback, tint = colors.textMuted, modifier = Modifier.size(18.dp))
+                        }
+                    },
+                    trailingContent = { Icon(Icons.Default.ChevronRight, "Go", tint = colors.textMuted) },
+                    modifier = Modifier.clickable {
+                        val intent = Intent(Intent.ACTION_SENDTO).apply {
+                            data = Uri.parse("mailto:saberfahid4465@gmail.com")
+                            putExtra(Intent.EXTRA_SUBJECT, "AI Writer Feedback (v3.0.0)")
+                        }
+                        context.startActivity(Intent.createChooser(intent, s.sendFeedback))
+                    }
                 )
             }
         }

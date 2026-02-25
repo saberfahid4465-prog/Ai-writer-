@@ -70,6 +70,8 @@ data class Strings(
     val privacyDesc: String,
     val termsOfService: String,
     val termsDesc: String,
+    val sendFeedback: String,
+    val feedbackDesc: String,
 
     // History
     val history: String,
@@ -147,6 +149,7 @@ val EnglishStrings = Strings(
     premium = "Premium", premiumDesc = "Unlimited tokens & more features", soon = "Soon",
     legal = "Legal", privacyPolicy = "Privacy Policy", privacyDesc = "How we handle your data",
     termsOfService = "Terms of Service", termsDesc = "Rules for using AI Writer",
+    sendFeedback = "Send Feedback", feedbackDesc = "Help us improve AI Writer",
     history = "History", noHistory = "No documents yet",
     translate = "Translate", aiTranslator = "AI Translator", translateSubtitle = "Translate documents or text with AI",
     from = "From", to = "To", sourceLanguage = "Source Language", targetLanguage = "Target Language",
@@ -165,7 +168,7 @@ val EnglishStrings = Strings(
     splashFeature1 = "Generate PDF, Word, PPT & Excel",
     splashFeature2 = "Translate documents in 32 languages",
     splashFeature3 = "AI-powered summaries & editing",
-    appVersion = "AI Writer v2.0.0", poweredBy = "Powered by Longcat AI"
+    appVersion = "AI Writer v3.0.0", poweredBy = "Powered by Longcat AI"
 )
 
 val ArabicStrings = Strings(
@@ -188,6 +191,7 @@ val ArabicStrings = Strings(
     premium = "مميز", premiumDesc = "رموز غير محدودة وميزات أكثر", soon = "قريباً",
     legal = "قانوني", privacyPolicy = "سياسة الخصوصية", privacyDesc = "كيف نتعامل مع بياناتك",
     termsOfService = "شروط الخدمة", termsDesc = "قواعد استخدام AI Writer",
+    sendFeedback = "إرسال ملاحظات", feedbackDesc = "ساعدنا في تحسين AI Writer",
     history = "السجل", noHistory = "لا توجد مستندات بعد",
     translate = "ترجمة", aiTranslator = "مترجم AI", translateSubtitle = "ترجم المستندات أو النصوص بالذكاء الاصطناعي",
     from = "من", to = "إلى", sourceLanguage = "اللغة المصدر", targetLanguage = "اللغة الهدف",
@@ -206,7 +210,7 @@ val ArabicStrings = Strings(
     splashFeature1 = "إنشاء PDF و Word و PPT و Excel",
     splashFeature2 = "ترجمة المستندات بـ 32 لغة",
     splashFeature3 = "تلخيص وتحرير بالذكاء الاصطناعي",
-    appVersion = "AI Writer v2.0.0", poweredBy = "مدعوم بـ Longcat AI"
+    appVersion = "AI Writer v3.0.0", poweredBy = "مدعوم بـ Longcat AI"
 )
 
 val SpanishStrings = Strings(
@@ -229,6 +233,7 @@ val SpanishStrings = Strings(
     premium = "Premium", premiumDesc = "Tokens ilimitados y más funciones", soon = "Pronto",
     legal = "Legal", privacyPolicy = "Política de privacidad", privacyDesc = "Cómo manejamos tus datos",
     termsOfService = "Términos de servicio", termsDesc = "Reglas de uso de AI Writer",
+    sendFeedback = "Enviar comentarios", feedbackDesc = "Ayúdanos a mejorar AI Writer",
     history = "Historial", noHistory = "Aún no hay documentos",
     translate = "Traducir", aiTranslator = "Traductor AI", translateSubtitle = "Traduce documentos o texto con IA",
     from = "De", to = "A", sourceLanguage = "Idioma de origen", targetLanguage = "Idioma de destino",
@@ -247,7 +252,7 @@ val SpanishStrings = Strings(
     splashFeature1 = "Genera PDF, Word, PPT y Excel",
     splashFeature2 = "Traduce documentos en 32 idiomas",
     splashFeature3 = "Resúmenes y edición con IA",
-    appVersion = "AI Writer v2.0.0", poweredBy = "Desarrollado con Longcat AI"
+    appVersion = "AI Writer v3.0.0", poweredBy = "Desarrollado con Longcat AI"
 )
 
 val FrenchStrings = Strings(
@@ -270,6 +275,7 @@ val FrenchStrings = Strings(
     premium = "Premium", premiumDesc = "Jetons illimités et plus", soon = "Bientôt",
     legal = "Juridique", privacyPolicy = "Politique de confidentialité", privacyDesc = "Comment nous gérons vos données",
     termsOfService = "Conditions d'utilisation", termsDesc = "Règles d'utilisation d'AI Writer",
+    sendFeedback = "Envoyer des commentaires", feedbackDesc = "Aidez-nous à améliorer AI Writer",
     history = "Historique", noHistory = "Aucun document pour l'instant",
     translate = "Traduire", aiTranslator = "Traducteur AI", translateSubtitle = "Traduisez des documents ou du texte avec l'IA",
     from = "De", to = "Vers", sourceLanguage = "Langue source", targetLanguage = "Langue cible",
@@ -288,7 +294,7 @@ val FrenchStrings = Strings(
     splashFeature1 = "Générez PDF, Word, PPT et Excel",
     splashFeature2 = "Traduisez dans 32 langues",
     splashFeature3 = "Résumés et édition par IA",
-    appVersion = "AI Writer v2.0.0", poweredBy = "Propulsé par Longcat AI"
+    appVersion = "AI Writer v3.0.0", poweredBy = "Propulsé par Longcat AI"
 )
 
 val GermanStrings = Strings(
@@ -311,6 +317,7 @@ val GermanStrings = Strings(
     premium = "Premium", premiumDesc = "Unbegrenzte Tokens & mehr", soon = "Bald",
     legal = "Rechtliches", privacyPolicy = "Datenschutz", privacyDesc = "Wie wir mit deinen Daten umgehen",
     termsOfService = "Nutzungsbedingungen", termsDesc = "Regeln für die Nutzung",
+    sendFeedback = "Feedback senden", feedbackDesc = "Hilf uns AI Writer zu verbessern",
     history = "Verlauf", noHistory = "Noch keine Dokumente",
     translate = "Übersetzen", aiTranslator = "AI Übersetzer", translateSubtitle = "Übersetze Dokumente oder Text mit KI",
     from = "Von", to = "Nach", sourceLanguage = "Ausgangssprache", targetLanguage = "Zielsprache",
@@ -329,7 +336,7 @@ val GermanStrings = Strings(
     splashFeature1 = "PDF, Word, PPT & Excel erstellen",
     splashFeature2 = "Dokumente in 32 Sprachen übersetzen",
     splashFeature3 = "KI-gestützte Zusammenfassungen & Bearbeitung",
-    appVersion = "AI Writer v2.0.0", poweredBy = "Powered by Longcat AI"
+    appVersion = "AI Writer v3.0.0", poweredBy = "Powered by Longcat AI"
 )
 
 val TurkishStrings = Strings(
@@ -352,6 +359,7 @@ val TurkishStrings = Strings(
     premium = "Premium", premiumDesc = "Sınırsız token ve daha fazlası", soon = "Yakında",
     legal = "Yasal", privacyPolicy = "Gizlilik Politikası", privacyDesc = "Verilerinizi nasıl işliyoruz",
     termsOfService = "Kullanım Şartları", termsDesc = "AI Writer kullanım kuralları",
+    sendFeedback = "Geri Bildirim Gönder", feedbackDesc = "AI Writer'ı geliştirmemize yardım edin",
     history = "Geçmiş", noHistory = "Henüz belge yok",
     translate = "Çeviri", aiTranslator = "AI Çevirmen", translateSubtitle = "Belgeleri veya metni yapay zeka ile çevirin",
     from = "Kaynak", to = "Hedef", sourceLanguage = "Kaynak Dil", targetLanguage = "Hedef Dil",
@@ -370,7 +378,7 @@ val TurkishStrings = Strings(
     splashFeature1 = "PDF, Word, PPT ve Excel oluşturun",
     splashFeature2 = "32 dilde belge çevirin",
     splashFeature3 = "Yapay zeka ile özetleme ve düzenleme",
-    appVersion = "AI Writer v2.0.0", poweredBy = "Longcat AI ile desteklenmektedir"
+    appVersion = "AI Writer v3.0.0", poweredBy = "Longcat AI ile desteklenmektedir"
 )
 
 val PersianStrings = Strings(
@@ -393,6 +401,7 @@ val PersianStrings = Strings(
     premium = "ویژه", premiumDesc = "توکن نامحدود و امکانات بیشتر", soon = "به‌زودی",
     legal = "حقوقی", privacyPolicy = "سیاست حریم خصوصی", privacyDesc = "نحوه مدیریت داده‌های شما",
     termsOfService = "شرایط خدمات", termsDesc = "قوانین استفاده از AI Writer",
+    sendFeedback = "ارسال بازخورد", feedbackDesc = "به ما کمک کنید AI Writer را بهبود دهیم",
     history = "تاریخچه", noHistory = "هنوز سندی نیست",
     translate = "ترجمه", aiTranslator = "مترجم AI", translateSubtitle = "اسناد یا متن را با هوش مصنوعی ترجمه کنید",
     from = "از", to = "به", sourceLanguage = "زبان مبدا", targetLanguage = "زبان مقصد",
@@ -411,7 +420,7 @@ val PersianStrings = Strings(
     splashFeature1 = "ایجاد PDF، Word، PPT و Excel",
     splashFeature2 = "ترجمه اسناد به ۳۲ زبان",
     splashFeature3 = "خلاصه‌سازی و ویرایش با هوش مصنوعی",
-    appVersion = "AI Writer v2.0.0", poweredBy = "ارائه شده توسط Longcat AI"
+    appVersion = "AI Writer v3.0.0", poweredBy = "ارائه شده توسط Longcat AI"
 )
 
 val ChineseStrings = Strings(
@@ -434,6 +443,7 @@ val ChineseStrings = Strings(
     premium = "高级版", premiumDesc = "无限令牌和更多功能", soon = "即将推出",
     legal = "法律", privacyPolicy = "隐私政策", privacyDesc = "我们如何处理您的数据",
     termsOfService = "服务条款", termsDesc = "AI Writer使用规则",
+    sendFeedback = "发送反馈", feedbackDesc = "帮助我们改进AI Writer",
     history = "历史", noHistory = "暂无文档",
     translate = "翻译", aiTranslator = "AI翻译器", translateSubtitle = "用AI翻译文档或文本",
     from = "从", to = "到", sourceLanguage = "源语言", targetLanguage = "目标语言",
@@ -452,7 +462,7 @@ val ChineseStrings = Strings(
     splashFeature1 = "生成PDF、Word、PPT和Excel",
     splashFeature2 = "支持32种语言翻译",
     splashFeature3 = "AI摘要和编辑",
-    appVersion = "AI Writer v2.0.0", poweredBy = "由Longcat AI提供支持"
+    appVersion = "AI Writer v3.0.0", poweredBy = "由Longcat AI提供支持"
 )
 
 val JapaneseStrings = Strings(
@@ -475,6 +485,7 @@ val JapaneseStrings = Strings(
     premium = "プレミアム", premiumDesc = "無制限トークンと追加機能", soon = "近日公開",
     legal = "法的情報", privacyPolicy = "プライバシーポリシー", privacyDesc = "データの取り扱い方法",
     termsOfService = "利用規約", termsDesc = "AI Writerの利用ルール",
+    sendFeedback = "フィードバックを送信", feedbackDesc = "AI Writerの改善にご協力ください",
     history = "履歴", noHistory = "まだ文書がありません",
     translate = "翻訳", aiTranslator = "AI翻訳", translateSubtitle = "AIで文書やテキストを翻訳",
     from = "翻訳元", to = "翻訳先", sourceLanguage = "ソース言語", targetLanguage = "ターゲット言語",
@@ -493,7 +504,7 @@ val JapaneseStrings = Strings(
     splashFeature1 = "PDF、Word、PPT、Excelを生成",
     splashFeature2 = "32言語で文書を翻訳",
     splashFeature3 = "AI要約と編集",
-    appVersion = "AI Writer v2.0.0", poweredBy = "Longcat AI 搭載"
+    appVersion = "AI Writer v3.0.0", poweredBy = "Longcat AI 搭載"
 )
 
 val KoreanStrings = Strings(
@@ -516,6 +527,7 @@ val KoreanStrings = Strings(
     premium = "프리미엄", premiumDesc = "무제한 토큰 및 추가 기능", soon = "곧 출시",
     legal = "법적 정보", privacyPolicy = "개인정보처리방침", privacyDesc = "데이터 처리 방법",
     termsOfService = "이용약관", termsDesc = "AI Writer 이용 규칙",
+    sendFeedback = "피드백 보내기", feedbackDesc = "AI Writer 개선에 도움을 주세요",
     history = "기록", noHistory = "아직 문서가 없습니다",
     translate = "번역", aiTranslator = "AI 번역기", translateSubtitle = "AI로 문서나 텍스트를 번역하세요",
     from = "출발어", to = "도착어", sourceLanguage = "원본 언어", targetLanguage = "대상 언어",
@@ -534,7 +546,7 @@ val KoreanStrings = Strings(
     splashFeature1 = "PDF, Word, PPT, Excel 생성",
     splashFeature2 = "32개 언어로 문서 번역",
     splashFeature3 = "AI 요약 및 편집",
-    appVersion = "AI Writer v2.0.0", poweredBy = "Longcat AI 제공"
+    appVersion = "AI Writer v3.0.0", poweredBy = "Longcat AI 제공"
 )
 
 val RussianStrings = Strings(
@@ -557,6 +569,7 @@ val RussianStrings = Strings(
     premium = "Премиум", premiumDesc = "Безлимитные токены и больше", soon = "Скоро",
     legal = "Правовая информация", privacyPolicy = "Политика конфиденциальности", privacyDesc = "Как мы обрабатываем данные",
     termsOfService = "Условия использования", termsDesc = "Правила использования AI Writer",
+    sendFeedback = "Отправить отзыв", feedbackDesc = "Помогите улучшить AI Writer",
     history = "История", noHistory = "Документов пока нет",
     translate = "Перевод", aiTranslator = "AI Переводчик", translateSubtitle = "Переводите документы или текст с помощью ИИ",
     from = "С", to = "На", sourceLanguage = "Исходный язык", targetLanguage = "Целевой язык",
@@ -575,7 +588,7 @@ val RussianStrings = Strings(
     splashFeature1 = "PDF, Word, PPT и Excel",
     splashFeature2 = "Перевод на 32 языка",
     splashFeature3 = "ИИ-резюме и редактирование",
-    appVersion = "AI Writer v2.0.0", poweredBy = "На базе Longcat AI"
+    appVersion = "AI Writer v3.0.0", poweredBy = "На базе Longcat AI"
 )
 
 val HindiStrings = Strings(
@@ -597,8 +610,7 @@ val HindiStrings = Strings(
     usage = "उपयोग", dailyTokenUsage = "दैनिक टोकन उपयोग", resetsAtMidnight = "मध्यरात्रि में रीसेट",
     premium = "प्रीमियम", premiumDesc = "असीमित टोकन और अधिक", soon = "जल्द",
     legal = "कानूनी", privacyPolicy = "गोपनीयता नीति", privacyDesc = "हम आपका डेटा कैसे संभालते हैं",
-    termsOfService = "सेवा की शर्तें", termsDesc = "AI Writer उपयोग नियम",
-    history = "इतिहास", noHistory = "अभी कोई दस्तावेज़ नहीं",
+    termsOfService = "सेवा की शर्तें", termsDesc = "AI Writer उपयोग नियम",    sendFeedback = "प्रतिक्रियू भेजें", feedbackDesc = "AI Writer को बेहतर बनधने में मदद करें",    history = "इतिहास", noHistory = "अभी कोई दस्तावेज़ नहीं",
     translate = "अनुवाद", aiTranslator = "AI अनुवादक", translateSubtitle = "AI से दस्तावेज़ या टेक्स्ट अनुवाद करें",
     from = "से", to = "में", sourceLanguage = "स्रोत भाषा", targetLanguage = "लक्ष्य भाषा",
     enterText = "टेक्स्ट दर्ज करें या पेस्ट करें…", parsingFile = "फ़ाइल पार्स हो रही है…",
@@ -616,7 +628,7 @@ val HindiStrings = Strings(
     splashFeature1 = "PDF, Word, PPT और Excel बनाएँ",
     splashFeature2 = "32 भाषाओं में अनुवाद",
     splashFeature3 = "AI सारांश और संपादन",
-    appVersion = "AI Writer v2.0.0", poweredBy = "Longcat AI द्वारा संचालित"
+    appVersion = "AI Writer v3.0.0", poweredBy = "Longcat AI द्वारा संचालित"
 )
 
 val PortugueseStrings = Strings(
@@ -639,6 +651,7 @@ val PortugueseStrings = Strings(
     premium = "Premium", premiumDesc = "Tokens ilimitados e mais recursos", soon = "Em breve",
     legal = "Legal", privacyPolicy = "Política de Privacidade", privacyDesc = "Como tratamos seus dados",
     termsOfService = "Termos de Serviço", termsDesc = "Regras de uso do AI Writer",
+    sendFeedback = "Enviar Feedback", feedbackDesc = "Ajude-nos a melhorar o AI Writer",
     history = "Histórico", noHistory = "Nenhum documento ainda",
     translate = "Traduzir", aiTranslator = "Tradutor AI", translateSubtitle = "Traduza documentos ou texto com IA",
     from = "De", to = "Para", sourceLanguage = "Idioma de origem", targetLanguage = "Idioma de destino",
@@ -657,7 +670,7 @@ val PortugueseStrings = Strings(
     splashFeature1 = "Gere PDF, Word, PPT e Excel",
     splashFeature2 = "Traduza documentos em 32 idiomas",
     splashFeature3 = "Resumos e edição com IA",
-    appVersion = "AI Writer v2.0.0", poweredBy = "Desenvolvido com Longcat AI"
+    appVersion = "AI Writer v3.0.0", poweredBy = "Desenvolvido com Longcat AI"
 )
 
 val ItalianStrings = Strings(
@@ -680,6 +693,7 @@ val ItalianStrings = Strings(
     premium = "Premium", premiumDesc = "Token illimitati e altro", soon = "Presto",
     legal = "Legale", privacyPolicy = "Informativa sulla Privacy", privacyDesc = "Come gestiamo i tuoi dati",
     termsOfService = "Termini di Servizio", termsDesc = "Regole di utilizzo di AI Writer",
+    sendFeedback = "Invia Feedback", feedbackDesc = "Aiutaci a migliorare AI Writer",
     history = "Cronologia", noHistory = "Nessun documento ancora",
     translate = "Traduci", aiTranslator = "Traduttore AI", translateSubtitle = "Traduci documenti o testo con l'IA",
     from = "Da", to = "A", sourceLanguage = "Lingua di origine", targetLanguage = "Lingua di destinazione",
@@ -698,7 +712,7 @@ val ItalianStrings = Strings(
     splashFeature1 = "Genera PDF, Word, PPT ed Excel",
     splashFeature2 = "Traduci documenti in 32 lingue",
     splashFeature3 = "Riassunti e modifica con IA",
-    appVersion = "AI Writer v2.0.0", poweredBy = "Powered by Longcat AI"
+    appVersion = "AI Writer v3.0.0", poweredBy = "Powered by Longcat AI"
 )
 
 val UrduStrings = Strings(
@@ -721,6 +735,7 @@ val UrduStrings = Strings(
     premium = "پریمیم", premiumDesc = "لامحدود ٹوکن اور مزید", soon = "جلد",
     legal = "قانونی", privacyPolicy = "رازداری پالیسی", privacyDesc = "ہم آپ کا ڈیٹا کیسے سنبھالتے ہیں",
     termsOfService = "سروس کی شرائط", termsDesc = "AI Writer استعمال کے قوانین",
+    sendFeedback = "رائے بھیجیں", feedbackDesc = "AI Writer کو بہتر بنانے میں مدد کریں",
     history = "تاریخ", noHistory = "ابھی کوئی دستاویز نہیں",
     translate = "ترجمہ", aiTranslator = "AI مترجم", translateSubtitle = "AI سے دستاویزات یا متن کا ترجمہ کریں",
     from = "سے", to = "میں", sourceLanguage = "ماخذ زبان", targetLanguage = "ہدف زبان",
@@ -739,7 +754,7 @@ val UrduStrings = Strings(
     splashFeature1 = "PDF، Word، PPT اور Excel بنائیں",
     splashFeature2 = "32 زبانوں میں ترجمہ",
     splashFeature3 = "AI خلاصہ اور ترمیم",
-    appVersion = "AI Writer v2.0.0", poweredBy = "Longcat AI کی طرف سے"
+    appVersion = "AI Writer v3.0.0", poweredBy = "Longcat AI کی طرف سے"
 )
 
 fun getStringsForLanguage(code: String): Strings = when (code) {
